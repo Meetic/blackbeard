@@ -2,6 +2,3 @@
 /blackbeard
 /vendor/
 /.go
-/.push-*
-/.container-*
-/.dockerfile-*
