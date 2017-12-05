@@ -34,6 +34,13 @@ fi
 export CGO_ENABLED=0
 export GOARCH="${ARCH}"
 
+# Install go dep
+go get -u github.com/golang/dep/cmd/dep
+
+# Ensure dependencies
+dep ensure
+
+# Build
 go install                                                         \
     -installsuffix "static"                                        \
     -ldflags "-X ${PKG}/pkg/version.VERSION=${VERSION}"            \

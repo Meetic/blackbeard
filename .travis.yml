@@ -1,0 +1,25 @@
+language: go
+go:
+  - 1.8
+  - 1.9
+  - master
+before_install:
+  - go get -v -u github.com/golang/dep/cmd/dep
+  - go get github.com/mitchellh/gox
+  - go get github.com/mattn/goveralls
+  - dep ensure
+script:
+  - go test -v -covermode=count -coverprofile=coverage.out
+  #- goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
+
+after_success:
+  - gox -osarch="linux/amd64 linux/386 windows/amd64 windows/386 darwin/amd64 darwin/386" -output "bin/blackbeard_{{.OS}}_{{.Arch}}"
+  
+deploy:
+  provider: releases
+  api_key:
+    secure: hWDDkQ6UgPup4fuHfNeibXdrk3aUciAy2OqAxXCeNPJg19dDOc54o/f676kY4LxhwPigiIIUpo7U6o75Jfhqo3Fh0C35dkr8EDDxkaW0U6IuolPMq4RW9ByRVdlyV6pC59kMYvobNqucvld08uIj1rQsA7aIEc8Kz7pDmdGjPl3+7kBF0kl1EKadQShbcQAIO+LCBZh79k7r97PGIf8tnQ6BcC8LcdzqbPFPYYSZZ5rwpD7ULigyXg2oDl2S1aUfBEK2+LCOTUiVVTupeuu05e/Xc9wD1Qtxot5NNThflfWuIge/zy/cFMClbQdb03IRHhgU0e2BRmQaYQKhwARW5nRwUW6LczRQUaVnBSOrdwKUU6iC77FwC9Pk2S8tzpfzCUrW6GjZWC9EfBjzroiqyZMw6wuB6Xk+Q8UyLS2KEU6T5KiiRrblQvsJOE2ut3AoFwDxzElX7bxptn3sRdcqheZlucBDHJa3KqmuKMlN8Uhh/v6sfYEAJrVh+3YM2DGvleQ/JQ9YxS54IRL3iaAeNdzZXiRuLY2SMj+ymbmwjTjP6DudHfp+Esbe5ItXa9W6QGgI3xtwVi1GMpQeP2cHEZJcBHM36wo+GHFKOmRu8mcOtHQxVKnjYHBFMPZOwUX7opAYbAbCem815X05mGaFq/ccdjLC6l6ia12I/TVBs2w=
+  file: bin/*
+  skip_cleanup: true
+  on:
+    tags: true
