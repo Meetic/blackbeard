@@ -196,7 +196,7 @@ working-dir: /path/to/your/playbook
 ## Installation
 
 ### Requirements
-* go > 1.8
+* go >= 1.8
 
 ### Go installation
 

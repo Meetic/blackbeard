@@ -1,7 +1,4 @@
 /bin/
-blackbeard
+/blackbeard
 /vendor/
 /.go
-/.push-*
-/.container-*
-/.dockerfile-*
