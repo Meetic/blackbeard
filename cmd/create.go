@@ -15,8 +15,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var usr string
-
 // createCmd represents the create command
 var createCmd = &cobra.Command{
 	Use:   "create",
@@ -28,7 +26,7 @@ Feel free to edit this file before applying changes.
 `,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		err := runCreate(usr, inventoryPath)
+		err := runCreate(namespace, inventoryPath)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(-1)
@@ -38,27 +36,25 @@ Feel free to edit this file before applying changes.
 
 func init() {
 	RootCmd.AddCommand(createCmd)
-
-	createCmd.Flags().StringVarP(&usr, "username", "u", "", "The username for the environement")
-	createCmd.Flags().StringVarP(&usr, "namespace", "n", "", "Same as username")
+	createCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace where to apply configuration")
 }
 
-func runCreate(usr, inventoryPath string) error {
+func runCreate(namespace, inventoryPath string) error {
 
-	if usr == "" {
-		return errors.New("You must specified a username for the testing env using the --username flag")
+	if namespace == "" {
+		return errors.New("you must specified a namespace for the testing env using the --namespace flag")
 	}
 
-	files := files.NewClient(templatePath, configPath, inventoryPath, defaultsPath)
+	f := files.NewClient(templatePath, configPath, inventoryPath, defaultsPath)
 
-	inv, err := files.InventoryService().Create(usr)
+	inv, err := f.InventoryService().Create(namespace)
 
 	if err != nil {
 		log.Println(err.Error())
 		log.Println("continue")
 	}
 
-	err = files.ConfigService().Apply(inv)
+	err = f.ConfigService().Apply(inv)
 	if err != nil {
 		return err
 	}

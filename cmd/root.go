@@ -22,6 +22,7 @@ var templatePath string
 var configPath string
 var inventoryPath string
 var defaultsPath string
+var namespace string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
