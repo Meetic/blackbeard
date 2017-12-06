@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"os"
 
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
 	"github.com/Meetic/blackbeard/pkg/files"
@@ -26,10 +25,9 @@ Feel free to edit this file before applying changes.
 `,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		err := runCreate(namespace, inventoryPath)
+		err := runCreate(namespace)
 		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(-1)
+			log.Fatal(err.Error())
 		}
 	},
 }
@@ -39,7 +37,7 @@ func init() {
 	createCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace where to apply configuration")
 }
 
-func runCreate(namespace, inventoryPath string) error {
+func runCreate(namespace string) error {
 
 	if namespace == "" {
 		return errors.New("you must specified a namespace for the testing env using the --namespace flag")
