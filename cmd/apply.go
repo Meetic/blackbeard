@@ -11,8 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var namespace string
-
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
 	Use:   "apply",
@@ -34,26 +32,25 @@ This command will update the Kubernetes files and apply this configuration to th
 
 func init() {
 	RootCmd.AddCommand(applyCmd)
-	applyCmd.Flags().StringVarP(&namespace, "username", "u", "", "The username for the environment")
-	applyCmd.Flags().StringVarP(&usr, "namespace", "n", "", "Same as username")
+	applyCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace where to apply configuration")
 
 }
 
 func runApply(namespace string) error {
 
 	if namespace == "" {
-		return errors.New("You must specified a username")
+		return errors.New("you must specified a namespace for the testing env using the --namespace flag")
 	}
 
-	files := files.NewClient(templatePath, configPath, inventoryPath, defaultsPath)
+	f := files.NewClient(templatePath, configPath, inventoryPath, defaultsPath)
 
-	inv, err := files.InventoryService().Get(namespace)
+	inv, err := f.InventoryService().Get(namespace)
 
 	if err != nil {
 		return err
 	}
 
-	err = files.ConfigService().Apply(inv)
+	err = f.ConfigService().Apply(inv)
 	if err != nil {
 		return err
 	}
