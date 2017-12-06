@@ -43,8 +43,7 @@ This action can be done using the "apply" command.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
+		log.Fatal(err)
 	}
 }
 
@@ -80,8 +79,6 @@ func initConfig() {
 
 	var wd string
 
-	fmt.Println(dir)
-
 	if dir != "" {
 		wd = dir
 	} else {
@@ -101,20 +98,25 @@ func initConfig() {
 }
 
 func checkWorkingDir() {
+
 	if ok, _ := fileExists(templatePath); ok != true {
-		panic(fmt.Sprintf("Your working directory must contains a `%s` dir.", templateDir))
-	}
-
-	if ok, _ := fileExists(configPath); ok != true {
-		panic(fmt.Sprintf("Your working directory must contains a `%s` dir.", configDir))
-	}
-
-	if ok, _ := fileExists(inventoryPath); ok != true {
-		panic(fmt.Sprintf("Your working directory must contains a `%s` dir.", inventoryDir))
+		log.Fatalf("A playbook must contains a `%s` dir. No one has been found.\nPlease check the playbook or change the working directory using the --dir option.", templateDir)
 	}
 
 	if ok, _ := fileExists(defaultsPath); ok != true {
-		panic(fmt.Sprintf("Your working directory must contains a `%s` file.", defaultFile))
+		log.Fatalf("Your working directory must contains a `%s` file.\nPlease check the playbook or change the working directory using the --dir option.", defaultFile)
+	}
+
+	if ok, _ := fileExists(configPath); ok != true {
+		if err := os.Mkdir(configPath, 0755); err != nil {
+			log.Fatalf("Impossible to create the %s directory. Please check directory rights.", configDir)
+		}
+	}
+
+	if ok, _ := fileExists(inventoryPath); ok != true {
+		if err := os.Mkdir(inventoryPath, 0755); err != nil {
+			log.Fatalf("Impossible to create the %s directory. Please check directory rights.", inventoryDir)
+		}
 	}
 }
 
