@@ -17,10 +17,10 @@ import (
 // createCmd represents the create command
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create a testing environnement for a given user.",
-	Long: `Create a testing environnement for a given user.
-This command will generate an inventory file calle {{username}}_inventory.json
-This file contains all the necessary parameters used to build a comple Kubernetes configuration.
+	Short: "Create a namespace and generated a dedicated inventory.",
+	Long: `This command will generate an inventory file called {{namespace}}_inventory.json
+
+This file contains all the parameters needed to build a complete Kubernetes configuration.
 Feel free to edit this file before applying changes.
 `,
 

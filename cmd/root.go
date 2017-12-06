@@ -27,14 +27,17 @@ var namespace string
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "blackbeard",
-	Short: "blackbeard is a tool that let you create a manage any testing environment using Kubernetes.",
-	Long: `blackbeard is a tool that let you create a manage any testing environment using Kubernetes.
+	Short: "Blackbeard is a tool that let you create and manage multiple version of the same stack using Kubernetes and namespace",
+	Long: `Blackbeard let you apply a bunch of configuration files template into different namespaces using some provided values.
 
-Kugen let you first create en Kubernetes namespace using the "create" command.
-This command wil generate a inventory file containning the default config for the testing env you are creating.
-Feel free to update this inventory file.
+Blackbeard is made to be executed using a directory containing configuration files and directories called a Playbook.
 
-Then blackbeard configure your testing env using a auto-generated Kubernetes config using the specified inventory file.
+Using blackbeard and a Playbook, you can easily create a namespace by using the "create" command.
+This command will generate an inventory file containing the default configuration for the namespace you are creating.
+
+Feel free to update this inventory file manually.
+
+Then Blackbeard configure your namespace using a auto-generated Kubernetes config using the specified inventory file.
 This action can be done using the "apply" command.
 	`,
 }
