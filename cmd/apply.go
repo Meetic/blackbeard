@@ -3,7 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"os"
+	"log"
 
 	"github.com/Meetic/blackbeard/pkg/files"
 	"github.com/Meetic/blackbeard/pkg/kubecli"
@@ -14,17 +14,16 @@ import (
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
 	Use:   "apply",
-	Short: "Apply a given inventory to the testing env targeted by the inventory.",
-	Long: `Apply a given inventory to the testing env targeted by the inventory.
-This command will update the Kubernetes files and apply this configuration to the testing env.
+	Short: "Apply a given inventory to the associated namespace",
+	Long: `This command will update the configuration files for the given namespace using the inventory file
+and apply the changes to the Kubernetes namespace.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		err := runApply(namespace)
 
 		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(-1)
+			log.Fatal(err)
 		}
 
 	},
