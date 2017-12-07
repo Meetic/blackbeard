@@ -1,4 +1,4 @@
-package kubecli
+package kubectl
 
 import (
 	"errors"

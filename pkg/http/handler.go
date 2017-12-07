@@ -44,7 +44,7 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 
 	//Create namespace
-	if errc := h.kube.NamespaceService().Create(inv); errc != nil {
+	if errc := h.kubectl.NamespaceService().Create(inv); errc != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": errc.Error()})
 		return
 	}
@@ -148,7 +148,7 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	if err := h.kube.NamespaceService().Apply(uQ); err != nil {
+	if err := h.kubectl.NamespaceService().Apply(uQ); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}

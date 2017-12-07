@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -23,6 +24,7 @@ var configPath string
 var inventoryPath string
 var defaultsPath string
 var namespace string
+var kubeConfigPath string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -82,6 +84,7 @@ func initConfig() {
 
 	var wd string
 
+	//dir is the value of the flag --dir
 	if dir != "" {
 		wd = dir
 	} else {
@@ -89,13 +92,14 @@ func initConfig() {
 	}
 
 	if ok, _ := fileExists(wd); ok != true {
-		panic(fmt.Sprintf("Your specified working dir does not exit : %s", wd))
+		log.Fatalf("Your specified working dir does not exit : %s", wd)
 	}
 
 	templatePath = fmt.Sprintf("%s/%s/", wd, templateDir)
 	configPath = fmt.Sprintf("%s/%s/", wd, configDir)
 	inventoryPath = fmt.Sprintf("%s/%s/", wd, inventoryDir)
 	defaultsPath = fmt.Sprintf("%s/%s", wd, defaultFile)
+	kubeConfigPath = filepath.Join(homeDir(), ".kube", "config")
 
 	checkWorkingDir()
 }
@@ -133,5 +137,11 @@ func fileExists(path string) (bool, error) {
 	}
 
 	return true, nil
+}
 
+func homeDir() string {
+	if h := os.Getenv("HOME"); h != "" {
+		return h
+	}
+	return os.Getenv("USERPROFILE") // windows
 }

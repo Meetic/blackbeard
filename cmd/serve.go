@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"github.com/Meetic/blackbeard/pkg/files"
-	"github.com/Meetic/blackbeard/pkg/kubecli"
+	"github.com/Meetic/blackbeard/pkg/kubectl"
+	"github.com/Meetic/blackbeard/pkg/kubernetes"
+	"github.com/Meetic/blackbeard/pkg/websocket"
 
 	"github.com/Meetic/blackbeard/pkg/http"
 	"github.com/spf13/cobra"
@@ -28,11 +30,15 @@ func init() {
 
 func runServe(inventoryPath string) {
 
-	files := files.NewClient(templatePath, configPath, inventoryPath, defaultsPath)
+	f := files.NewClient(templatePath, configPath, inventoryPath, defaultsPath)
 
-	cli := kubecli.NewClient(configPath)
+	cli := kubectl.NewClient(configPath)
 
-	h := http.NewHandler(files, cli)
+	kube := kubernetes.NewClient(kubeConfigPath)
+
+	ws := websocket.NewHandler(kube)
+
+	h := http.NewHandler(f, cli, ws)
 	s := http.NewServer(h)
 	s.Serve()
 

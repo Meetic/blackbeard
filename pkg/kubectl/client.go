@@ -1,14 +1,14 @@
-package kubecli
+package kubectl
 
 import "github.com/Meetic/blackbeard/pkg/blackbeard"
 
-//Client represents a file client for configService and inventoryService
+//Client represents a kubectl client for namespaceService
 type Client struct {
 	configPath       string
 	namespaceService NamespaceService
 }
 
-//NewClient return a new file client
+//NewClient returns a new kubectl client
 func NewClient(configPath string) *Client {
 	c := &Client{
 		configPath: configPath,
@@ -19,5 +19,5 @@ func NewClient(configPath string) *Client {
 	return c
 }
 
-//NamespaceService return the kubectl implementation of namespaceService
+//NamespaceService returns the kubectl implementation of namespaceService
 func (c *Client) NamespaceService() blackbeard.NamespaceService { return &c.namespaceService }

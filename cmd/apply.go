@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/Meetic/blackbeard/pkg/files"
-	"github.com/Meetic/blackbeard/pkg/kubecli"
+	"github.com/Meetic/blackbeard/pkg/kubectl"
 
 	"github.com/spf13/cobra"
 )
@@ -54,7 +54,7 @@ func runApply(namespace string) error {
 		return err
 	}
 
-	cli := kubecli.NewClient(configPath)
+	cli := kubectl.NewClient(configPath)
 
 	err = cli.NamespaceService().Apply(inv)
 	if err != nil {

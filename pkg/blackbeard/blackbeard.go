@@ -1,8 +1,13 @@
 package blackbeard
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"net/http"
+)
 
-//Inventory represents the inventory file.
+//Inventory represents a group of variable to use in the templates.
+// Namespace is the namespace dedicated files where to apply the variables contains into Values
+// Values is map of string can contains whatever the user set in the default.json file inside a playbook
 type Inventory struct {
 	Namespace string                 `json:"namespace"`
 	Values    map[string]interface{} `json:"values"`
@@ -12,6 +17,12 @@ type Inventory struct {
 type NamespaceService interface {
 	Create(Inventory) error
 	Apply(Inventory) error
+}
+
+//ResourceService defines the way kubernetes resources such as pods, services, etc. should be managed.
+type ResourceService interface {
+	GetPods(string) (Pods, error)
+	GetNamespaceStatus(string) (string, error)
 }
 
 //InventoryService define the way inventory should be managed.
@@ -35,12 +46,22 @@ type ConfigClient interface {
 	ConfigService() ConfigService
 }
 
-//KubeClient is an interface that represents the way kubernetes is managed.
-type KubeClient interface {
+//KubectlClient is an interface that represents the way kubernetes is managed using kubectl.
+type KubectlClient interface {
 	NamespaceService() NamespaceService
 }
 
-//NewInventory create a new inventory for a given usr.
+//KubernetesClient creates a client that use the kubernetes-go-client.
+type KubernetesClient interface {
+	ResourceService() ResourceService
+}
+
+//WebsocketHandler defines the way Websocket should be handled
+type WebsocketHandler interface {
+	Handle(http.ResponseWriter, *http.Request, string)
+}
+
+//NewInventory create a new inventory for a given namespace.
 func NewInventory(namespace string, defaults []byte) Inventory {
 
 	var inventory Inventory
@@ -52,4 +73,13 @@ func NewInventory(namespace string, defaults []byte) Inventory {
 	inventory.Namespace = namespace
 
 	return inventory
+}
+
+//Pods represent a list of pods.
+type Pods []Pod
+
+//Pod represent a Kubernetes pod.
+type Pod struct {
+	Name   string
+	Status string
 }
