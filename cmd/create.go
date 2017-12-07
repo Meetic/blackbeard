@@ -9,7 +9,7 @@ import (
 
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
 	"github.com/Meetic/blackbeard/pkg/files"
-	"github.com/Meetic/blackbeard/pkg/kubecli"
+	"github.com/Meetic/blackbeard/pkg/kubectl"
 
 	"github.com/spf13/cobra"
 )
@@ -57,7 +57,7 @@ func runCreate(namespace string) error {
 		return err
 	}
 
-	cli := kubecli.NewClient(configPath)
+	cli := kubectl.NewClient(configPath)
 
 	err = cli.NamespaceService().Create(inv)
 

@@ -2,25 +2,27 @@ package http
 
 import (
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
-	"github.com/Meetic/blackbeard/pkg/ws"
 	"github.com/gin-gonic/gin"
 )
 
 //Handler actually handle http requests.
 //It use a router to map uri to HandlerFunc
 type Handler struct {
-	config blackbeard.ConfigClient
-	kube   blackbeard.KubeClient
+	config    blackbeard.ConfigClient
+	kubectl   blackbeard.KubectlClient
+	websocket blackbeard.WebsocketHandler
+
 	engine *gin.Engine
 }
 
 //NewHandler create an Handler using defined routes.
 //It takes a client as argument in order to be passe to the handler and be accessible to the HandlerFunc
 //Typically in a CRUD API, the client manage connections to a storage system.
-func NewHandler(c blackbeard.ConfigClient, k blackbeard.KubeClient) *Handler {
+func NewHandler(c blackbeard.ConfigClient, k blackbeard.KubectlClient, websocket blackbeard.WebsocketHandler) *Handler {
 	h := &Handler{
-		config: c,
-		kube:   k,
+		config:    c,
+		kubectl:   k,
+		websocket: websocket,
 	}
 
 	h.engine = gin.Default()
@@ -31,7 +33,7 @@ func NewHandler(c blackbeard.ConfigClient, k blackbeard.KubeClient) *Handler {
 	h.engine.GET("/defaults", h.GetDefaults)
 	h.engine.PUT("/inventories/:namespace", h.Update)
 	h.engine.GET("/ws/:namespace", func(c *gin.Context) {
-		ws.NewHandler().Handle(c.Writer, c.Request, c.Params.ByName("namespace"))
+		websocket.Handle(c.Writer, c.Request, c.Params.ByName("namespace"))
 	})
 
 	return h
