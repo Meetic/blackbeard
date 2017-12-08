@@ -10,6 +10,10 @@ import (
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
 )
 
+const (
+	timeout = 30 * time.Second
+)
+
 //NamespaceService is used to managed kubernetes namespace
 type NamespaceService struct {
 	configPath string
@@ -21,7 +25,7 @@ var _ blackbeard.NamespaceService = (*NamespaceService)(nil)
 //Create create a namespace
 func (ns *NamespaceService) Create(inv blackbeard.Inventory) error {
 
-	err := execute("kubectl create namespace "+inv.Namespace, 5*time.Second)
+	err := execute("kubectl create namespace "+inv.Namespace, timeout)
 	if err != nil {
 		return fmt.Errorf("The namespace %s could not be created because the either the namespace already exist or the command timed out : %s", inv.Namespace, err.Error())
 	}
