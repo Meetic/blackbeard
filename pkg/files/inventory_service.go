@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -21,7 +20,7 @@ type InventoryService struct {
 var _ blackbeard.InventoryService = (*InventoryService)(nil)
 
 const (
-	inventoryFileSuffix = "_inventory.json"
+	inventoryFileSuffix = "inventory.json"
 )
 
 //Create instantiate a new Inventory and write a json file containing the inventory
@@ -36,15 +35,14 @@ func (is *InventoryService) Create(namespace string) (blackbeard.Inventory, erro
 	defaults, errR := ioutil.ReadFile(is.defaultsPath)
 
 	if errR != nil {
-		log.Fatalf("Error when reading defaults file : %s", errR.Error())
+		return inv, NewErrorReadingDefaultsFile(errR)
 	}
 
 	inv = blackbeard.NewInventory(namespace, defaults)
 
-	//Check if a inventory file already exist for this usr.
+	//Check if an inventory file already exist for this namespace
 	if is.exists(inv.Namespace) {
-		err := fmt.Errorf("An inventory for the namespace %s already exist", namespace)
-		return inv, err
+		return inv, NewErrorInventoryAlreadyExist(namespace)
 	}
 
 	iJSON, _ := json.MarshalIndent(inv, "", "    ")
@@ -67,10 +65,12 @@ func (is *InventoryService) Update(namespace string, inv blackbeard.Inventory) e
 	if namespace != inv.Namespace {
 		//Check if a inventory file already exist for this usr.
 		if is.exists(inv.Namespace) {
-			err := fmt.Errorf("An inventory for the namespace %s already exist", inv.Namespace)
+			return NewErrorInventoryAlreadyExist(inv.Namespace)
+		}
+		err := os.Rename(is.path(namespace), is.path(inv.Namespace))
+		if err != nil {
 			return err
 		}
-		os.Rename(is.path(namespace), is.path(inv.Namespace))
 	}
 
 	iJSON, _ := json.MarshalIndent(inv, "", "    ")
@@ -91,7 +91,7 @@ func (is *InventoryService) Get(namespace string) (blackbeard.Inventory, error) 
 	var inv blackbeard.Inventory
 
 	if !is.exists(namespace) {
-		return inv, fmt.Errorf("The namespace %s does not exist.", namespace)
+		return inv, NewErrorInventoryNotFound(namespace)
 	}
 
 	return is.read(is.path(namespace))
@@ -103,10 +103,11 @@ func (is *InventoryService) GetDefaults() (blackbeard.Inventory, error) {
 }
 
 //List return the list of existing inventories
+//If no inventory file exist, the function returns an empty slice.
 func (is *InventoryService) List() ([]blackbeard.Inventory, error) {
 	var inventories []blackbeard.Inventory
 
-	invFiles, _ := filepath.Glob(is.inventoryPath + "*" + inventoryFileSuffix)
+	invFiles, _ := filepath.Glob(filepath.Join(is.inventoryPath, fmt.Sprintf("*_%s", inventoryFileSuffix)))
 
 	for _, invFile := range invFiles {
 		inv, err := is.read(invFile)
@@ -143,5 +144,5 @@ func (is *InventoryService) exists(namespace string) bool {
 
 //Path return the inventory file path of a given namespace
 func (is *InventoryService) path(namespace string) string {
-	return is.inventoryPath + "/" + namespace + inventoryFileSuffix
+	return filepath.Join(is.inventoryPath, fmt.Sprintf("%s_%s", namespace, inventoryFileSuffix))
 }

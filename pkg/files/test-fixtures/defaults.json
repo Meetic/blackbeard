@@ -1,0 +1,21 @@
+{
+  "namespace": "default",
+  "values": {
+    "microservices": [
+      {
+        "name": "api-advertising",
+        "version": "latest",
+        "urls": [
+          "api-advertising"
+        ]
+      },
+      {
+        "name": "api-algo",
+        "version": "latest",
+        "urls": [
+          "api-algo"
+        ]
+      }
+    ]
+  }
+}
