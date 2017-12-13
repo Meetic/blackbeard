@@ -4,17 +4,14 @@ go:
   - 1.9
   - master
 before_install:
-  - go get -v -u github.com/golang/dep/cmd/dep
-  - go get github.com/mitchellh/gox
-  - go get github.com/mattn/goveralls
+  make dep
 install:
-  - dep ensure
+  make build
 script:
-  - go test -v -covermode=count -coverprofile=coverage.out ./pkg/files/
-  - goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
+  make test-cover
 
 after_success:
-  - gox -osarch="linux/amd64 linux/386 windows/amd64 windows/386 darwin/amd64 darwin/386" -output "bin/blackbeard_{{.OS}}_{{.Arch}}"
+  make cross-build
   
 deploy:
   provider: releases
