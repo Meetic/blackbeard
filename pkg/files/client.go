@@ -1,6 +1,10 @@
 package files
 
-import "github.com/Meetic/blackbeard/pkg/blackbeard"
+import (
+	"fmt"
+
+	"github.com/Meetic/blackbeard/pkg/blackbeard"
+)
 
 //Client represents a file client for configService and inventoryService
 type Client struct {
@@ -34,3 +38,39 @@ func (c *Client) InventoryService() blackbeard.InventoryService { return &c.inve
 
 //ConfigService return the file implementation of configService
 func (c *Client) ConfigService() blackbeard.ConfigService { return &c.configService }
+
+type ErrorReadingDefaultsFile struct {
+	msg string
+}
+
+func (err *ErrorReadingDefaultsFile) Error() string {
+	return err.msg
+}
+
+func NewErrorReadingDefaultsFile(err error) *ErrorReadingDefaultsFile {
+	return &ErrorReadingDefaultsFile{fmt.Sprintf("Error when reading defaults file : %s", err.Error())}
+}
+
+type ErrorInventoryAlreadyExist struct {
+	msg string
+}
+
+func (err *ErrorInventoryAlreadyExist) Error() string {
+	return err.msg
+}
+
+func NewErrorInventoryAlreadyExist(namespace string) *ErrorInventoryAlreadyExist {
+	return &ErrorInventoryAlreadyExist{fmt.Sprintf("An inventory for the namespace %s already exist", namespace)}
+}
+
+type ErrorInventoryNotFound struct {
+	msg string
+}
+
+func (err *ErrorInventoryNotFound) Error() string {
+	return err.msg
+}
+
+func NewErrorInventoryNotFound(namespace string) *ErrorInventoryNotFound {
+	return &ErrorInventoryNotFound{fmt.Sprintf("The inventory for %s does not exist.", namespace)}
+}

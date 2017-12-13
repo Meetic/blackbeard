@@ -48,8 +48,13 @@ func runCreate(namespace string) error {
 	inv, err := f.InventoryService().Create(namespace)
 
 	if err != nil {
-		log.Println(err.Error())
-		log.Println("continue")
+		switch t := err.(type) {
+		default:
+			log.Fatalf(err.Error())
+		case *files.ErrorReadingDefaultsFile:
+			log.Println(t.Error())
+			log.Println("Process continue.")
+		}
 	}
 
 	err = f.ConfigService().Apply(inv)

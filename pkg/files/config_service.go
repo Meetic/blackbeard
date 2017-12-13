@@ -24,10 +24,16 @@ func (cs *ConfigService) Apply(inv blackbeard.Inventory) error {
 	//Get template list
 	templates, _ := filepath.Glob(cs.templatePath + "/*.tpl")
 
+	if templates == nil {
+		return fmt.Errorf("no template files found in directory %s", cs.templatePath)
+	}
+
 	//Create config dir for a given namespace
 	configDir := fmt.Sprintf("%s/%s", cs.configPath, inv.Namespace)
 	if _, err := os.Stat(configDir); os.IsNotExist(err) {
-		os.Mkdir(configDir, os.ModePerm)
+		if e := os.Mkdir(configDir, os.ModePerm); e != nil {
+			return fmt.Errorf("the configs dir '%s' could not be created : %s", configDir, e.Error())
+		}
 	}
 
 	for _, templ := range templates {
