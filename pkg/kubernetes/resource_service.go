@@ -13,7 +13,7 @@ const (
 )
 
 type ResourceService struct {
-	client *kubernetes.Clientset
+	client kubernetes.Interface
 }
 
 //Ensure that ResourceService implements the interface

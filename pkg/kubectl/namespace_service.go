@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
 )
 
 const (
-	timeout = 30 * time.Second
+	timeout = 60 * time.Second
 )
 
 //NamespaceService is used to managed kubernetes namespace
@@ -25,9 +26,9 @@ var _ blackbeard.NamespaceService = (*NamespaceService)(nil)
 //Create create a namespace
 func (ns *NamespaceService) Create(inv blackbeard.Inventory) error {
 
-	err := execute("kubectl create namespace "+inv.Namespace, timeout)
+	err := execute(fmt.Sprintf("kubectl create namespace %s", inv.Namespace), timeout)
 	if err != nil {
-		return fmt.Errorf("The namespace %s could not be created because the either the namespace already exist or the command timed out : %s", inv.Namespace, err.Error())
+		return fmt.Errorf("the namespace %s could not be created because the either the namespace already exist or the command timed out : %v", inv.Namespace, err)
 	}
 
 	return nil
@@ -36,9 +37,9 @@ func (ns *NamespaceService) Create(inv blackbeard.Inventory) error {
 //Apply load configuration files into kubernetes
 func (ns *NamespaceService) Apply(inv blackbeard.Inventory) error {
 
-	err := execute("kubectl apply -f "+ns.configPath+"/"+inv.Namespace+" -n "+inv.Namespace, 10*time.Second)
+	err := execute(fmt.Sprintf("kubectl apply -f %s -n %s", filepath.Join(ns.configPath, inv.Namespace), inv.Namespace), timeout)
 	if err != nil {
-		return fmt.Errorf("The namespace could not be configured : %s", err.Error())
+		return fmt.Errorf("the namespace could not be configured : %v", err)
 	}
 
 	return nil
@@ -61,9 +62,9 @@ func execute(c string, t time.Duration) error {
 			for _ = range timer.C {
 				e := cmd.Process.Kill()
 				if e != nil {
-					err = errors.New("The command has timedout but the process could not be kiled.")
+					err = errors.New("the command has timeout but the process could not be killed")
 				} else {
-					err = errors.New("The command timed out.")
+					err = errors.New("the command timed out")
 				}
 			}
 		}(timer, cmd)
@@ -76,7 +77,7 @@ func execute(c string, t time.Duration) error {
 	}
 
 	if err != nil {
-		return errors.New("The command did not succed")
+		return errors.New("the command did not succeed")
 	}
 
 	return nil
