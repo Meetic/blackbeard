@@ -23,6 +23,7 @@ type NamespaceService interface {
 type ResourceService interface {
 	GetPods(string) (Pods, error)
 	GetNamespaceStatus(string) (string, error)
+	GetExposedServices(string) ([]Service, error)
 }
 
 //InventoryService define the way inventory should be managed.
@@ -82,4 +83,18 @@ type Pods []Pod
 type Pod struct {
 	Name   string
 	Status string
+}
+
+//Port represent a kubernetes service port.
+//This mean an internal port and a exposed port
+type Port struct {
+	Port        int32 `json:"port"`
+	ExposedPort int32 `json:"exposedPort"`
+}
+
+//Service represent a kubernetes service
+type Service struct {
+	Name  string `json:"name"`
+	Ports []Port `json:"ports"`
+	Addr  string `json:"addr"`
 }

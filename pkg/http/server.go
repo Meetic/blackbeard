@@ -8,9 +8,10 @@ import (
 //Handler actually handle http requests.
 //It use a router to map uri to HandlerFunc
 type Handler struct {
-	config    blackbeard.ConfigClient
-	kubectl   blackbeard.KubectlClient
-	websocket blackbeard.WebsocketHandler
+	config     blackbeard.ConfigClient
+	kubectl    blackbeard.KubectlClient
+	kubernetes blackbeard.KubernetesClient
+	websocket  blackbeard.WebsocketHandler
 
 	engine *gin.Engine
 }
@@ -18,17 +19,19 @@ type Handler struct {
 //NewHandler create an Handler using defined routes.
 //It takes a client as argument in order to be passe to the handler and be accessible to the HandlerFunc
 //Typically in a CRUD API, the client manage connections to a storage system.
-func NewHandler(c blackbeard.ConfigClient, k blackbeard.KubectlClient, websocket blackbeard.WebsocketHandler) *Handler {
+func NewHandler(c blackbeard.ConfigClient, kubecli blackbeard.KubectlClient, k blackbeard.KubernetesClient, websocket blackbeard.WebsocketHandler) *Handler {
 	h := &Handler{
-		config:    c,
-		kubectl:   k,
-		websocket: websocket,
+		config:     c,
+		kubectl:    kubecli,
+		websocket:  websocket,
+		kubernetes: k,
 	}
 
 	h.engine = gin.Default()
 
 	h.engine.POST("/inventories", h.Create)
 	h.engine.GET("/inventories/:namespace", h.Get)
+	h.engine.GET("/inventories/:namespace/services", h.ListServices)
 	h.engine.GET("/inventories", h.List)
 	h.engine.GET("/defaults", h.GetDefaults)
 	h.engine.PUT("/inventories/:namespace", h.Update)

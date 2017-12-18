@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -14,6 +15,7 @@ const (
 
 type ResourceService struct {
 	client kubernetes.Interface
+	host   string
 }
 
 //Ensure that ResourceService implements the interface
@@ -62,5 +64,111 @@ func (rs *ResourceService) GetNamespaceStatus(namespace string) (string, error) 
 	}
 
 	return ready, nil
+
+}
+
+//GetExposedServices find services exposed as NodePort and ingress configuration and return
+//an array of services containing an URL, the exposed port and the service name.
+func (rs *ResourceService) GetExposedServices(namespace string) ([]blackbeard.Service, error) {
+
+	var (
+		services []blackbeard.Service
+		err      error
+	)
+
+	services, err = rs.getNodePortServices(namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	ingress, err := rs.getIngress(namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	services = append(services, ingress...)
+
+	return services, nil
+}
+
+func (rs *ResourceService) getNodePortServices(namespace string) ([]blackbeard.Service, error) {
+	svcs, err := rs.client.CoreV1().Services(namespace).List(metav1.ListOptions{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	var services []blackbeard.Service
+
+	for _, svc := range svcs.Items {
+		if isNodePort(svc) {
+
+			var ports []blackbeard.Port
+
+			for _, p := range svc.Spec.Ports {
+				ports = append(ports, blackbeard.Port{
+					Port:        p.Port,
+					ExposedPort: p.NodePort,
+				})
+			}
+
+			services = append(services, blackbeard.Service{
+				Name:  svc.Name,
+				Ports: ports,
+				Addr:  rs.host,
+			})
+		}
+	}
+
+	return services, nil
+
+}
+
+func (rs *ResourceService) getIngress(namespace string) ([]blackbeard.Service, error) {
+	ingressList, err := rs.client.ExtensionsV1beta1().Ingresses(namespace).List(metav1.ListOptions{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	var services []blackbeard.Service
+
+	for _, ing := range ingressList.Items {
+
+		for _, rules := range ing.Spec.Rules {
+			for _, path := range rules.HTTP.Paths {
+				svc := blackbeard.Service{
+					Name: path.Backend.ServiceName,
+					Addr: rules.Host,
+					Ports: []blackbeard.Port{
+						{
+							Port:        path.Backend.ServicePort.IntVal,
+							ExposedPort: 80,
+						},
+					},
+				}
+				services = append(services, svc)
+			}
+		}
+	}
+
+	return services, nil
+
+}
+
+func isNodePort(svc v1.Service) bool {
+	var nP int
+	for _, p := range svc.Spec.Ports {
+
+		if p.NodePort != 0 {
+			nP++
+		}
+	}
+
+	if nP > 0 {
+		return true
+	}
+
+	return false
 
 }
