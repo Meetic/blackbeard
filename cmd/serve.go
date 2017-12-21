@@ -17,28 +17,22 @@ var serveCmd = &cobra.Command{
 	Long: `This command run a web server that expose a REST API.
 This API let the client use all the features provided by Blackbeard such as create a namespace and apply a change in a inventory.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		runServe(inventoryPath)
+		runServe()
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(serveCmd)
-
-	serveCmd.Flags().StringVarP(&inventoryPath, "inventory-dir", "d", "", "The directory where to store the inventory config")
-
 }
 
-func runServe(inventoryPath string) {
+func runServe() {
 
 	f := files.NewClient(templatePath, configPath, inventoryPath, defaultsPath)
-
 	cli := kubectl.NewClient(configPath)
-
 	kube := kubernetes.NewClient(kubeConfigPath)
-
 	ws := websocket.NewHandler(kube)
 
-	h := http.NewHandler(f, cli, ws)
+	h := http.NewHandler(f, cli, kube, ws)
 	s := http.NewServer(h)
 	s.Serve()
 

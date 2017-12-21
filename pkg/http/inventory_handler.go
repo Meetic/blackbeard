@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/Meetic/blackbeard/pkg/files"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,6 +21,8 @@ type createQuery struct {
 // {
 //		"namespace": "test"
 // }
+//This function returns a 400 status if an inventory already exist for the namespace
+//Else, the function returns a 500 status or a 422 depending on the error
 func (h *Handler) Create(c *gin.Context) {
 
 	var createQ createQuery
@@ -33,7 +36,11 @@ func (h *Handler) Create(c *gin.Context) {
 	inv, err := h.config.InventoryService().Create(createQ.Namespace)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if alreadyExist, ok := err.(files.ErrorInventoryAlreadyExist); ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": alreadyExist.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -61,7 +68,11 @@ func (h *Handler) Get(c *gin.Context) {
 	inv, err := h.config.InventoryService().Get(c.Params.ByName("namespace"))
 
 	if err != nil {
-		c.AbortWithError(http.StatusNotFound, err)
+		if notFound, ok := err.(files.ErrorInventoryNotFound); ok {
+			c.JSON(http.StatusNotFound, gin.H{"error": notFound.Error()})
+			return
+		}
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -75,7 +86,7 @@ func (h *Handler) GetDefaults(c *gin.Context) {
 	inv, err := h.config.InventoryService().GetDefaults()
 
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -99,7 +110,7 @@ func (h *Handler) List(c *gin.Context) {
 	invList, err := h.config.InventoryService().List()
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

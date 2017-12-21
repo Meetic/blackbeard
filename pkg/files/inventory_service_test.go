@@ -79,7 +79,7 @@ func TestDefaultNotExist(t *testing.T) {
 	_, err := fClient.InventoryService().Create(namespace)
 
 	if a.Error(err) {
-		a.IsType(&files.ErrorReadingDefaultsFile{}, err)
+		a.IsType(files.ErrorReadingDefaultsFile{}, err)
 	}
 }
 
@@ -99,7 +99,7 @@ func TestInventoryAlreadyExist(t *testing.T) {
 	//Assert namespace is ok
 	a.Equal(namespace, inv.Namespace)
 	a.NotNil(err)
-	a.IsType(&files.ErrorInventoryAlreadyExist{}, err)
+	a.IsType(files.ErrorInventoryAlreadyExist{}, err)
 }
 
 //Test Update func work as expected when trying to update the namespace
@@ -178,7 +178,7 @@ func TestGetInventoryNotExist(t *testing.T) {
 	_, err := fClient.InventoryService().Get("default")
 
 	a.NotNil(err)
-	a.IsType(&files.ErrorInventoryNotFound{}, err)
+	a.IsType(files.ErrorInventoryNotFound{}, err)
 }
 
 //Test GetDefault func

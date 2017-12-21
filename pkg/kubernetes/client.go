@@ -2,6 +2,8 @@ package kubernetes
 
 import (
 	"log"
+	"net/url"
+	"strings"
 
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
 	"k8s.io/client-go/kubernetes"
@@ -34,7 +36,13 @@ func NewClient(configFile string) *Client {
 	}
 
 	c.resourceService.client = clientSet
+	u, err := url.Parse(config.Host)
 
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	c.resourceService.host = strings.Split(u.Host, ":")[0]
 	return c
 }
 

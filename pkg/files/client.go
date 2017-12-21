@@ -43,34 +43,34 @@ type ErrorReadingDefaultsFile struct {
 	msg string
 }
 
-func (err *ErrorReadingDefaultsFile) Error() string {
+func (err ErrorReadingDefaultsFile) Error() string {
 	return err.msg
 }
 
-func NewErrorReadingDefaultsFile(err error) *ErrorReadingDefaultsFile {
-	return &ErrorReadingDefaultsFile{fmt.Sprintf("Error when reading defaults file : %s", err.Error())}
+func NewErrorReadingDefaultsFile(err error) ErrorReadingDefaultsFile {
+	return ErrorReadingDefaultsFile{fmt.Sprintf("Error when reading defaults file : %s", err.Error())}
 }
 
 type ErrorInventoryAlreadyExist struct {
 	msg string
 }
 
-func (err *ErrorInventoryAlreadyExist) Error() string {
+func (err ErrorInventoryAlreadyExist) Error() string {
 	return err.msg
 }
 
-func NewErrorInventoryAlreadyExist(namespace string) *ErrorInventoryAlreadyExist {
-	return &ErrorInventoryAlreadyExist{fmt.Sprintf("An inventory for the namespace %s already exist", namespace)}
+func NewErrorInventoryAlreadyExist(namespace string) ErrorInventoryAlreadyExist {
+	return ErrorInventoryAlreadyExist{fmt.Sprintf("An inventory for the namespace %s already exist", namespace)}
 }
 
 type ErrorInventoryNotFound struct {
 	msg string
 }
 
-func (err *ErrorInventoryNotFound) Error() string {
+func (err ErrorInventoryNotFound) Error() string {
 	return err.msg
 }
 
-func NewErrorInventoryNotFound(namespace string) *ErrorInventoryNotFound {
-	return &ErrorInventoryNotFound{fmt.Sprintf("The inventory for %s does not exist.", namespace)}
+func NewErrorInventoryNotFound(namespace string) ErrorInventoryNotFound {
+	return ErrorInventoryNotFound{fmt.Sprintf("The inventory for %s does not exist.", namespace)}
 }
