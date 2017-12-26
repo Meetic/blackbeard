@@ -1,8 +1,11 @@
 package http
 
 import (
+	_ "github.com/Meetic/blackbeard/docs"
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
 	"github.com/gin-gonic/gin"
+	"github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
 //Handler actually handle http requests.
@@ -38,6 +41,9 @@ func NewHandler(c blackbeard.ConfigClient, kubecli blackbeard.KubectlClient, k b
 	h.engine.GET("/ws/:namespace", func(c *gin.Context) {
 		websocket.Handle(c.Writer, c.Request, c.Params.ByName("namespace"))
 	})
+
+	//swagger
+	h.engine.GET("/doc/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return h
 }

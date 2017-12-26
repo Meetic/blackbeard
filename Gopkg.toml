@@ -23,12 +23,40 @@
 
 [[constraint]]
   name = "github.com/gin-gonic/gin"
-  version = "1.2"
+  version = "1.2.0"
 
 [[constraint]]
-  branch = "master"
+  name = "github.com/gorilla/websocket"
+  version = "1.2.0"
+
+[[constraint]]
   name = "github.com/spf13/cobra"
+  version = "0.0.1"
 
 [[constraint]]
   name = "github.com/spf13/viper"
   version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  version = "1.1.4"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/swaggo/gin-swagger"
+
+[[constraint]]
+  name = "github.com/swaggo/swag"
+  version = "1.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "k8s.io/api"
+
+[[constraint]]
+  branch = "master"
+  name = "k8s.io/apimachinery"
+
+[[constraint]]
+  name = "k8s.io/client-go"
+  version = "6.0.0"

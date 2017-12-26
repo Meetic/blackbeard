@@ -11,18 +11,21 @@ import (
 
 //createQuery represents the POST payload send to the create handler
 type createQuery struct {
-	Namespace string `json:"namespace" binding:"required"`
+	Namespace string `json:"namespace,required" binding:"required"`
 }
 
-//Create handle the testing env creation.
-//It is called on route POST /inventories/ and returns either the created inventory
-//or an error if the namespace could not be created.
-//The payload sent must be like :
-// {
-//		"namespace": "test"
-// }
-//This function returns a 400 status if an inventory already exist for the namespace
-//Else, the function returns a 500 status or a 422 depending on the error
+// @Summary Create an inventory
+// @Description Create an inventory for the given namespace. This will also create the inventory file and the associated namespace.
+// @ID create-inventory
+// @Accept  json
+// @Produce  json
+// @Param   namespace     body    http.createQuery     true        "Namespace"
+// @Success 200 {object} blackbeard.Inventory	"The inventory"
+// @Failure 400 {string} string   "The inventory already exists"
+// @Failure 422 {string} string   "The inventory could not be created due to communication with kubernetes"
+// @Failure 500 {string} string   "Something went wrong checking for existing inventories"
+// @Router /inventories [post]
+//Create handle the inventory and associated namespace creation
 func (h *Handler) Create(c *gin.Context) {
 
 	var createQ createQuery
@@ -59,10 +62,17 @@ func (h *Handler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, inv)
 }
 
+// @Summary Return an inventory
+// @Description Read inventory file for a given namespace and return it as a json object.
+// @ID get-inventory
+// @Accept  json
+// @Produce  json
+// @Param   namespace     path    string     true        "Namespace"
+// @Success 200 {object} blackbeard.Inventory	"The inventory"
+// @Failure 404 {string} string   "Can not find the namespace/inventory"
+// @Failure 500 {string} string   "Something went wrong when reading the inventory"
+// @Router /inventories/{namespace} [get]
 //Get return an inventory for a given namespace passed has query parameters.
-// $ curl -xGET inventories/:namespace/
-//This function returns a 404 status if the corresponding inventory could not be found.
-//Else, it returns a complete inventory read from the InventoryService.
 func (h *Handler) Get(c *gin.Context) {
 
 	inv, err := h.config.InventoryService().Get(c.Params.ByName("namespace"))
@@ -72,15 +82,22 @@ func (h *Handler) Get(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": notFound.Error()})
 			return
 		}
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, inv)
 }
 
+// @Summary Get default value for an inventory
+// @Description Return the content of the defaults.json file in the used playbook.
+// @ID get-defaults
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} blackbeard.Inventory	"The default inventory"
+// @Failure 404 {string} string   "Defaults file not found"
+// @Router /defaults [get]
 //GetDefaults return default for an inventory
-// $ curl -xGET defaults/
 func (h *Handler) GetDefaults(c *gin.Context) {
 
 	inv, err := h.config.InventoryService().GetDefaults()
@@ -93,18 +110,15 @@ func (h *Handler) GetDefaults(c *gin.Context) {
 	c.JSON(http.StatusOK, inv)
 }
 
+// @Summary Return the list of existing inventories
+// @Description Read all inventory files and return them as an array
+// @ID list-inventories
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} blackbeard.Inventories "List of inventories"
+// @Failure 500 {string} string   "Impossible to read the inventory list"
+// @Router /inventories/ [get]
 //List returns the list of existing inventories.
-// Example :
-// [
-//	{
-//		...
-// 	},
-//	{
-// 		...
-// 	},
-//]
-//
-//
 func (h *Handler) List(c *gin.Context) {
 
 	invList, err := h.config.InventoryService().List()

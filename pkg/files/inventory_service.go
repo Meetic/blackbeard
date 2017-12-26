@@ -104,8 +104,8 @@ func (is *InventoryService) GetDefaults() (blackbeard.Inventory, error) {
 
 //List return the list of existing inventories
 //If no inventory file exist, the function returns an empty slice.
-func (is *InventoryService) List() ([]blackbeard.Inventory, error) {
-	var inventories []blackbeard.Inventory
+func (is *InventoryService) List() (blackbeard.Inventories, error) {
+	var inventories blackbeard.Inventories
 
 	invFiles, _ := filepath.Glob(filepath.Join(is.inventoryPath, fmt.Sprintf("*_%s", inventoryFileSuffix)))
 

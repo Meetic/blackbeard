@@ -13,6 +13,8 @@ type Inventory struct {
 	Values    map[string]interface{} `json:"values"`
 }
 
+type Inventories []Inventory
+
 //NamespaceService define the way kubernetes namespace should be managed.
 type NamespaceService interface {
 	Create(Inventory) error
@@ -32,7 +34,7 @@ type InventoryService interface {
 	Update(namespace string, inv Inventory) error
 	Get(namespace string) (Inventory, error)
 	GetDefaults() (Inventory, error)
-	List() ([]Inventory, error)
+	List() (Inventories, error)
 }
 
 //ConfigService define the way configuration should be managed
