@@ -28,7 +28,7 @@ func (ns *NamespaceService) Create(inv blackbeard.Inventory) error {
 
 	err := execute(fmt.Sprintf("kubectl create namespace %s", inv.Namespace), timeout)
 	if err != nil {
-		return fmt.Errorf("the namespace %s could not be created because the either the namespace already exist or the command timed out : %v", inv.Namespace, err)
+		return fmt.Errorf("the namespace %s could not be created because either the namespace already exist or the command timed out : %v", inv.Namespace, err)
 	}
 
 	return nil
