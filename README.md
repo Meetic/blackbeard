@@ -31,7 +31,7 @@ You can find examples bellow.
 
 ```sh
 cd {your playbook}
-kubgen create -n {namespace name}
+blackbeard create -n {namespace name}
 ```
 
 #### Apply a change :
@@ -40,7 +40,7 @@ kubgen create -n {namespace name}
 cd {your playbook}/inventories
 ## edit the inventory file you want to update
 cd ..
-kubgen apply -n {namespace name}
+blackbeard apply -n {namespace name}
 ```
 
 #### Getting Help
@@ -57,47 +57,7 @@ blackbeard also provide a webserver able to handle REST queries and a websocket 
 
 The REST api can be used to do the same thing that you can do using blackbeard as cli tool.
 
-Here are example  : 
-
-#### Create a new namespace
-
-`POST /inventories/`
-
-```json
-{
-    "namespace": "foo"
-}
-```
-
-#### Get defaults
-
-`GET /defaults/`
-
-#### Get a namespace
-
-`GET /inventories/foo`
-
-#### Get the list of avaible namespace
-
-`GET /inventories`
-
-#### Update a namespace
-
-`PUT /inventories/foo`
-
-```json
-{
-    "namespace" : "bar",
-    "values": {
-        "microservice" : {
-            "name": "baz",
-            "version" : "1.2.3"
-        }
-    }
-}
-```
-
-*Note : the payload here must match the required defaults.json (see creating Paybook bellow)*
+API specifications can be found in the `swagger.json` file.
 
 ## Playbooks
 
