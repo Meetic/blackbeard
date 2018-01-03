@@ -1,0 +1,291 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Blackbeard API",
+    "description": "This is a REST API to manage Blackbeard. See https://github.com/Meetic/blackbeard",
+    "contact": {
+      "name": "Sébastien Le gall",
+      "url": "http://le-gall.bzh",
+      "email": "seb@le-gall.net"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/inventories/{namespace}": {
+      "get": {
+        "description": "Read inventory file for a given namespace and return it as a json object.",
+        "operationId": "get-inventory",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "namespace",
+            "in": "path",
+            "description": "Namespace name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The inventory",
+            "schema": {
+              "$ref": "#/definitions/blackbeard.Inventory"
+            }
+          },
+          "404": {
+            "description": "Can not find the namespace/inventory",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "500": {
+            "description": "Something went wrong when reading the inventory",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Update the inventory for the given namespace. If the namespace field is different from the namespace passed as query param, it will also rename the namespace.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Update the inventory",
+        "operationId": "update-inventory",
+        "parameters": [
+          {
+            "name": "namespace",
+            "in": "path",
+            "description": "Namespace name",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Inventory",
+            "name": "Inventory",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/blackbeard.Inventory"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The inventory"
+          },
+          "400": {
+            "description": "The inventory is malformed",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "422": {
+            "description": "The inventory could not be created.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/inventories": {
+      "post": {
+        "description": "Create an inventory for the given namespace. This will also create the inventory file and the associated namespace.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Create an inventory",
+        "operationId": "create-inventory",
+        "parameters": [
+          {
+            "description": "Namespace",
+            "name": "namespace",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/http.createQuery"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The inventory",
+            "schema": {
+              "$ref": "#/definitions/blackbeard.Inventory"
+            }
+          },
+          "400": {
+            "description": "The inventory already exists",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "422": {
+            "description": "The inventory could not be created due to communication with kubernetes",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "500": {
+            "description": "Something went wrong checking for existing inventories",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Read all inventory files and return them as an array",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Return the list of existing inventories",
+        "operationId": "list-inventories",
+        "responses": {
+          "200": {
+            "description": "List of inventories",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/blackbeard.Inventory"
+              }
+            }
+          },
+          "500": {
+            "description": "Impossible to read the inventory list",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/defaults": {
+      "get": {
+        "description": "Return the content of the defaults.json file in the used playbook.",
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get default value for an inventory",
+        "operationId": "get-defaults",
+        "responses": {
+          "200": {
+            "description": "The default inventory",
+            "schema": {
+              "$ref": "#/definitions/blackbeard.Inventory"
+            }
+          },
+          "404": {
+            "description": "Defaults file not found",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/inventories/{namespace}/services": {
+      "get": {
+        "description": "Returns the list of exposed services (NodePort and ingress configuration) of a given inventory",
+        "operationId": "get-services",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "namespace",
+            "in": "path",
+            "description": "Namespace name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The inventory",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/blackbeard.Service"
+              }
+            }
+          },
+          "404": {
+            "description": "Can not find the namespace/inventory",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "500": {
+            "description": "Something went wrong when reading the namespace services",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "blackbeard.Inventory": {
+      "type": "object",
+      "properties": {
+        "Namespace": {
+          "type": "string"
+        },
+        "Values": {
+          "type": "object"
+        }
+      }
+    },
+    "blackbeard.Service": {
+      "type": "object",
+      "properties": {
+        "Namespace": {
+          "type": "string"
+        },
+        "Values": {
+          "type": "object"
+        }
+      }
+    },
+    "http.createQuery": {
+      "type": "object",
+      "properties": {
+        "Namespace": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

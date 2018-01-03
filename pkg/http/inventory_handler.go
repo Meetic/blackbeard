@@ -14,15 +14,7 @@ type createQuery struct {
 	Namespace string `json:"namespace" binding:"required"`
 }
 
-//Create handle the testing env creation.
-//It is called on route POST /inventories/ and returns either the created inventory
-//or an error if the namespace could not be created.
-//The payload sent must be like :
-// {
-//		"namespace": "test"
-// }
-//This function returns a 400 status if an inventory already exist for the namespace
-//Else, the function returns a 500 status or a 422 depending on the error
+//Create handle the namespace creation.
 func (h *Handler) Create(c *gin.Context) {
 
 	var createQ createQuery
@@ -60,9 +52,6 @@ func (h *Handler) Create(c *gin.Context) {
 }
 
 //Get return an inventory for a given namespace passed has query parameters.
-// $ curl -xGET inventories/:namespace/
-//This function returns a 404 status if the corresponding inventory could not be found.
-//Else, it returns a complete inventory read from the InventoryService.
 func (h *Handler) Get(c *gin.Context) {
 
 	inv, err := h.config.InventoryService().Get(c.Params.ByName("namespace"))
@@ -72,7 +61,7 @@ func (h *Handler) Get(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": notFound.Error()})
 			return
 		}
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -94,17 +83,6 @@ func (h *Handler) GetDefaults(c *gin.Context) {
 }
 
 //List returns the list of existing inventories.
-// Example :
-// [
-//	{
-//		...
-// 	},
-//	{
-// 		...
-// 	},
-//]
-//
-//
 func (h *Handler) List(c *gin.Context) {
 
 	invList, err := h.config.InventoryService().List()
@@ -118,28 +96,6 @@ func (h *Handler) List(c *gin.Context) {
 }
 
 //Update will update inventory for a given namespace
-//Route: /inventories/{namespace}
-//Example  :
-// {
-// 	"inventory":{
-// 				    "namespace": "seblegall",
-// 				    "containers": {
-// 				        "Microservices": null,
-// 				        "PublicAPI": [
-// 				            {
-// 				                "name": "api-exposure-layer",
-// 				                "version": "test",
-// 				                "urls": [
-// 				                    "authent.ilius.net",
-// 				                    "apixl.ilius.net"
-// 				                ]
-// 				            }
-// 				        ]
-// 				    }
-// 				}
-// }
-// If the namespace value of the inventory is different from the namespace passed as uri parameters
-// The function will rename the corresponding inventory file to match the new namespace
 func (h *Handler) Update(c *gin.Context) {
 
 	var uQ blackbeard.Inventory
