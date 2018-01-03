@@ -15,8 +15,9 @@ const (
 )
 
 type Client struct {
-	configFile      string
-	resourceService ResourceService
+	configFile       string
+	resourceService  ResourceService
+	namespaceService NamespaceService
 }
 
 //Ensure that ResourceService implements the interface
@@ -34,17 +35,21 @@ func NewClient(configFile string) *Client {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	//ResourceService
 	c.resourceService.client = clientSet
 	u, err := url.Parse(config.Host)
-
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	c.resourceService.host = strings.Split(u.Host, ":")[0]
+
+	//NamespaceService
+	c.namespaceService.client = clientSet
 	return c
 }
 
 //ResourceService returns the kubernetes resource service
 func (c *Client) ResourceService() blackbeard.ResourceService { return &c.resourceService }
+
+//NamespaceService returns the kubernetes namespace service
+func (c *Client) NamespaceService() blackbeard.NamespaceService { return &c.namespaceService }

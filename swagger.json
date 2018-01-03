@@ -95,7 +95,7 @@
         ],
         "responses": {
           "204": {
-            "description": "The inventory"
+            "description": "Sucess"
           },
           "400": {
             "description": "The inventory is malformed",
@@ -105,6 +105,33 @@
           },
           "422": {
             "description": "The inventory could not be created.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete inventory file, configs and namespace for the given namespace",
+        "operationId": "delete-inventory",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "namespace",
+            "in": "path",
+            "description": "Namespace name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deletion successfully executed"
+          },
+          "500": {
+            "description": "Something went wrong when deleting the inventory, the config files or the namespace",
             "schema": {
               "type": "string"
             }

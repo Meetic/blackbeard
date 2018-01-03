@@ -95,3 +95,49 @@ func TestApplConfigDirNotExists(t *testing.T) {
 	err := fCLient.ConfigService().Apply(inv)
 	a.Equal(fmt.Sprintf("the configs dir '%s/%s' could not be created : mkdir %s/%s: no such file or directory", configsDir, "test", configsDir, "test"), err.Error())
 }
+
+//Test Delete work as expected
+func TestDeleteOk(t *testing.T) {
+	a := assert.New(t)
+
+	defer cleanTestDir(t)
+
+	//Create inventory
+	def, _ := ioutil.ReadFile(filepath.Join(fixturesDir, defaultsFile))
+	inv := blackbeard.NewInventory("test", def)
+	inv.Namespace = "test"
+
+	//Configure file client
+	fClient := newDefaultClient()
+
+	//Create folders
+	createDefaultTestDir(t)
+	createTemplateFiles(t, tplFile)
+
+	//Create test configuration files
+	fClient.ConfigService().Apply(inv)
+
+	//Test Delete returns no error
+	a.Nil(fClient.ConfigService().Delete(inv.Namespace))
+
+	//Test directory "test" no more exit
+	_, errD := os.Stat(filepath.Join(configsDir, "test"))
+	a.True(os.IsNotExist(errD))
+}
+
+//Test Delete return nil when file does not exist
+func TestDeleteWhenFileNotExists(t *testing.T) {
+	a := assert.New(t)
+
+	defer cleanTestDir(t)
+
+	//Configure file client
+	fClient := newDefaultClient()
+
+	//Test Delete returns no error
+	a.Nil(fClient.ConfigService().Delete("test"))
+
+	//Test directory "test" does not exist
+	_, errD := os.Stat(filepath.Join(configsDir, "test"))
+	a.True(os.IsNotExist(errD))
+}

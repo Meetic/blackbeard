@@ -38,29 +38,20 @@ func init() {
 func runApply(namespace string) error {
 
 	if namespace == "" {
-		return errors.New("you must specified a namespace for the testing env using the --namespace flag")
+		return errors.New("you must specified a namespace using the --namespace flag")
 	}
-
 	f := files.NewClient(templatePath, configPath, inventoryPath, defaultsPath)
-
 	inv, err := f.InventoryService().Get(namespace)
-
 	if err != nil {
 		return err
 	}
-
-	err = f.ConfigService().Apply(inv)
-	if err != nil {
+	if err = f.ConfigService().Apply(inv); err != nil {
 		return err
 	}
-
 	cli := kubectl.NewClient(configPath)
-
-	err = cli.NamespaceService().Apply(inv)
-	if err != nil {
+	if err = cli.NamespaceConfigurationService().Apply(inv); err != nil {
 		return err
 	}
-
 	fmt.Println("Playbook has been deployed!")
 
 	return nil

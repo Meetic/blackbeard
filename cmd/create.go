@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"path/filepath"
 
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
 	"github.com/Meetic/blackbeard/pkg/files"
-	"github.com/Meetic/blackbeard/pkg/kubectl"
 
+	"github.com/Meetic/blackbeard/pkg/kubernetes"
 	"github.com/spf13/cobra"
 )
 
@@ -40,7 +41,7 @@ func init() {
 func runCreate(namespace string) error {
 
 	if namespace == "" {
-		return errors.New("you must specified a namespace for the testing env using the --namespace flag")
+		return errors.New("you must specified a namespace using the --namespace flag")
 	}
 
 	f := files.NewClient(templatePath, configPath, inventoryPath, defaultsPath)
@@ -50,7 +51,7 @@ func runCreate(namespace string) error {
 	if err != nil {
 		switch t := err.(type) {
 		default:
-			log.Fatalf(err.Error())
+			log.Fatalf(t.Error())
 		case *files.ErrorReadingDefaultsFile:
 			log.Println(t.Error())
 			log.Println("Process continue.")
@@ -62,15 +63,12 @@ func runCreate(namespace string) error {
 		return err
 	}
 
-	cli := kubectl.NewClient(configPath)
+	kube := kubernetes.NewClient(kubeConfigPath)
 
-	err = cli.NamespaceService().Create(inv)
-
-	if err != nil {
+	if err = kube.NamespaceService().Create(namespace); err != nil {
 		return err
 	}
-
-	tpl := template.Must(template.New("config").Parse(`Recette env for user {{.Inv.Namespace}} has been created !
+	tpl := template.Must(template.New("config").Parse(`Namespace for user {{.Inv.Namespace}} has been created !
 
 	A inventory file has been generated : {{.File}}
 	Feel free to edit this file to match your desired testing env configuration.
@@ -81,7 +79,7 @@ func runCreate(namespace string) error {
 		File string
 		Inv  blackbeard.Inventory
 	}{
-		File: inventoryPath + "/" + inv.Namespace + "_inventory.json",
+		File: filepath.Join(inventoryPath, inv.Namespace+"_inventory.json"),
 		Inv:  inv,
 	}); err != nil {
 		return err
