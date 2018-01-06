@@ -6,6 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"bufio"
+	"strings"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -95,10 +98,10 @@ func initConfig() {
 		log.Fatalf("Your specified working dir does not exit : %s", wd)
 	}
 
-	templatePath = fmt.Sprintf("%s/%s/", wd, templateDir)
-	configPath = fmt.Sprintf("%s/%s/", wd, configDir)
-	inventoryPath = fmt.Sprintf("%s/%s/", wd, inventoryDir)
-	defaultsPath = fmt.Sprintf("%s/%s", wd, defaultFile)
+	templatePath = filepath.Join(wd, templateDir)
+	configPath = filepath.Join(wd, configDir)
+	inventoryPath = filepath.Join(wd, inventoryDir)
+	defaultsPath = filepath.Join(wd, defaultFile)
 	kubeConfigPath = filepath.Join(homeDir(), ".kube", "config")
 
 	checkWorkingDir()
@@ -144,4 +147,25 @@ func homeDir() string {
 		return h
 	}
 	return os.Getenv("USERPROFILE") // windows
+}
+
+func askForConfirmation(s string) bool {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Printf("%s [y/n]: ", s)
+
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		response = strings.ToLower(strings.TrimSpace(response))
+
+		if response == "y" || response == "yes" {
+			return true
+		} else if response == "n" || response == "no" {
+			return false
+		}
+	}
 }

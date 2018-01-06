@@ -13,10 +13,15 @@ type Inventory struct {
 	Values    map[string]interface{} `json:"values"`
 }
 
-//NamespaceService define the way kubernetes namespace should be managed.
-type NamespaceService interface {
-	Create(Inventory) error
+//NamespaceConfigurationService apply configuration file to a namespace.
+type NamespaceConfigurationService interface {
 	Apply(Inventory) error
+}
+
+//NamespaceService defined the way namespace should be managed.
+type NamespaceService interface {
+	Create(string) error
+	Delete(string) error
 }
 
 //ResourceService defines the way kubernetes resources such as pods, services, etc. should be managed.
@@ -28,16 +33,18 @@ type ResourceService interface {
 
 //InventoryService define the way inventory should be managed.
 type InventoryService interface {
-	Create(namespace string) (Inventory, error)
-	Update(namespace string, inv Inventory) error
-	Get(namespace string) (Inventory, error)
+	Create(string) (Inventory, error)
+	Update(string, Inventory) error
+	Get(string) (Inventory, error)
 	GetDefaults() (Inventory, error)
 	List() ([]Inventory, error)
+	Delete(string) error
 }
 
 //ConfigService define the way configuration should be managed
 type ConfigService interface {
 	Apply(inv Inventory) error
+	Delete(string) error
 }
 
 //ConfigClient is an interface that must be implemented by any kind of blackbeard client.
@@ -49,12 +56,13 @@ type ConfigClient interface {
 
 //KubectlClient is an interface that represents the way kubernetes is managed using kubectl.
 type KubectlClient interface {
-	NamespaceService() NamespaceService
+	NamespaceConfigurationService() NamespaceConfigurationService
 }
 
 //KubernetesClient creates a client that use the kubernetes-go-client.
 type KubernetesClient interface {
 	ResourceService() ResourceService
+	NamespaceService() NamespaceService
 }
 
 //WebsocketHandler defines the way Websocket should be handled

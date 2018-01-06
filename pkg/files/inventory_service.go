@@ -121,6 +121,15 @@ func (is *InventoryService) List() ([]blackbeard.Inventory, error) {
 
 }
 
+//Delete remove an inventory file.
+//if the specified inventory does not exist, Delete return nil and does nothing.
+func (is *InventoryService) Delete(namespace string) error {
+	if !is.exists(namespace) {
+		return nil
+	}
+	return os.Remove(is.path(namespace))
+}
+
 func (is *InventoryService) read(path string) (blackbeard.Inventory, error) {
 	var inv blackbeard.Inventory
 
@@ -133,10 +142,12 @@ func (is *InventoryService) read(path string) (blackbeard.Inventory, error) {
 	return inv, nil
 }
 
-//exists return true if an inventory for the given user already exist.
+//exists return true if an inventory for the given namespace already exist.
 //Else, it return false.
 func (is *InventoryService) exists(namespace string) bool {
-	if _, err := os.Stat(is.path(namespace)); err == nil {
+	if _, err := os.Stat(is.path(namespace)); os.IsNotExist(err) {
+		return false
+	} else if err == nil {
 		return true
 	}
 	return false

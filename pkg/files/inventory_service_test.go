@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"os"
+
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
 	"github.com/Meetic/blackbeard/pkg/files"
 	"github.com/stretchr/testify/assert"
@@ -246,4 +248,35 @@ func TestGetInventoryListNoFiles(t *testing.T) {
 
 	a.Len(inventories, 0)
 	a.Empty(inventories)
+}
+
+//Test Delete method works as expected
+func TestDeleteInventoryOK(t *testing.T) {
+	a := assert.New(t)
+	defer cleanTestDir(t)
+
+	namespace := "test"
+	createDefaultTestDir(t)
+	fClient := newDefaultClient()
+
+	fClient.InventoryService().Create(namespace)
+
+	a.Nil(fClient.InventoryService().Delete(namespace))
+	//Test directory "test" no more exit
+	_, errD := os.Stat(filepath.Join(inventoryDir, fmt.Sprintf("%s_%s", namespace, "inventory.json")))
+	a.True(os.IsNotExist(errD))
+}
+
+//Test Delete method return nil when inventory does not exist
+func TestDeleteInventoryNotExist(t *testing.T) {
+	a := assert.New(t)
+	defer cleanTestDir(t)
+
+	namespace := "test"
+	createDefaultTestDir(t)
+	fClient := newDefaultClient()
+	a.Nil(fClient.InventoryService().Delete(namespace))
+	//Test directory "test" no more exit
+	_, errD := os.Stat(filepath.Join(inventoryDir, fmt.Sprintf("%s_%s", namespace, "inventory.json")))
+	a.True(os.IsNotExist(errD))
 }

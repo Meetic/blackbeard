@@ -43,7 +43,7 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 
 	//Create namespace
-	if errc := h.kubectl.NamespaceService().Create(inv); errc != nil {
+	if errc := h.kubernetes.NamespaceService().Create(inv.Namespace); errc != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": errc.Error()})
 		return
 	}
@@ -115,10 +115,34 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	if err := h.kubectl.NamespaceService().Apply(uQ); err != nil {
+	if err := h.kubectl.NamespaceConfigurationService().Apply(uQ); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
+	c.JSON(http.StatusNoContent, nil)
+}
+
+//Delete handle the namespace deletion.
+func (h *Handler) Delete(c *gin.Context) {
+	namespace := c.Params.ByName("namespace")
+
+	//Delete inventory
+	if err := h.config.InventoryService().Delete(namespace); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	//Delete config files
+	if err := h.config.ConfigService().Delete(namespace); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	//Delete namespace
+	if err := h.kubernetes.NamespaceService().Delete(namespace); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusNoContent, nil)
 }

@@ -16,15 +16,15 @@ const (
 )
 
 //NamespaceService is used to managed kubernetes namespace
-type NamespaceService struct {
+type NamespaceConfigurationService struct {
 	configPath string
 }
 
 //Ensure that NamespaceService implements the interface
-var _ blackbeard.NamespaceService = (*NamespaceService)(nil)
+var _ blackbeard.NamespaceConfigurationService = (*NamespaceConfigurationService)(nil)
 
 //Create create a namespace
-func (ns *NamespaceService) Create(inv blackbeard.Inventory) error {
+func (ns *NamespaceConfigurationService) Create(inv blackbeard.Inventory) error {
 
 	err := execute(fmt.Sprintf("kubectl create namespace %s", inv.Namespace), timeout)
 	if err != nil {
@@ -35,7 +35,7 @@ func (ns *NamespaceService) Create(inv blackbeard.Inventory) error {
 }
 
 //Apply load configuration files into kubernetes
-func (ns *NamespaceService) Apply(inv blackbeard.Inventory) error {
+func (ns *NamespaceConfigurationService) Apply(inv blackbeard.Inventory) error {
 
 	err := execute(fmt.Sprintf("kubectl apply -f %s -n %s", filepath.Join(ns.configPath, inv.Namespace), inv.Namespace), timeout)
 	if err != nil {
