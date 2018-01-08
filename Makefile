@@ -26,7 +26,7 @@ build: ## Build blackbeard
 	dep ensure && go build
 
 cross-build: ## Build blackbeard for multiple os/arch
-	gox -osarch= -output $(OSARCH) "bin/blackbeard_{{.OS}}_{{.Arch}}"
+	gox -osarch=$(OSARCH) -output "bin/blackbeard_{{.OS}}_{{.Arch}}"
 
 test: ## Launch tests
 	go test -v ./...
