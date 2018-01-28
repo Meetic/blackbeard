@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/gin-gonic/gin/json"
 	"github.com/gorilla/websocket"
 )
 
@@ -25,13 +26,19 @@ const (
 
 //Handler represent a websocket handler
 type Handler struct {
-	upgrader websocket.Upgrader
-	client   blackbeard.KubernetesClient
-	conn     *websocket.Conn
+	upgrader   websocket.Upgrader
+	kubernetes blackbeard.KubernetesClient
+	files      blackbeard.ConfigClient
+	conn       *websocket.Conn
+}
+
+type namespaceStatus struct {
+	Namespace string
+	Status    string
 }
 
 //NewHandler creates a websocket server
-func NewHandler(client blackbeard.KubernetesClient) *Handler {
+func NewHandler(client blackbeard.KubernetesClient, files blackbeard.ConfigClient) *Handler {
 	up := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -40,8 +47,9 @@ func NewHandler(client blackbeard.KubernetesClient) *Handler {
 		},
 	}
 	h := Handler{
-		upgrader: up,
-		client:   client,
+		upgrader:   up,
+		kubernetes: client,
+		files:      files,
 	}
 
 	return &h
@@ -49,7 +57,7 @@ func NewHandler(client blackbeard.KubernetesClient) *Handler {
 }
 
 //Handle upgrade user request to websocket and start a connexion
-func (h *Handler) Handle(w http.ResponseWriter, r *http.Request, namespace string) {
+func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println("Failed to set websocket upgrade: ", err)
@@ -58,7 +66,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request, namespace strin
 
 	h.conn = conn
 
-	go h.writer(namespace)
+	go h.writer()
 	h.reader()
 }
 
@@ -75,7 +83,7 @@ func (h *Handler) reader() {
 	}
 }
 
-func (h *Handler) writer(namespace string) {
+func (h *Handler) writer() {
 	lastError := ""
 	pingTicker := time.NewTicker(pingPeriod)
 	kubeTicker := time.NewTicker(kubernetesPeriod)
@@ -88,7 +96,7 @@ func (h *Handler) writer(namespace string) {
 		select {
 		case <-kubeTicker.C:
 
-			status, err := h.readNamespaceStatus(namespace)
+			status, err := h.readNamespacesStatus()
 
 			if err != nil {
 				if s := err.Error(); s != lastError {
@@ -114,10 +122,23 @@ func (h *Handler) writer(namespace string) {
 	}
 }
 
-func (h *Handler) readNamespaceStatus(namespace string) ([]byte, error) {
+func (h *Handler) readNamespacesStatus() ([]byte, error) {
 
-	status, err := h.client.ResourceService().GetNamespaceStatus(namespace)
+	invs, _ := h.files.InventoryService().List()
 
-	return []byte(status), err
+	var status []namespaceStatus
 
+	for _, i := range invs {
+		s, err := h.kubernetes.ResourceService().GetNamespaceStatus(i.Namespace)
+		if err != nil {
+			return nil, err
+		}
+
+		status = append(status, namespaceStatus{
+			Namespace: i.Namespace,
+			Status:    s,
+		})
+	}
+
+	return json.Marshal(status)
 }

@@ -67,7 +67,7 @@ type KubernetesClient interface {
 
 //WebsocketHandler defines the way Websocket should be handled
 type WebsocketHandler interface {
-	Handle(http.ResponseWriter, *http.Request, string)
+	Handle(http.ResponseWriter, *http.Request)
 }
 
 //NewInventory create a new inventory for a given namespace.

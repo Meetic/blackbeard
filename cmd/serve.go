@@ -30,7 +30,7 @@ func runServe() {
 	f := files.NewClient(templatePath, configPath, inventoryPath, defaultsPath)
 	cli := kubectl.NewClient(configPath)
 	kube := kubernetes.NewClient(kubeConfigPath)
-	ws := websocket.NewHandler(kube)
+	ws := websocket.NewHandler(kube, f)
 
 	h := http.NewHandler(f, cli, kube, ws)
 	s := http.NewServer(h)
