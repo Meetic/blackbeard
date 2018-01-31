@@ -1,12 +1,12 @@
 package websocket
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
-	"github.com/gin-gonic/gin/json"
 	"github.com/gorilla/websocket"
 )
 
@@ -85,6 +85,7 @@ func (h *Handler) reader() {
 
 func (h *Handler) writer() {
 	lastError := ""
+	var lastStatus []namespaceStatus
 	pingTicker := time.NewTicker(pingPeriod)
 	kubeTicker := time.NewTicker(kubernetesPeriod)
 	defer func() {
@@ -92,6 +93,7 @@ func (h *Handler) writer() {
 		kubeTicker.Stop()
 		h.conn.Close()
 	}()
+
 	for {
 		select {
 		case <-kubeTicker.C:
@@ -101,15 +103,22 @@ func (h *Handler) writer() {
 			if err != nil {
 				if s := err.Error(); s != lastError {
 					lastError = s
-					status = []byte(lastError)
+					h.conn.SetWriteDeadline(time.Now().Add(writeWait))
+					if err := h.conn.WriteMessage(websocket.TextMessage, []byte(lastError)); err != nil {
+						return
+					}
 				}
 			} else {
 				lastError = ""
 			}
 
-			if status != nil {
+			returnStatus := diff(status, lastStatus)
+			lastStatus = status
+
+			if returnStatus != nil {
 				h.conn.SetWriteDeadline(time.Now().Add(writeWait))
-				if err := h.conn.WriteMessage(websocket.TextMessage, status); err != nil {
+				jsonStatus, _ := json.Marshal(returnStatus)
+				if err := h.conn.WriteMessage(websocket.TextMessage, jsonStatus); err != nil {
 					return
 				}
 			}
@@ -122,7 +131,7 @@ func (h *Handler) writer() {
 	}
 }
 
-func (h *Handler) readNamespacesStatus() ([]byte, error) {
+func (h *Handler) readNamespacesStatus() ([]namespaceStatus, error) {
 
 	invs, _ := h.files.InventoryService().List()
 
@@ -140,5 +149,35 @@ func (h *Handler) readNamespacesStatus() ([]byte, error) {
 		})
 	}
 
-	return json.Marshal(status)
+	return status, nil
+}
+
+func diff(slice1 []namespaceStatus, slice2 []namespaceStatus) []namespaceStatus {
+	var diff []namespaceStatus
+
+	for i := 0; i < 2; i++ {
+		for _, s1 := range slice1 {
+			found := false
+			statusDiff := true
+			for _, s2 := range slice2 {
+				if s1.Namespace == s2.Namespace {
+					found = true
+					if s1.Status == s2.Status {
+						statusDiff = false
+					}
+					break
+				}
+			}
+
+			if !found || statusDiff {
+				diff = append(diff, s1)
+			}
+		}
+
+		if i == 0 {
+			slice1, slice2 = slice2, slice1
+		}
+	}
+
+	return diff
 }
