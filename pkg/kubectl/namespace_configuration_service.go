@@ -24,17 +24,6 @@ type NamespaceConfigurationService struct {
 //Ensure that NamespaceService implements the interface
 var _ blackbeard.NamespaceConfigurationService = (*NamespaceConfigurationService)(nil)
 
-//Create create a namespace
-//func (ns *NamespaceConfigurationService) Create(inv blackbeard.Inventory) error {
-//
-//	err := execute(fmt.Sprintf("kubectl create namespace %s", inv.Namespace), timeout)
-//	if err != nil {
-//		return fmt.Errorf("the namespace %s could not be created because either the namespace already exist or the command timed out : %v", inv.Namespace, err)
-//	}
-//
-//	return nil
-//}
-
 //Apply load configuration files into kubernetes
 func (ns *NamespaceConfigurationService) Apply(inv blackbeard.Inventory) error {
 
