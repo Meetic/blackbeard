@@ -36,8 +36,8 @@ func NewHandler(c blackbeard.ConfigClient, kubecli blackbeard.KubectlClient, k b
 	h.engine.GET("/defaults", h.GetDefaults)
 	h.engine.PUT("/inventories/:namespace", h.Update)
 	h.engine.DELETE("/inventories/:namespace", h.Delete)
-	h.engine.GET("/ws/:namespace", func(c *gin.Context) {
-		websocket.Handle(c.Writer, c.Request, c.Params.ByName("namespace"))
+	h.engine.GET("/ws", func(c *gin.Context) {
+		websocket.Handle(c.Writer, c.Request)
 	})
 
 	return h

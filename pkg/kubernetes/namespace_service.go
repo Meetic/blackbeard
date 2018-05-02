@@ -21,7 +21,7 @@ func (rs *NamespaceService) Create(namespace string) error {
 	return err
 }
 
-//DeleteNamespace delete a given namespace
+//Delete delete a given namespace
 func (rs *NamespaceService) Delete(namespace string) error {
 	err := rs.client.CoreV1().Namespaces().Delete(namespace, &metav1.DeleteOptions{})
 	switch t := err.(type) {

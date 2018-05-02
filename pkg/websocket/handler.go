@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -25,13 +26,19 @@ const (
 
 //Handler represent a websocket handler
 type Handler struct {
-	upgrader websocket.Upgrader
-	client   blackbeard.KubernetesClient
-	conn     *websocket.Conn
+	upgrader   websocket.Upgrader
+	kubernetes blackbeard.KubernetesClient
+	files      blackbeard.ConfigClient
+	conn       *websocket.Conn
+}
+
+type namespaceStatus struct {
+	Namespace string
+	Status    string
 }
 
 //NewHandler creates a websocket server
-func NewHandler(client blackbeard.KubernetesClient) *Handler {
+func NewHandler(client blackbeard.KubernetesClient, files blackbeard.ConfigClient) *Handler {
 	up := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -40,8 +47,9 @@ func NewHandler(client blackbeard.KubernetesClient) *Handler {
 		},
 	}
 	h := Handler{
-		upgrader: up,
-		client:   client,
+		upgrader:   up,
+		kubernetes: client,
+		files:      files,
 	}
 
 	return &h
@@ -49,7 +57,7 @@ func NewHandler(client blackbeard.KubernetesClient) *Handler {
 }
 
 //Handle upgrade user request to websocket and start a connexion
-func (h *Handler) Handle(w http.ResponseWriter, r *http.Request, namespace string) {
+func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println("Failed to set websocket upgrade: ", err)
@@ -58,7 +66,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request, namespace strin
 
 	h.conn = conn
 
-	go h.writer(namespace)
+	go h.writer()
 	h.reader()
 }
 
@@ -75,8 +83,9 @@ func (h *Handler) reader() {
 	}
 }
 
-func (h *Handler) writer(namespace string) {
+func (h *Handler) writer() {
 	lastError := ""
+	var lastStatus []namespaceStatus
 	pingTicker := time.NewTicker(pingPeriod)
 	kubeTicker := time.NewTicker(kubernetesPeriod)
 	defer func() {
@@ -84,24 +93,32 @@ func (h *Handler) writer(namespace string) {
 		kubeTicker.Stop()
 		h.conn.Close()
 	}()
+
 	for {
 		select {
 		case <-kubeTicker.C:
 
-			status, err := h.readNamespaceStatus(namespace)
+			status, err := h.readNamespacesStatus()
 
 			if err != nil {
 				if s := err.Error(); s != lastError {
 					lastError = s
-					status = []byte(lastError)
+					h.conn.SetWriteDeadline(time.Now().Add(writeWait))
+					if err := h.conn.WriteMessage(websocket.TextMessage, []byte(lastError)); err != nil {
+						return
+					}
 				}
 			} else {
 				lastError = ""
 			}
 
-			if status != nil {
+			returnStatus := diff(status, lastStatus)
+			lastStatus = status
+
+			if returnStatus != nil {
 				h.conn.SetWriteDeadline(time.Now().Add(writeWait))
-				if err := h.conn.WriteMessage(websocket.TextMessage, status); err != nil {
+				jsonStatus, _ := json.Marshal(returnStatus)
+				if err := h.conn.WriteMessage(websocket.TextMessage, jsonStatus); err != nil {
 					return
 				}
 			}
@@ -114,10 +131,53 @@ func (h *Handler) writer(namespace string) {
 	}
 }
 
-func (h *Handler) readNamespaceStatus(namespace string) ([]byte, error) {
+func (h *Handler) readNamespacesStatus() ([]namespaceStatus, error) {
 
-	status, err := h.client.ResourceService().GetNamespaceStatus(namespace)
+	invs, _ := h.files.InventoryService().List()
 
-	return []byte(status), err
+	var status []namespaceStatus
 
+	for _, i := range invs {
+		s, err := h.kubernetes.ResourceService().GetNamespaceStatus(i.Namespace)
+		if err != nil {
+			return nil, err
+		}
+
+		status = append(status, namespaceStatus{
+			Namespace: i.Namespace,
+			Status:    s,
+		})
+	}
+
+	return status, nil
+}
+
+func diff(slice1 []namespaceStatus, slice2 []namespaceStatus) []namespaceStatus {
+	var diff []namespaceStatus
+
+	for i := 0; i < 2; i++ {
+		for _, s1 := range slice1 {
+			found := false
+			statusDiff := true
+			for _, s2 := range slice2 {
+				if s1.Namespace == s2.Namespace {
+					found = true
+					if s1.Status == s2.Status {
+						statusDiff = false
+					}
+					break
+				}
+			}
+
+			if !found || statusDiff {
+				diff = append(diff, s1)
+			}
+		}
+
+		if i == 0 {
+			slice1, slice2 = slice2, slice1
+		}
+	}
+
+	return diff
 }
