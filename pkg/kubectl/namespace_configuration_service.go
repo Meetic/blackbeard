@@ -1,9 +1,10 @@
 package kubectl
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
-	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
@@ -24,15 +25,15 @@ type NamespaceConfigurationService struct {
 var _ blackbeard.NamespaceConfigurationService = (*NamespaceConfigurationService)(nil)
 
 //Create create a namespace
-func (ns *NamespaceConfigurationService) Create(inv blackbeard.Inventory) error {
-
-	err := execute(fmt.Sprintf("kubectl create namespace %s", inv.Namespace), timeout)
-	if err != nil {
-		return fmt.Errorf("the namespace %s could not be created because either the namespace already exist or the command timed out : %v", inv.Namespace, err)
-	}
-
-	return nil
-}
+//func (ns *NamespaceConfigurationService) Create(inv blackbeard.Inventory) error {
+//
+//	err := execute(fmt.Sprintf("kubectl create namespace %s", inv.Namespace), timeout)
+//	if err != nil {
+//		return fmt.Errorf("the namespace %s could not be created because either the namespace already exist or the command timed out : %v", inv.Namespace, err)
+//	}
+//
+//	return nil
+//}
 
 //Apply load configuration files into kubernetes
 func (ns *NamespaceConfigurationService) Apply(inv blackbeard.Inventory) error {
@@ -49,9 +50,22 @@ func execute(c string, t time.Duration) error {
 
 	cmd := exec.Command("/bin/sh", "-c", c)
 
+	cmdReader, err := cmd.StdoutPipe()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error creating StdoutPipe for Cmd")
+		return err
+	}
+
+	scanner := bufio.NewScanner(cmdReader)
+	go func() {
+		for scanner.Scan() {
+			fmt.Println(scanner.Text())
+		}
+	}()
+
 	//Start process. Exit code 127 if process fail to start.
 	if err := cmd.Start(); err != nil {
-		log.Println("error at start")
+		fmt.Fprintln(os.Stderr, "Error stating Cmd")
 		return err
 	}
 	var timer *time.Timer
@@ -70,7 +84,7 @@ func execute(c string, t time.Duration) error {
 		}(timer, cmd)
 	}
 
-	err := cmd.Wait()
+	err = cmd.Wait()
 
 	if t > 0 {
 		timer.Stop()
