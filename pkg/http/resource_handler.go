@@ -31,6 +31,7 @@ func (h *Handler) ListServices(c *gin.Context) {
 	c.JSON(http.StatusOK, services)
 }
 
+//GetStatus returns the namespace status (ready or not) for a given namespace
 func (h *Handler) GetStatus(c *gin.Context) {
 
 	_, err := h.config.InventoryService().Get(c.Params.ByName("namespace"))
@@ -58,6 +59,7 @@ func (h *Handler) GetStatus(c *gin.Context) {
 	})
 }
 
+//GetStatuses returns an array of namespaces and their associated status
 func (h *Handler) GetStatuses(c *gin.Context) {
 
 	invs, _ := h.config.InventoryService().List()

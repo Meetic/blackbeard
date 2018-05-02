@@ -34,7 +34,7 @@ func NewHandler(c blackbeard.ConfigClient, kubecli blackbeard.KubectlClient, k b
 	h.engine.GET("/inventories/:namespace/status", h.GetStatus)
 	h.engine.GET("/inventories/:namespace/services", h.ListServices)
 	h.engine.GET("/inventories", h.List)
-	h.engine.GET("/inventories", h.GetStatuses)
+	//h.engine.GET("/inventories/status", h.GetStatuses)
 	h.engine.GET("/defaults", h.GetDefaults)
 	h.engine.PUT("/inventories/:namespace", h.Update)
 	h.engine.DELETE("/inventories/:namespace", h.Delete)
