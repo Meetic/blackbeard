@@ -2,6 +2,7 @@ package files
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -128,6 +129,27 @@ func (is *InventoryService) Delete(namespace string) error {
 		return nil
 	}
 	return os.Remove(is.path(namespace))
+}
+
+//Reset override the inventory file for the given namespace base on the content of the default inventory.
+func (is *InventoryService) Reset(namespace string) error {
+
+	if !is.exists(namespace) {
+		return errors.New("the given namespace does not have any associated inventory")
+	}
+
+	defaultInv, err := is.read(is.defaultsPath)
+
+	if err != nil {
+		return err
+	}
+
+	defaultInv.Namespace = namespace
+
+	iJSON, _ := json.MarshalIndent(defaultInv, "", "    ")
+
+	return ioutil.WriteFile(is.path(namespace), iJSON, 0644)
+
 }
 
 func (is *InventoryService) read(path string) (blackbeard.Inventory, error) {

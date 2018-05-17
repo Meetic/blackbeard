@@ -39,6 +39,7 @@ type InventoryService interface {
 	GetDefaults() (Inventory, error)
 	List() ([]Inventory, error)
 	Delete(string) error
+	Reset(string) error
 }
 
 //ConfigService define the way configuration should be managed
