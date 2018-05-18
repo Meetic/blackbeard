@@ -49,7 +49,7 @@ func runApply(namespace string) error {
 		return err
 	}
 	cli := kubectl.NewClient(configPath)
-	if err = cli.NamespaceConfigurationService().Apply(inv); err != nil {
+	if err = cli.NamespaceConfigurationService().Apply(inv.Namespace); err != nil {
 		return err
 	}
 	fmt.Println("Playbook has been deployed!")

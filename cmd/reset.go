@@ -56,7 +56,7 @@ func runReset(namespace string) error {
 	}
 
 	//Apply changes to Kubernetes
-	if err = cli.NamespaceConfigurationService().Apply(inv); err != nil {
+	if err = cli.NamespaceConfigurationService().Apply(inv.Namespace); err != nil {
 		return err
 	}
 
