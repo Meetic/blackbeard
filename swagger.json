@@ -180,6 +180,45 @@
         }
       }
     },
+    "/inventories/{namespace}/reset": {
+      "post": {
+        "description": "Reset a namespace to defaults. This will reset the inventory and apply the changes to kubernetes.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Reset a namespace to defaults",
+        "operationId": "reset-inventory",
+        "parameters": [
+          {
+            "name": "namespace",
+            "in": "path",
+            "description": "Namespace name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "The given inventory has no associated namespace",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "422": {
+            "description": "The inventory could not be created due to communication with kubernetes",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/inventories": {
       "post": {
         "description": "Create an inventory for the given namespace. This will also create the inventory file and the associated namespace.",
