@@ -115,12 +115,28 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	if err := h.kubectl.NamespaceConfigurationService().Apply(uQ); err != nil {
+	if err := h.kubectl.NamespaceConfigurationService().Apply(uQ.Namespace); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusNoContent, nil)
+}
+
+//Reset reset a inventory to default and apply changes into kubernetes
+func (h *Handler) Reset(c *gin.Context) {
+
+	n := c.Params.ByName("namespace")
+
+	if err := h.config.InventoryService().Reset(n); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.kubectl.NamespaceConfigurationService().Apply(n); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
 }
 
 //Delete handle the namespace deletion.

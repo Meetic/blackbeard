@@ -280,3 +280,57 @@ func TestDeleteInventoryNotExist(t *testing.T) {
 	_, errD := os.Stat(filepath.Join(inventoryDir, fmt.Sprintf("%s_%s", namespace, "inventory.json")))
 	a.True(os.IsNotExist(errD))
 }
+
+func TestResetInventoryOK(t *testing.T) {
+	a := assert.New(t)
+	defer cleanTestDir(t)
+
+	//Create a new inventory to replace the first one
+	newInv := blackbeard.NewInventory("test", []byte(`
+		{
+		  "namespace": "test",
+		  "values": {
+			"microservices": [
+			  {
+				"name": "api-advertising",
+				"version": "1.0.2",
+				"urls": [
+				  "api-advertising"
+				]
+			  },
+			  {
+				"name": "api-algo",
+				"version": "1.0.3",
+				"urls": [
+				  "api-algo"
+				]
+			  }
+			]
+		  }
+		}
+		`))
+
+	createDefaultTestDir(t)
+	fClient := newDefaultClient()
+
+	//create an inventory
+	_, _ = fClient.InventoryService().Create("test")
+	//update the inventory using the new created inventory
+	_ = fClient.InventoryService().Update("test", newInv)
+
+	a.Nil(fClient.InventoryService().Reset("test"))
+
+}
+
+func TestResetInventoryNamespaceDoesNotExists(t *testing.T) {
+	a := assert.New(t)
+	defer cleanTestDir(t)
+
+	createDefaultTestDir(t)
+	fClient := newDefaultClient()
+
+	err := fClient.InventoryService().Reset("test")
+
+	a.EqualError(err, "the given namespace does not have any associated inventory")
+
+}

@@ -15,7 +15,7 @@ type Inventory struct {
 
 //NamespaceConfigurationService apply configuration file to a namespace.
 type NamespaceConfigurationService interface {
-	Apply(Inventory) error
+	Apply(string) error
 }
 
 //NamespaceService defined the way namespace should be managed.
@@ -39,6 +39,7 @@ type InventoryService interface {
 	GetDefaults() (Inventory, error)
 	List() ([]Inventory, error)
 	Delete(string) error
+	Reset(string) error
 }
 
 //ConfigService define the way configuration should be managed

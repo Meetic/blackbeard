@@ -16,7 +16,7 @@ const (
 	timeout = 60 * time.Second
 )
 
-//NamespaceService is used to managed kubernetes namespace
+//NamespaceConfigurationService is used to managed kubernetes namespace
 type NamespaceConfigurationService struct {
 	configPath string
 }
@@ -25,9 +25,9 @@ type NamespaceConfigurationService struct {
 var _ blackbeard.NamespaceConfigurationService = (*NamespaceConfigurationService)(nil)
 
 //Apply load configuration files into kubernetes
-func (ns *NamespaceConfigurationService) Apply(inv blackbeard.Inventory) error {
+func (ns *NamespaceConfigurationService) Apply(namespace string) error {
 
-	err := execute(fmt.Sprintf("kubectl apply -f %s -n %s", filepath.Join(ns.configPath, inv.Namespace), inv.Namespace), timeout)
+	err := execute(fmt.Sprintf("kubectl apply -f %s -n %s", filepath.Join(ns.configPath, namespace), namespace), timeout)
 	if err != nil {
 		return fmt.Errorf("the namespace could not be configured : %v", err)
 	}
