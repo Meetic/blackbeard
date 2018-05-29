@@ -23,6 +23,7 @@ This API let the client use all the features provided by Blackbeard such as crea
 
 func init() {
 	RootCmd.AddCommand(serveCmd)
+	serveCmd.Flags().BoolVar(&cors, "cors", false, "Enable cors")
 }
 
 func runServe() {
@@ -32,7 +33,7 @@ func runServe() {
 	kube := kubernetes.NewClient(kubeConfigPath)
 	ws := websocket.NewHandler(kube, f)
 
-	h := http.NewHandler(f, cli, kube, ws)
+	h := http.NewHandler(f, cli, kube, ws, cors)
 	s := http.NewServer(h)
 	s.Serve()
 
