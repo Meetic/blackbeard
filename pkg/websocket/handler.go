@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -33,8 +34,9 @@ type Handler struct {
 }
 
 type namespaceStatus struct {
-	Namespace string
-	Status    string
+	Namespace  string
+	Status     int
+	PodsStatus blackbeard.Pods
 }
 
 //NewHandler creates a websocket server
@@ -113,6 +115,8 @@ func (h *Handler) writer() {
 			}
 
 			returnStatus := diff(status, lastStatus)
+
+			log.Printf("resturnStatus | %v", returnStatus)
 			lastStatus = status
 
 			if returnStatus != nil {
@@ -143,23 +147,31 @@ func (h *Handler) readNamespacesStatus() ([]namespaceStatus, error) {
 			return nil, err
 		}
 
+		log.Printf("readNamespaceStatus | Namespace : %s | status: %d", i.Namespace, s)
+
+		pods, err := h.kubernetes.ResourceService().GetPods(i.Namespace)
+		if err != nil {
+			return nil, err
+		}
+
 		status = append(status, namespaceStatus{
-			Namespace: i.Namespace,
-			Status:    s,
+			Namespace:  i.Namespace,
+			Status:     s,
+			PodsStatus: pods,
 		})
 	}
 
 	return status, nil
 }
 
-func diff(slice1 []namespaceStatus, slice2 []namespaceStatus) []namespaceStatus {
+func diff(now []namespaceStatus, before []namespaceStatus) []namespaceStatus {
 	var diff []namespaceStatus
 
 	for i := 0; i < 2; i++ {
-		for _, s1 := range slice1 {
+		for _, s1 := range now {
 			found := false
 			statusDiff := true
-			for _, s2 := range slice2 {
+			for _, s2 := range before {
 				if s1.Namespace == s2.Namespace {
 					found = true
 					if s1.Status == s2.Status {
@@ -175,7 +187,7 @@ func diff(slice1 []namespaceStatus, slice2 []namespaceStatus) []namespaceStatus 
 		}
 
 		if i == 0 {
-			slice1, slice2 = slice2, slice1
+			now, before = before, now
 		}
 	}
 

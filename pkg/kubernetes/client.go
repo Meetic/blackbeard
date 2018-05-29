@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	running = "running"
+	running = "Running"
 )
 
 type Client struct {
