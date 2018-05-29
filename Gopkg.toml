@@ -29,3 +29,7 @@
 [[constraint]]
   name = "k8s.io/client-go"
   version = "6.0.0"
+
+[[constraint]]
+  name = "github.com/gin-contrib/cors"
+  branch = "master"
