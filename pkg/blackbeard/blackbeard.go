@@ -27,7 +27,7 @@ type NamespaceService interface {
 //ResourceService defines the way kubernetes resources such as pods, services, etc. should be managed.
 type ResourceService interface {
 	GetPods(string) (Pods, error)
-	GetNamespaceStatus(string) (string, error)
+	GetNamespaceStatus(string) (int, error)
 	GetExposedServices(string) ([]Service, error)
 }
 

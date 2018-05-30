@@ -53,7 +53,7 @@ func (h *Handler) GetStatus(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, struct {
-		Status string `json:"status"`
+		Status int `json:"status"`
 	}{
 		Status: status,
 	})
@@ -64,9 +64,9 @@ func (h *Handler) GetStatuses(c *gin.Context) {
 
 	invs, _ := h.config.InventoryService().List()
 
-	var status []struct {
+	var statuses []struct {
 		Namespace string `json:"namespace"`
-		Status    string `json:"status"`
+		Status    int    `json:"status"`
 	}
 
 	for _, i := range invs {
@@ -76,14 +76,14 @@ func (h *Handler) GetStatuses(c *gin.Context) {
 			return
 		}
 
-		status = append(status, struct {
+		statuses = append(statuses, struct {
 			Namespace string `json:"namespace"`
-			Status    string `json:"status"`
+			Status    int    `json:"status"`
 		}{
 			Namespace: i.Namespace,
 			Status:    s,
 		})
 	}
 
-	c.JSON(http.StatusOK, status)
+	c.JSON(http.StatusOK, statuses)
 }

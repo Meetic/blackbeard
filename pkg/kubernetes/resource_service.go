@@ -1,16 +1,12 @@
 package kubernetes
 
 import (
+	"log"
+
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-)
-
-const (
-	//Namespace status
-	ready    = "ready"
-	notReady = "not ready"
 )
 
 type ResourceService struct {
@@ -24,13 +20,19 @@ var _ blackbeard.ResourceService = (*ResourceService)(nil)
 //GetPods of all the pods in a given namespace.
 //This method returns a Pods slice containing the pod name and the pod status (pod status phase).
 func (rs *ResourceService) GetPods(namespace string) (blackbeard.Pods, error) {
+
+	var pods blackbeard.Pods
+
+	_, err := rs.client.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{})
+	if err != nil {
+		return pods, err
+	}
+
 	podsList, err := rs.client.CoreV1().Pods(namespace).List(metav1.ListOptions{})
 
 	if err != nil {
 		return nil, err
 	}
-
-	var pods blackbeard.Pods
 
 	for _, pod := range podsList.Items {
 
@@ -45,25 +47,36 @@ func (rs *ResourceService) GetPods(namespace string) (blackbeard.Pods, error) {
 
 //IsNamespaceReady return the current status of a given namespace based on the pods status
 //contains in the namespace.
-func (rs *ResourceService) GetNamespaceStatus(namespace string) (string, error) {
+func (rs *ResourceService) GetNamespaceStatus(namespace string) (int, error) {
 	pods, err := rs.GetPods(namespace)
-
 	if err != nil {
-		return notReady, err
+		return 0, err
 	}
 
-	r := true
+	totalPods := len(pods)
+
+	log.Printf("GetNamespaceStatus. | namespace %s | total Pods %d", namespace, totalPods)
+
+	if totalPods == 0 {
+		return 0, nil
+	}
+
+	var i int
+
 	for _, pod := range pods {
-		if pod.Status != running {
-			r = false
+		if pod.Status == running {
+			log.Printf("GetNamespaceStatus. | namespace %s | running pods %s", namespace, pod.Name)
+			i++
 		}
 	}
 
-	if !r {
-		return notReady, nil
-	}
+	log.Printf("GetNamespaceStatus. | namespace %s | running pods %d", namespace, i)
 
-	return ready, nil
+	status := i * 100 / totalPods
+
+	log.Printf("GetNamespaceStatus. | namespace %s | status %d", namespace, status)
+
+	return status, nil
 
 }
 
