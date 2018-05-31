@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/Meetic/blackbeard/pkg/websocket"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -11,10 +12,9 @@ import (
 //Handler actually handle http requests.
 //It use a router to map uri to HandlerFunc
 type Handler struct {
-	config     blackbeard.ConfigClient
-	kubectl    blackbeard.KubectlClient
-	kubernetes blackbeard.KubernetesClient
-	websocket  blackbeard.WebsocketHandler
+	api        blackbeard.Api
+	websocket  websocket.Handler
+	configPath string
 
 	engine *gin.Engine
 }
@@ -22,12 +22,11 @@ type Handler struct {
 //NewHandler create an Handler using defined routes.
 //It takes a client as argument in order to be passe to the handler and be accessible to the HandlerFunc
 //Typically in a CRUD API, the client manage connections to a storage system.
-func NewHandler(c blackbeard.ConfigClient, kubecli blackbeard.KubectlClient, k blackbeard.KubernetesClient, websocket blackbeard.WebsocketHandler, corsEnable bool) *Handler {
+func NewHandler(api blackbeard.Api, websocket websocket.Handler, configPath string, corsEnable bool) *Handler {
 	h := &Handler{
-		config:     c,
-		kubectl:    kubecli,
+		api:        api,
 		websocket:  websocket,
-		kubernetes: k,
+		configPath: configPath,
 	}
 
 	h.engine = gin.Default()

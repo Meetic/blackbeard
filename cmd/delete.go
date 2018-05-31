@@ -6,8 +6,6 @@ import (
 
 	"fmt"
 
-	"github.com/Meetic/blackbeard/pkg/files"
-	"github.com/Meetic/blackbeard/pkg/kubernetes"
 	"github.com/spf13/cobra"
 )
 
@@ -37,18 +35,10 @@ func runDelete(namespace string) error {
 
 	askForConfirmation(fmt.Sprintf("You are about to delete the inventory %s and all its associated files. Are you sure?", namespace))
 
-	kube := kubernetes.NewClient(kubeConfigPath)
-	if err := kube.NamespaceService().Delete(namespace); err != nil {
-		return err
-	}
+	api := newAPI()
 
-	f := files.NewClient(templatePath, configPath, inventoryPath, defaultsPath)
-
-	if err := f.InventoryService().Delete(namespace); err != nil {
-		return err
-	}
-
-	if err := f.ConfigService().Delete(namespace); err != nil {
+	err := api.Delete(namespace)
+	if err != nil {
 		return err
 	}
 

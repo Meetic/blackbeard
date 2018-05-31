@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Meetic/blackbeard/pkg/files"
-	"github.com/Meetic/blackbeard/pkg/kubectl"
-
 	"github.com/spf13/cobra"
 )
 
@@ -40,18 +37,14 @@ func runApply(namespace string) error {
 	if namespace == "" {
 		return errors.New("you must specified a namespace using the --namespace flag")
 	}
-	f := files.NewClient(templatePath, configPath, inventoryPath, defaultsPath)
-	inv, err := f.InventoryService().Get(namespace)
+
+	api := newAPI()
+
+	err := api.Apply(namespace, configPath)
 	if err != nil {
 		return err
 	}
-	if err = f.ConfigService().Apply(inv); err != nil {
-		return err
-	}
-	cli := kubectl.NewClient(configPath)
-	if err = cli.NamespaceConfigurationService().Apply(inv.Namespace); err != nil {
-		return err
-	}
+
 	fmt.Println("Playbook has been deployed!")
 
 	return nil

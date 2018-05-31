@@ -1,4 +1,4 @@
-package kubectl
+package kubernetes
 
 import (
 	"bufio"
@@ -10,24 +10,49 @@ import (
 	"time"
 
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"k8s.io/api/core/v1"
+	kerr "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
 	timeout = 60 * time.Second
 )
 
-//NamespaceConfigurationService is used to managed kubernetes namespace
-type NamespaceConfigurationService struct {
-	configPath string
+type namespaceRepository struct {
+	kubernetes kubernetes.Interface
 }
 
-//Ensure that NamespaceService implements the interface
-var _ blackbeard.NamespaceConfigurationService = (*NamespaceConfigurationService)(nil)
+func NewNamespaceRepository(kubernetes kubernetes.Interface) blackbeard.NamespaceRepository {
+	return &namespaceRepository{
+		kubernetes: kubernetes,
+	}
+}
 
-//Apply load configuration files into kubernetes
-func (ns *NamespaceConfigurationService) Apply(namespace string) error {
+//Create create a namespace
+func (ns *namespaceRepository) Create(namespace string) error {
+	_, err := ns.kubernetes.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}})
+	return err
+}
 
-	err := execute(fmt.Sprintf("kubectl apply -f %s -n %s", filepath.Join(ns.configPath, namespace), namespace), timeout)
+//Delete delete a given namespace
+func (ns *namespaceRepository) Delete(namespace string) error {
+	err := ns.kubernetes.CoreV1().Namespaces().Delete(namespace, &metav1.DeleteOptions{})
+	switch t := err.(type) {
+	case *kerr.StatusError:
+		return nil
+	case *kerr.UnexpectedObjectError:
+		return nil
+	default:
+		return t
+	}
+}
+
+//ApplyConfig load configuration files into kubernetes
+func (ns *namespaceRepository) ApplyConfig(namespace, configPath string) error {
+
+	err := execute(fmt.Sprintf("kubectl apply -f %s -n %s", filepath.Join(configPath, namespace), namespace), timeout)
 	if err != nil {
 		return fmt.Errorf("the namespace could not be configured : %v", err)
 	}
@@ -62,7 +87,7 @@ func execute(c string, t time.Duration) error {
 		timer = time.NewTimer(t)
 		var err error
 		go func(timer *time.Timer, cmd *exec.Cmd) {
-			for _ = range timer.C {
+			for range timer.C {
 				e := cmd.Process.Kill()
 				if e != nil {
 					err = errors.New("the command has timeout but the process could not be killed")

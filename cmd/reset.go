@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Meetic/blackbeard/pkg/files"
-	"github.com/Meetic/blackbeard/pkg/kubectl"
-
 	"github.com/spf13/cobra"
 )
 
@@ -36,27 +33,11 @@ func runReset(namespace string) error {
 		return errors.New("you must specified a namespace using the --namespace flag")
 	}
 
-	f := files.NewClient(templatePath, configPath, inventoryPath, defaultsPath)
-	cli := kubectl.NewClient(configPath)
+	api := newAPI()
 
 	//Reset inventory file
-	if err := f.InventoryService().Reset(namespace); err != nil {
-		return err
-	}
-
-	//Get inventory
-	inv, err := f.InventoryService().Get(namespace)
+	err := api.Reset(namespace, configPath)
 	if err != nil {
-		return err
-	}
-
-	//Apply inventory to configuration
-	if err := f.ConfigService().Apply(inv); err != nil {
-		return err
-	}
-
-	//Apply changes to Kubernetes
-	if err = cli.NamespaceConfigurationService().Apply(inv.Namespace); err != nil {
 		return err
 	}
 

@@ -9,9 +9,6 @@ import (
 	"path/filepath"
 
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
-	"github.com/Meetic/blackbeard/pkg/files"
-
-	"github.com/Meetic/blackbeard/pkg/kubernetes"
 	"github.com/spf13/cobra"
 )
 
@@ -44,30 +41,13 @@ func runCreate(namespace string) error {
 		return errors.New("you must specified a namespace using the --namespace flag")
 	}
 
-	f := files.NewClient(templatePath, configPath, inventoryPath, defaultsPath)
+	api := newAPI()
 
-	inv, err := f.InventoryService().Create(namespace)
-
-	if err != nil {
-		switch t := err.(type) {
-		default:
-			log.Fatalf(t.Error())
-		case *files.ErrorReadingDefaultsFile:
-			log.Println(t.Error())
-			log.Println("Process continue.")
-		}
-	}
-
-	err = f.ConfigService().Apply(inv)
+	inv, err := api.Create(namespace)
 	if err != nil {
 		return err
 	}
 
-	kube := kubernetes.NewClient(kubeConfigPath)
-
-	if err = kube.NamespaceService().Create(namespace); err != nil {
-		return err
-	}
 	tpl := template.Must(template.New("config").Parse(`Namespace for user {{.Inv.Namespace}} has been created !
 
 	A inventory file has been generated : {{.File}}

@@ -6,7 +6,6 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/Meetic/blackbeard/pkg/kubernetes"
 	"github.com/spf13/cobra"
 )
 
@@ -26,10 +25,11 @@ func init() {
 }
 
 func runGetServices() {
-	kube := kubernetes.NewClient(kubeConfigPath)
+
+	api := newAPI()
 
 	//get exposed services (NodePort)
-	services, err := kube.ResourceService().GetExposedServices(namespace)
+	services, err := api.GetExposedServices(namespace)
 	if err != nil {
 		log.Fatalf("an error occurend when getting information about services : %v", err)
 	}

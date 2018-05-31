@@ -9,6 +9,9 @@ import (
 	"bufio"
 	"strings"
 
+	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/Meetic/blackbeard/pkg/files"
+	"github.com/Meetic/blackbeard/pkg/kubernetes"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -62,6 +65,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&dir, "dir", "", "Use the specified dir as root path to execute commands. Default is the current dir.")
 
 	viper.BindPFlag("dir", RootCmd.PersistentFlags().Lookup("dir"))
+
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -169,4 +173,15 @@ func askForConfirmation(s string) bool {
 			return false
 		}
 	}
+}
+
+func newAPI() blackbeard.Api {
+	kube := kubernetes.NewClient(kubeConfigPath)
+
+	return blackbeard.NewApi(
+		files.NewInventoryRepository(inventoryPath, defaultsPath),
+		files.NewConfigRepository(templatePath, configPath),
+		kubernetes.NewNamespaceRepository(kube),
+		kubernetes.NewPodRepository(kube),
+		kubernetes.NewServiceRepository(kube, kubernetes.GetKubernetesHost(kubeConfigPath)))
 }
