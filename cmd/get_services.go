@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -15,7 +16,11 @@ var getServicesCmd = &cobra.Command{
 	Long: `This command display informations from a given namespace such as the list of exposed services
 or the url where you can join services throw ingress.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		runGetServices()
+		err := runGetServices()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
 	},
 }
 
@@ -24,7 +29,11 @@ func init() {
 	getServicesCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace from which get info")
 }
 
-func runGetServices() {
+func runGetServices() error {
+
+	if namespace == "" {
+		return errors.New("you must specified a namespace using the --namespace flag")
+	}
 
 	api := newAPI()
 
@@ -44,5 +53,7 @@ func runGetServices() {
 	}
 	fmt.Fprintln(w)
 	w.Flush()
+
+	return nil
 
 }

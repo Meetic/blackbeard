@@ -6,17 +6,17 @@ const (
 
 //NamespaceService defined the way namespace should be managed.
 type NamespaceService interface {
-	Create(string) error
-	ApplyConfig(string, string) error
-	Delete(string) error
-	GetStatus(string) (int, error)
+	Create(namespace string) error
+	ApplyConfig(namespace string, configPath string) error
+	Delete(namespace string) error
+	GetStatus(namespace string) (int, error)
 	GetPods(namespace string) (Pods, error)
 }
 
 type NamespaceRepository interface {
-	Create(string) error
-	ApplyConfig(string, string) error
-	Delete(string) error
+	Create(namespace string) error
+	ApplyConfig(namespace string, configPath string) error
+	Delete(namespace string) error
 }
 
 type namespaceService struct {

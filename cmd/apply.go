@@ -16,9 +16,7 @@ var applyCmd = &cobra.Command{
 and apply the changes to the Kubernetes namespace.
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-
 		err := runApply(namespace)
-
 		if err != nil {
 			log.Fatal(err)
 		}

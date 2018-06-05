@@ -15,12 +15,12 @@ type Port struct {
 }
 
 type ServiceService interface {
-	ListExposed(string) ([]Service, error)
+	ListExposed(namespace string) ([]Service, error)
 }
 
 type ServiceRepository interface {
-	ListNodePort(string) ([]Service, error)
-	ListIngress(string) ([]Service, error)
+	ListNodePort(namespace string) ([]Service, error)
+	ListIngress(namespace string) ([]Service, error)
 }
 
 type serviceService struct {

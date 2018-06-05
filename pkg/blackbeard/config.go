@@ -30,13 +30,13 @@ type InventoryRelease struct {
 //ConfigService define the way configuration should be managed
 type ConfigService interface {
 	Generate(Inventory) error
-	Delete(string) error
+	Delete(namespace string) error
 }
 
 type ConfigRepository interface {
 	GetTemplate() ([]ConfigTemplate, error)
 	Save(namespace string, configs []Config) error
-	Delete(string) error
+	Delete(namespace string) error
 }
 
 type configService struct {

@@ -14,21 +14,21 @@ type Inventory struct {
 
 //InventoryService define the way inventory should be managed.
 type InventoryService interface {
-	Create(string) (Inventory, error)
-	Update(string, Inventory) error
-	Get(string) (Inventory, error)
+	Create(namespace string) (Inventory, error)
+	Update(namespace string, inventory Inventory) error
+	Get(namespace string) (Inventory, error)
 	GetDefault() (Inventory, error)
 	List() ([]Inventory, error)
-	Delete(string) error
-	Reset(string) (Inventory, error)
+	Delete(namespace string) error
+	Reset(namespace string) (Inventory, error)
 }
 
 type InventoryRepository interface {
 	GetDefault() (Inventory, error)
-	Get(string) (Inventory, error)
+	Get(namespace string) (Inventory, error)
 	Create(Inventory) error
-	Delete(string) error
-	Update(string, Inventory) error
+	Delete(namespace string) error
+	Update(namespace string, inventory Inventory) error
 	List() ([]Inventory, error)
 }
 
