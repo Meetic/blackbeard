@@ -3,7 +3,6 @@ package websocket
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -121,7 +120,6 @@ func (h *handler) writer() {
 
 			returnStatus := diff(status, lastStatus)
 
-			log.Printf("resturnStatus | %v", returnStatus)
 			lastStatus = status
 
 			if returnStatus != nil {

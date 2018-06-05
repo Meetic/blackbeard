@@ -3,7 +3,6 @@ package blackbeard
 import (
 	"bytes"
 	"errors"
-	"log"
 	"text/template"
 	"time"
 )
@@ -81,8 +80,6 @@ func (cs *configService) Generate(inv Inventory) error {
 			Name:   tpl.Name,
 			Values: confVal.String(),
 		}
-
-		log.Printf("%v", conf)
 
 		configs = append(configs, conf)
 	}
