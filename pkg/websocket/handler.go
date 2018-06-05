@@ -25,12 +25,17 @@ const (
 	kubernetesPeriod = 10 * time.Second
 )
 
+//WebsocketHandler defines the way Websocket should be handled
+type Handler interface {
+	Handle(http.ResponseWriter, *http.Request)
+}
+
 //Handler represent a websocket handler
-type Handler struct {
-	upgrader   websocket.Upgrader
-	kubernetes blackbeard.KubernetesClient
-	files      blackbeard.ConfigClient
-	conn       *websocket.Conn
+type handler struct {
+	upgrader    websocket.Upgrader
+	namespaces  blackbeard.NamespaceService
+	inventories blackbeard.InventoryService
+	conn        *websocket.Conn
 }
 
 type namespaceStatus struct {
@@ -40,7 +45,7 @@ type namespaceStatus struct {
 }
 
 //NewHandler creates a websocket server
-func NewHandler(client blackbeard.KubernetesClient, files blackbeard.ConfigClient) *Handler {
+func NewHandler(namespace blackbeard.NamespaceService, inventories blackbeard.InventoryService) Handler {
 	up := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -48,10 +53,10 @@ func NewHandler(client blackbeard.KubernetesClient, files blackbeard.ConfigClien
 			return true
 		},
 	}
-	h := Handler{
-		upgrader:   up,
-		kubernetes: client,
-		files:      files,
+	h := handler{
+		upgrader:    up,
+		namespaces:  namespace,
+		inventories: inventories,
 	}
 
 	return &h
@@ -59,7 +64,7 @@ func NewHandler(client blackbeard.KubernetesClient, files blackbeard.ConfigClien
 }
 
 //Handle upgrade user request to websocket and start a connexion
-func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
+func (h *handler) Handle(w http.ResponseWriter, r *http.Request) {
 	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println("Failed to set websocket upgrade: ", err)
@@ -72,7 +77,7 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 	h.reader()
 }
 
-func (h *Handler) reader() {
+func (h *handler) reader() {
 	defer h.conn.Close()
 	h.conn.SetReadLimit(512)
 	h.conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -85,7 +90,7 @@ func (h *Handler) reader() {
 	}
 }
 
-func (h *Handler) writer() {
+func (h *handler) writer() {
 	lastError := ""
 	var lastStatus []namespaceStatus
 	pingTicker := time.NewTicker(pingPeriod)
@@ -135,21 +140,19 @@ func (h *Handler) writer() {
 	}
 }
 
-func (h *Handler) readNamespacesStatus() ([]namespaceStatus, error) {
+func (h *handler) readNamespacesStatus() ([]namespaceStatus, error) {
 
-	invs, _ := h.files.InventoryService().List()
+	invs, _ := h.inventories.List()
 
 	var status []namespaceStatus
 
 	for _, i := range invs {
-		s, err := h.kubernetes.ResourceService().GetNamespaceStatus(i.Namespace)
+		s, err := h.namespaces.GetStatus(i.Namespace)
 		if err != nil {
 			return nil, err
 		}
 
-		log.Printf("readNamespaceStatus | Namespace : %s | status: %d", i.Namespace, s)
-
-		pods, err := h.kubernetes.ResourceService().GetPods(i.Namespace)
+		pods, err := h.namespaces.GetPods(i.Namespace)
 		if err != nil {
 			return nil, err
 		}
