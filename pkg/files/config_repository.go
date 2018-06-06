@@ -18,6 +18,11 @@ type configRepository struct {
 	configPath   string
 }
 
+// NewConfigRepository returns a new ConfigRepository
+// It takes as parameters the directory where templates files are stored and
+// the directory where configs are stored.
+// Typically, the templates files for a given playbook are in a "templates" directory at the root of the playbook
+// and configs are stored in a "configs" directory located at the root of the playbook
 func NewConfigRepository(templatePath, configPath string) blackbeard.ConfigRepository {
 	return &configRepository{
 		templatePath: templatePath,
@@ -25,6 +30,7 @@ func NewConfigRepository(templatePath, configPath string) blackbeard.ConfigRepos
 	}
 }
 
+// GetTemplate returns the templates from the playbook
 func (cr *configRepository) GetTemplate() ([]blackbeard.ConfigTemplate, error) {
 
 	//Get template list
@@ -59,6 +65,8 @@ func (cr *configRepository) GetTemplate() ([]blackbeard.ConfigTemplate, error) {
 
 }
 
+// Save writes kubernetes configs for a given namespace in files.
+// files are named after the Config.Name value
 func (cr *configRepository) Save(namespace string, configs []blackbeard.Config) error {
 
 	//Create config dir for a given namespace
@@ -86,8 +94,8 @@ func (cr *configRepository) Save(namespace string, configs []blackbeard.Config) 
 	return nil
 }
 
-//Delete remove a config directory
-//if the specified config dir does not exist, Delete return nil and does nothing.
+// Delete remove a config directory
+// if the specified config dir does not exist, Delete return nil and does nothing.
 func (cr *configRepository) Delete(namespace string) error {
 	if !cr.exists(namespace) {
 		return nil
@@ -95,8 +103,8 @@ func (cr *configRepository) Delete(namespace string) error {
 	return os.RemoveAll(filepath.Join(cr.configPath, namespace))
 }
 
-//exists return true if a config dir for the given namespace already exist.
-//Else, it return false.
+// exists return true if a config dir for the given namespace already exist.
+// Else, it return false.
 func (cr *configRepository) exists(namespace string) bool {
 	if _, err := os.Stat(cr.path(namespace)); os.IsNotExist(err) {
 		return false
@@ -106,7 +114,7 @@ func (cr *configRepository) exists(namespace string) bool {
 	return false
 }
 
-//Path return the config dir path of a given namespace
+// path return the config dir path of a given namespace
 func (cr *configRepository) path(namespace string) string {
 	return filepath.Join(cr.configPath, namespace)
 }

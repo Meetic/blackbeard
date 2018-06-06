@@ -24,19 +24,21 @@ type namespaceRepository struct {
 	kubernetes kubernetes.Interface
 }
 
+// NewNamespaceRepository returns a new NamespaceRepository.
+// The parameter is a go-client Kubernetes client
 func NewNamespaceRepository(kubernetes kubernetes.Interface) blackbeard.NamespaceRepository {
 	return &namespaceRepository{
 		kubernetes: kubernetes,
 	}
 }
 
-//Create create a namespace
+// Create creates a namespace
 func (ns *namespaceRepository) Create(namespace string) error {
 	_, err := ns.kubernetes.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}})
 	return err
 }
 
-//Delete delete a given namespace
+// Delete deletes a given namespace
 func (ns *namespaceRepository) Delete(namespace string) error {
 	err := ns.kubernetes.CoreV1().Namespaces().Delete(namespace, &metav1.DeleteOptions{})
 	switch t := err.(type) {
@@ -49,7 +51,7 @@ func (ns *namespaceRepository) Delete(namespace string) error {
 	}
 }
 
-//ApplyConfig load configuration files into kubernetes
+// ApplyConfig loads configuration files into kubernetes
 func (ns *namespaceRepository) ApplyConfig(namespace, configPath string) error {
 
 	err := execute(fmt.Sprintf("kubectl apply -f %s -n %s", filepath.Join(configPath, namespace), namespace), timeout)

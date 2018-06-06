@@ -10,14 +10,16 @@ type podRepository struct {
 	kubernetes kubernetes.Interface
 }
 
+// NewPodRepository returns a new PodRepository.
+// The parameter is a go-client kubernetes client.
 func NewPodRepository(kubernetes kubernetes.Interface) blackbeard.PodRepository {
 	return &podRepository{
 		kubernetes: kubernetes,
 	}
 }
 
-//GetPods of all the pods in a given namespace.
-//This method returns a Pods slice containing the pod name and the pod status (pod status phase).
+// GetPods of all the pods in a given namespace.
+// This method returns a Pods slice containing the pod name and the pod status (pod status phase).
 func (rs *podRepository) List(namespace string) (blackbeard.Pods, error) {
 	podsList, err := rs.kubernetes.CoreV1().Pods(namespace).List(metav1.ListOptions{})
 

@@ -12,6 +12,8 @@ type serviceRepository struct {
 	host       string
 }
 
+// NewServiceRepository retuns a new ServiceRespository
+// It takes as parameter a go-client kubernetes client and the kubernetes cluster host (domain name or ip).
 func NewServiceRepository(kubernetes kubernetes.Interface, host string) blackbeard.ServiceRepository {
 	return &serviceRepository{
 		kubernetes: kubernetes,
@@ -19,6 +21,7 @@ func NewServiceRepository(kubernetes kubernetes.Interface, host string) blackbea
 	}
 }
 
+// ListNodePort returns a list of kubernetes services exposed as NodePort.
 func (sr *serviceRepository) ListNodePort(namespace string) ([]blackbeard.Service, error) {
 	svcs, err := sr.kubernetes.CoreV1().Services(namespace).List(metav1.ListOptions{})
 
@@ -52,6 +55,7 @@ func (sr *serviceRepository) ListNodePort(namespace string) ([]blackbeard.Servic
 
 }
 
+// ListIngress returns a list of Kubernetes services exposed throw Ingress.
 func (sr *serviceRepository) ListIngress(namespace string) ([]blackbeard.Service, error) {
 	ingressList, err := sr.kubernetes.ExtensionsV1beta1().Ingresses(namespace).List(metav1.ListOptions{})
 

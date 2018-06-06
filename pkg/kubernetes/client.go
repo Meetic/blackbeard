@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-//NewClient return a new kubernetes client
+// NewClient return a new kubernetes client
 func NewClient(configFile string) kubernetes.Interface {
 
 	config, _ := clientcmd.BuildConfigFromFlags("", configFile)
@@ -22,6 +22,7 @@ func NewClient(configFile string) kubernetes.Interface {
 	return clientSet
 }
 
+// GetKubernetesHost return the kubernetes cluster domain name used in the ~/.kube/config file
 func GetKubernetesHost(configFile string) string {
 
 	config, _ := clientcmd.BuildConfigFromFlags("", configFile)

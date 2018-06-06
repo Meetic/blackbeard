@@ -4,7 +4,7 @@ const (
 	running = "Running"
 )
 
-//NamespaceService defined the way namespace should be managed.
+// NamespaceService defined the way namespace are managed.
 type NamespaceService interface {
 	Create(namespace string) error
 	ApplyConfig(namespace string, configPath string) error
@@ -13,6 +13,7 @@ type NamespaceService interface {
 	GetPods(namespace string) (Pods, error)
 }
 
+// NamespaceService defined the way namespace area actually managed.
 type NamespaceRepository interface {
 	Create(namespace string) error
 	ApplyConfig(namespace string, configPath string) error
@@ -24,6 +25,7 @@ type namespaceService struct {
 	pods       PodRepository
 }
 
+// NewNamespaceService creates a new NamespaceService
 func NewNamespaceService(namespaces NamespaceRepository, pods PodRepository) NamespaceService {
 	return &namespaceService{
 		namespaces: namespaces,
@@ -31,18 +33,25 @@ func NewNamespaceService(namespaces NamespaceRepository, pods PodRepository) Nam
 	}
 }
 
+// Create creates a kubernetes namespace
 func (ns *namespaceService) Create(n string) error {
 	return ns.namespaces.Create(n)
 }
 
+// ApplyConfig apply kubernetes configurations to the given namespace.
+// Warning : For now, this method takes a configPath as parameter. This parameter is the directory containing configs in a playbook
+// This may change since the NamespaceService should not be aware that configs are stored in files.
 func (ns *namespaceService) ApplyConfig(namespace, configPath string) error {
 	return ns.namespaces.ApplyConfig(namespace, configPath)
 }
 
+// Delete deletes a kubernetes namespace
 func (ns *namespaceService) Delete(namespace string) error {
 	return ns.namespaces.Delete(namespace)
 }
 
+// GetStatus returns the status of an inventory
+// The status is an int that represents the percentage of pods in a "running" state inside the given namespace
 func (ns *namespaceService) GetStatus(namespace string) (int, error) {
 
 	pods, err := ns.pods.List(namespace)
@@ -70,6 +79,7 @@ func (ns *namespaceService) GetStatus(namespace string) (int, error) {
 
 }
 
+// GetPods returns the list of pods in a kubernetes namespace with their associated status.
 func (ns *namespaceService) GetPods(namespace string) (Pods, error) {
 	return ns.pods.List(namespace)
 }

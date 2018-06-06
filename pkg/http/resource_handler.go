@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//ListServices returns the list of exposed services (NodePort and ingress configuration) of a given inventory
+// ListServices returns the list of exposed services (NodePort and ingress configuration) of a given inventory
 func (h *Handler) ListServices(c *gin.Context) {
 
 	services, err := h.api.GetExposedServices(c.Params.ByName("namespace"))
@@ -24,7 +24,7 @@ func (h *Handler) ListServices(c *gin.Context) {
 	c.JSON(http.StatusOK, services)
 }
 
-//GetStatus returns the namespace status (ready or not) for a given namespace
+// GetStatus returns the namespace status (ready or not) for a given namespace
 func (h *Handler) GetStatus(c *gin.Context) {
 
 	_, err := h.api.Inventories().Get(c.Params.ByName("namespace"))
@@ -52,7 +52,7 @@ func (h *Handler) GetStatus(c *gin.Context) {
 	})
 }
 
-//GetStatuses returns an array of namespaces and their associated status
+// GetStatuses returns an array of namespaces and their associated status
 func (h *Handler) GetStatuses(c *gin.Context) {
 
 	invs, _ := h.api.Inventories().List()

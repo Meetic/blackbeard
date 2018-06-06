@@ -8,12 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//createQuery represents the POST payload send to the create handler
+// createQuery represents the POST payload send to the create handler
 type createQuery struct {
 	Namespace string `json:"namespace" binding:"required"`
 }
 
-//Create handle the namespace creation.
+// Create handle the namespace creation.
 func (h *Handler) Create(c *gin.Context) {
 
 	var createQ createQuery
@@ -38,7 +38,7 @@ func (h *Handler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, inv)
 }
 
-//Get return an inventory for a given namespace passed has query parameters.
+// Get return an inventory for a given namespace passed has query parameters.
 func (h *Handler) Get(c *gin.Context) {
 
 	inv, err := h.api.Inventories().Get(c.Params.ByName("namespace"))
@@ -55,7 +55,7 @@ func (h *Handler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, inv)
 }
 
-//GetDefaults return default for an inventory
+// GetDefaults return default for an inventory
 // $ curl -xGET defaults/
 func (h *Handler) GetDefaults(c *gin.Context) {
 
@@ -69,7 +69,7 @@ func (h *Handler) GetDefaults(c *gin.Context) {
 	c.JSON(http.StatusOK, inv)
 }
 
-//List returns the list of existing inventories.
+// List returns the list of existing inventories.
 func (h *Handler) List(c *gin.Context) {
 
 	invList, err := h.api.Inventories().List()
@@ -82,7 +82,7 @@ func (h *Handler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, invList)
 }
 
-//Update will update inventory for a given namespace
+// Update will update inventory for a given namespace
 func (h *Handler) Update(c *gin.Context) {
 
 	var uQ blackbeard.Inventory
@@ -100,7 +100,7 @@ func (h *Handler) Update(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
-//Reset reset a inventory to default and apply changes into kubernetes
+// Reset reset a inventory to default and apply changes into kubernetes
 func (h *Handler) Reset(c *gin.Context) {
 
 	n := c.Params.ByName("namespace")
@@ -114,7 +114,7 @@ func (h *Handler) Reset(c *gin.Context) {
 
 }
 
-//Delete handle the namespace deletion.
+// Delete handle the namespace deletion.
 func (h *Handler) Delete(c *gin.Context) {
 	namespace := c.Params.ByName("namespace")
 

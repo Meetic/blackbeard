@@ -24,12 +24,12 @@ const (
 	kubernetesPeriod = 10 * time.Second
 )
 
-//WebsocketHandler defines the way Websocket should be handled
+// WebsocketHandler defines the way Websocket should be handled
 type Handler interface {
 	Handle(http.ResponseWriter, *http.Request)
 }
 
-//Handler represent a websocket handler
+// Handler represent a websocket handler
 type handler struct {
 	upgrader    websocket.Upgrader
 	namespaces  blackbeard.NamespaceService
@@ -43,7 +43,7 @@ type namespaceStatus struct {
 	PodsStatus blackbeard.Pods
 }
 
-//NewHandler creates a websocket server
+// NewHandler creates a websocket server
 func NewHandler(namespace blackbeard.NamespaceService, inventories blackbeard.InventoryService) Handler {
 	up := websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -62,7 +62,7 @@ func NewHandler(namespace blackbeard.NamespaceService, inventories blackbeard.In
 
 }
 
-//Handle upgrade user request to websocket and start a connexion
+// Handle upgrade user request to websocket and start a connexion
 func (h *handler) Handle(w http.ResponseWriter, r *http.Request) {
 	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {

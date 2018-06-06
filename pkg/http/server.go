@@ -9,8 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//Handler actually handle http requests.
-//It use a router to map uri to HandlerFunc
+// Handler actually handle http requests.
+// It use a router to map uri to HandlerFunc
 type Handler struct {
 	api        blackbeard.Api
 	websocket  websocket.Handler
@@ -19,9 +19,9 @@ type Handler struct {
 	engine *gin.Engine
 }
 
-//NewHandler create an Handler using defined routes.
-//It takes a client as argument in order to be passe to the handler and be accessible to the HandlerFunc
-//Typically in a CRUD API, the client manage connections to a storage system.
+// NewHandler create an Handler using defined routes.
+// It takes a client as argument in order to be passe to the handler and be accessible to the HandlerFunc
+// Typically in a CRUD API, the client manage connections to a storage system.
 func NewHandler(api blackbeard.Api, websocket websocket.Handler, configPath string, corsEnable bool) *Handler {
 	h := &Handler{
 		api:        api,
@@ -56,22 +56,22 @@ func NewHandler(api blackbeard.Api, websocket websocket.Handler, configPath stri
 	return h
 }
 
-//Engine returns the defined router for the Handler
+// Engine returns the defined router for the Handler
 func (h *Handler) Engine() *gin.Engine { return h.engine }
 
-//Server represents an http server that handle request
+// Server represents an http server that handle request
 type Server struct {
 	handler *Handler
 }
 
-//NewServer return an http server with a given handler
+// NewServer return an http server with a given handler
 func NewServer(h *Handler) *Server {
 	return &Server{
 		handler: h,
 	}
 }
 
-//Serve launch the webserver
+// Serve launch the webserver
 func (s *Server) Serve() {
 	s.handler.Engine().Run(":8080")
 }
