@@ -77,7 +77,7 @@ func (cs *configService) Generate(inv Inventory) error {
 		inv.Namespace,
 		inv.Values,
 		Release{
-			Date: time.Now().Format(time.RFC850),
+			Date: time.Now().Format("20060102150405"),
 		},
 	}
 
