@@ -9,11 +9,13 @@ type ConfigTemplate struct {
 	Template *template.Template
 }
 
+// PlaybookService represents the way playbook are managed
 type PlaybookService interface {
 	GetDefault() (Inventory, error)
 	GetTemplate() ([]ConfigTemplate, error)
 }
 
+// PlaybookRepository is an actual implementation of playbook management
 type PlaybookRepository interface {
 	GetDefault() (Inventory, error)
 	GetTemplate() ([]ConfigTemplate, error)
@@ -23,6 +25,7 @@ type playbookService struct {
 	playbooks PlaybookRepository
 }
 
+// NewPlaybookService returns a new PlaybookService
 func NewPlaybookService(playbooks PlaybookRepository) PlaybookService {
 	return &playbookService{
 		playbooks: playbooks,

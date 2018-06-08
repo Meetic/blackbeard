@@ -48,6 +48,7 @@ func (api *api) Namespaces() NamespaceService {
 	return api.namespaces
 }
 
+// Playbooks returns the Playbook Service from the api
 func (api *api) Playbooks() PlaybookService {
 	return api.playbooks
 }

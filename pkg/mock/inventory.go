@@ -1,33 +1,7 @@
 package mock
 
 import (
-	"encoding/json"
-
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
-)
-
-const (
-	def = `{
-  "namespace": "default",
-  "values": {
-    "microservices": [
-      {
-        "name": "api-advertising",
-        "version": "latest",
-        "urls": [
-          "api-advertising"
-        ]
-      },
-      {
-        "name": "api-algo",
-        "version": "latest",
-        "urls": [
-          "api-algo"
-        ]
-      }
-    ]
-  }
-}`
 )
 
 type inventoryRepository struct{}
@@ -37,20 +11,9 @@ func NewInventoryRepository() blackbeard.InventoryRepository {
 	return &inventoryRepository{}
 }
 
-func (ir *inventoryRepository) GetDefault() (blackbeard.Inventory, error) {
-
-	var inventory blackbeard.Inventory
-
-	if err := json.Unmarshal([]byte(def), &inventory); err != nil {
-		return blackbeard.Inventory{}, blackbeard.NewErrorReadingDefaultsFile(err)
-	}
-
-	return inventory, nil
-}
-
 func (ir *inventoryRepository) Get(namespace string) (blackbeard.Inventory, error) {
-
-	inv, _ := ir.GetDefault()
+	playbooks := NewPlaybookRepository()
+	inv, _ := playbooks.GetDefault()
 	inv.Namespace = namespace
 
 	return inv, nil

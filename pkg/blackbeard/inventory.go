@@ -6,7 +6,7 @@ import (
 
 // Inventory represents a set of variable to apply to the templates (see config).
 // Namespace is the namespace dedicated files where to apply the variables contains into Values
-// Values is map of string that contains whatever the user set in the default.json file from a playbook
+// Values is map of string that contains whatever the user set in the default inventory from a playbook
 type Inventory struct {
 	Namespace string                 `json:"namespace"`
 	Values    map[string]interface{} `json:"values"`
