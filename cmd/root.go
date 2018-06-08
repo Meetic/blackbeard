@@ -179,8 +179,9 @@ func newAPI() blackbeard.Api {
 	kube := kubernetes.NewClient(kubeConfigPath)
 
 	return blackbeard.NewApi(
-		files.NewInventoryRepository(inventoryPath, defaultsPath),
-		files.NewConfigRepository(templatePath, configPath),
+		files.NewInventoryRepository(inventoryPath),
+		files.NewConfigRepository(templatePath),
+		files.NewPlaybookRepository(templatePath, defaultsPath),
 		kubernetes.NewNamespaceRepository(kube),
 		kubernetes.NewPodRepository(kube),
 		kubernetes.NewServiceRepository(kube, kubernetes.GetKubernetesHost(kubeConfigPath)))
