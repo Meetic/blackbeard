@@ -9,6 +9,7 @@ import (
 type Api interface {
 	Inventories() InventoryService
 	Namespaces() NamespaceService
+	Playbooks() PlaybookService
 	Create(namespace string) (Inventory, error)
 	Delete(namespace string) error
 	GetExposedServices(namespace string) ([]Service, error)
@@ -20,16 +21,18 @@ type Api interface {
 type api struct {
 	inventories InventoryService
 	configs     ConfigService
+	playbooks   PlaybookService
 	namespaces  NamespaceService
 	services    ServiceService
 }
 
 // NewApi creates a blackbeard api. The blackbeard api is responsible for managing playbooks and namespaces.
 // Parameters are struct implementing respectively Inventory, Config, Namespace, Pod and Service interfaces.
-func NewApi(inventories InventoryRepository, configs ConfigRepository, namespaces NamespaceRepository, pods PodRepository, services ServiceRepository) Api {
+func NewApi(inventories InventoryRepository, configs ConfigRepository, playbooks PlaybookRepository, namespaces NamespaceRepository, pods PodRepository, services ServiceRepository) Api {
 	return &api{
-		inventories: NewInventoryService(inventories),
-		configs:     NewConfigService(configs),
+		inventories: NewInventoryService(inventories, NewPlaybookService(playbooks)),
+		configs:     NewConfigService(configs, NewPlaybookService(playbooks)),
+		playbooks:   NewPlaybookService(playbooks),
 		namespaces:  NewNamespaceService(namespaces, pods),
 		services:    NewServiceService(services),
 	}
@@ -43,6 +46,11 @@ func (api *api) Inventories() InventoryService {
 // Namespaces returns the Namespace Service from the api
 func (api *api) Namespaces() NamespaceService {
 	return api.namespaces
+}
+
+// Playbooks returns the Playbook Service from the api
+func (api *api) Playbooks() PlaybookService {
+	return api.playbooks
 }
 
 // Create is responsible for creating an inventory, a set of kubernetes configs and a kubernetes namespace

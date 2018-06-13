@@ -6,7 +6,7 @@ import (
 
 // Inventory represents a set of variable to apply to the templates (see config).
 // Namespace is the namespace dedicated files where to apply the variables contains into Values
-// Values is map of string that contains whatever the user set in the default.json file from a playbook
+// Values is map of string that contains whatever the user set in the default inventory from a playbook
 type Inventory struct {
 	Namespace string                 `json:"namespace"`
 	Values    map[string]interface{} `json:"values"`
@@ -17,7 +17,6 @@ type InventoryService interface {
 	Create(namespace string) (Inventory, error)
 	Update(namespace string, inventory Inventory) error
 	Get(namespace string) (Inventory, error)
-	GetDefault() (Inventory, error)
 	List() ([]Inventory, error)
 	Delete(namespace string) error
 	Reset(namespace string) (Inventory, error)
@@ -25,7 +24,6 @@ type InventoryService interface {
 
 // InventoryRepository define the way inventories are actually managed
 type InventoryRepository interface {
-	GetDefault() (Inventory, error)
 	Get(namespace string) (Inventory, error)
 	Create(Inventory) error
 	Delete(namespace string) error
@@ -35,12 +33,14 @@ type InventoryRepository interface {
 
 type inventoryService struct {
 	inventories InventoryRepository
+	playbooks   PlaybookService
 }
 
 // NewInventoryService create an InventoryService
-func NewInventoryService(inventories InventoryRepository) InventoryService {
+func NewInventoryService(inventories InventoryRepository, playbooks PlaybookService) InventoryService {
 	return &inventoryService{
 		inventories,
+		playbooks,
 	}
 }
 
@@ -51,7 +51,7 @@ func (is *inventoryService) Create(namespace string) (Inventory, error) {
 		return Inventory{}, fmt.Errorf("A namespace cannot be empty")
 	}
 
-	def, err := is.inventories.GetDefault()
+	def, err := is.playbooks.GetDefault()
 	if err != nil {
 		return Inventory{}, err
 	}
@@ -81,11 +81,6 @@ func (is *inventoryService) Delete(namespace string) error {
 	return is.inventories.Delete(namespace)
 }
 
-// GetDefault returns the default inventory of a playbook
-func (is *inventoryService) GetDefault() (Inventory, error) {
-	return is.inventories.GetDefault()
-}
-
 // List returns the list of available inventories
 func (is *inventoryService) List() ([]Inventory, error) {
 	return is.inventories.List()
@@ -98,7 +93,7 @@ func (is *inventoryService) Update(namespace string, inv Inventory) error {
 
 // Reset override the inventory file for the given namespace base on the content of the default inventory.
 func (is *inventoryService) Reset(namespace string) (Inventory, error) {
-	def, err := is.inventories.GetDefault()
+	def, err := is.playbooks.GetDefault()
 	if err != nil {
 		return Inventory{}, err
 	}

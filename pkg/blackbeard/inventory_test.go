@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	inventories = blackbeard.NewInventoryService(mock.NewInventoryRepository())
+	playbooks   = blackbeard.NewPlaybookService(mock.NewPlaybookRepository())
+	inventories = blackbeard.NewInventoryService(mock.NewInventoryRepository(), playbooks)
 )
 
 func TestCreateOK(t *testing.T) {
@@ -36,13 +37,6 @@ func TestGetEmptyNamespace(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestGetDefaultOk(t *testing.T) {
-	inv, err := inventories.GetDefault()
-
-	assert.Equal(t, inv.Namespace, "default")
-	assert.Nil(t, err)
-}
-
 func TestListOk(t *testing.T) {
 	_, err := inventories.List()
 
@@ -50,7 +44,7 @@ func TestListOk(t *testing.T) {
 }
 
 func TestUpdateOk(t *testing.T) {
-	def, _ := inventories.GetDefault()
+	def, _ := playbooks.GetDefault()
 
 	assert.Nil(t, inventories.Update("test", def))
 }

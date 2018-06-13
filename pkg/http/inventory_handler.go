@@ -59,7 +59,7 @@ func (h *Handler) Get(c *gin.Context) {
 // $ curl -xGET defaults/
 func (h *Handler) GetDefaults(c *gin.Context) {
 
-	inv, err := h.api.Inventories().GetDefault()
+	inv, err := h.api.Playbooks().GetDefault()
 
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})

@@ -3,7 +3,6 @@ package blackbeard
 import (
 	"bytes"
 	"errors"
-	"text/template"
 	"time"
 )
 
@@ -12,13 +11,6 @@ import (
 type Config struct {
 	Name   string
 	Values string
-}
-
-// ConfigTemplate represents a set of kubernetes configuration template.
-// Usually, Template is expected to be golang template of yaml.
-type ConfigTemplate struct {
-	Name     string
-	Template *template.Template
 }
 
 // Release represents information related to an inventory release.
@@ -43,19 +35,20 @@ type ConfigService interface {
 
 // ConfigRepository represents a service that implements configs management
 type ConfigRepository interface {
-	GetTemplate() ([]ConfigTemplate, error)
 	Save(namespace string, configs []Config) error
 	Delete(namespace string) error
 }
 
 type configService struct {
-	configs ConfigRepository
+	configs   ConfigRepository
+	playbooks PlaybookService
 }
 
 // NewConfigService creates a ConfigService
-func NewConfigService(configs ConfigRepository) ConfigService {
+func NewConfigService(configs ConfigRepository, playbooks PlaybookService) ConfigService {
 	return &configService{
 		configs,
+		playbooks,
 	}
 }
 
@@ -68,7 +61,7 @@ func (cs *configService) Generate(inv Inventory) error {
 		return errors.New("an namespace must be specified in the inventory")
 	}
 
-	tpls, err := cs.configs.GetTemplate()
+	tpls, err := cs.playbooks.GetTemplate()
 	if err != nil {
 		return err
 	}

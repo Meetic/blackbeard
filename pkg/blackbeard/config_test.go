@@ -8,9 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGenerateOk(t *testing.T) {
+var configs = blackbeard.NewConfigService(mock.NewConfigRepository(),
+	blackbeard.NewPlaybookService(mock.NewPlaybookRepository()))
 
-	configs := blackbeard.NewConfigService(mock.NewConfigRepository())
+func TestGenerateOk(t *testing.T) {
 	inventories := mock.NewInventoryRepository()
 
 	inv, _ := inventories.Get("test1")
@@ -20,7 +21,6 @@ func TestGenerateOk(t *testing.T) {
 
 func TestGenerateEmptyNamespace(t *testing.T) {
 
-	configs := blackbeard.NewConfigService(mock.NewConfigRepository())
 	inventories := mock.NewInventoryRepository()
 
 	inv, _ := inventories.Get("")
@@ -29,6 +29,5 @@ func TestGenerateEmptyNamespace(t *testing.T) {
 }
 
 func TestDeleteOk(t *testing.T) {
-	configs := blackbeard.NewConfigService(mock.NewConfigRepository())
 	assert.Nil(t, configs.Delete("test"))
 }

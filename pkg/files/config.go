@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"text/template"
 
 	"github.com/Meetic/blackbeard/pkg/blackbeard"
 )
@@ -13,61 +12,23 @@ const (
 	tplSuffix = ".tpl"
 )
 
-type configRepository struct {
-	templatePath string
-	configPath   string
+type configs struct {
+	configPath string
 }
 
 // NewConfigRepository returns a new ConfigRepository
-// It takes as parameters the directory where templates files are stored and
-// the directory where configs are stored.
+// It takes as parameters the directory where configs are stored.
 // Typically, the templates files for a given playbook are in a "templates" directory at the root of the playbook
 // and configs are stored in a "configs" directory located at the root of the playbook
-func NewConfigRepository(templatePath, configPath string) blackbeard.ConfigRepository {
-	return &configRepository{
-		templatePath: templatePath,
-		configPath:   configPath,
+func NewConfigRepository(configPath string) blackbeard.ConfigRepository {
+	return &configs{
+		configPath: configPath,
 	}
-}
-
-// GetTemplate returns the templates from the playbook
-func (cr *configRepository) GetTemplate() ([]blackbeard.ConfigTemplate, error) {
-
-	//Get template list
-	templates, _ := filepath.Glob(fmt.Sprintf("%s/*%s", cr.templatePath, tplSuffix))
-
-	if templates == nil {
-		return nil, fmt.Errorf("no template files found in directory %s", cr.templatePath)
-	}
-
-	var cfgTpl []blackbeard.ConfigTemplate
-
-	for _, templ := range templates {
-
-		tpl, err := template.ParseFiles(templ)
-		if err != nil {
-			return nil, err
-		}
-
-		//create config file from tpl by removing the .tpl extension
-		ext := filepath.Ext(templ)
-		_, configFile := filepath.Split(templ[0 : len(templ)-len(ext)])
-
-		config := blackbeard.ConfigTemplate{
-			Name:     configFile,
-			Template: tpl,
-		}
-
-		cfgTpl = append(cfgTpl, config)
-	}
-
-	return cfgTpl, nil
-
 }
 
 // Save writes kubernetes configs for a given namespace in files.
 // files are named after the Config.Name value
-func (cr *configRepository) Save(namespace string, configs []blackbeard.Config) error {
+func (cr *configs) Save(namespace string, configs []blackbeard.Config) error {
 
 	//Create config dir for a given namespace
 	configDir := filepath.Join(cr.configPath, namespace)
@@ -96,7 +57,7 @@ func (cr *configRepository) Save(namespace string, configs []blackbeard.Config) 
 
 // Delete remove a config directory
 // if the specified config dir does not exist, Delete return nil and does nothing.
-func (cr *configRepository) Delete(namespace string) error {
+func (cr *configs) Delete(namespace string) error {
 	if !cr.exists(namespace) {
 		return nil
 	}
@@ -105,7 +66,7 @@ func (cr *configRepository) Delete(namespace string) error {
 
 // exists return true if a config dir for the given namespace already exist.
 // Else, it return false.
-func (cr *configRepository) exists(namespace string) bool {
+func (cr *configs) exists(namespace string) bool {
 	if _, err := os.Stat(cr.path(namespace)); os.IsNotExist(err) {
 		return false
 	} else if err == nil {
@@ -115,6 +76,6 @@ func (cr *configRepository) exists(namespace string) bool {
 }
 
 // path return the config dir path of a given namespace
-func (cr *configRepository) path(namespace string) string {
+func (cr *configs) path(namespace string) string {
 	return filepath.Join(cr.configPath, namespace)
 }
