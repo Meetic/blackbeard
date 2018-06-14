@@ -1,79 +1,83 @@
-package blackbeard
+package api
 
 import (
 	"log"
+
+	"github.com/Meetic/blackbeard/pkg/playbook"
+	"github.com/Meetic/blackbeard/pkg/resource"
 )
 
 // Api represents the blackbeard entrypoint by defining the list of actions
 // blackbeard is able to perform.
 type Api interface {
-	Inventories() InventoryService
-	Namespaces() NamespaceService
-	Playbooks() PlaybookService
-	Create(namespace string) (Inventory, error)
+	Inventories() playbook.InventoryService
+	Namespaces() resource.NamespaceService
+	Playbooks() playbook.PlaybookService
+	Create(namespace string) (playbook.Inventory, error)
 	Delete(namespace string) error
-	GetExposedServices(namespace string) ([]Service, error)
+	ListExposedServices(namespace string) ([]resource.Service, error)
+	ListNamespaces() ([]Namespace, error)
 	Reset(namespace string, configPath string) error
 	Apply(namespace string, configPath string) error
-	Update(namespace string, inventory Inventory, configPath string) error
+	Update(namespace string, inventory playbook.Inventory, configPath string) error
 }
 
 type api struct {
-	inventories InventoryService
-	configs     ConfigService
-	playbooks   PlaybookService
-	namespaces  NamespaceService
-	services    ServiceService
+	inventories playbook.InventoryService
+	configs     playbook.ConfigService
+	playbooks   playbook.PlaybookService
+	namespaces  resource.NamespaceService
+	services    resource.ServiceService
 }
 
 // NewApi creates a blackbeard api. The blackbeard api is responsible for managing playbooks and namespaces.
 // Parameters are struct implementing respectively Inventory, Config, Namespace, Pod and Service interfaces.
-func NewApi(inventories InventoryRepository, configs ConfigRepository, playbooks PlaybookRepository, namespaces NamespaceRepository, pods PodRepository, services ServiceRepository) Api {
+func NewApi(inventories playbook.InventoryRepository, configs playbook.ConfigRepository, playbooks playbook.PlaybookRepository, namespaces resource.NamespaceRepository, pods resource.PodRepository, services resource.ServiceRepository) Api {
 	return &api{
-		inventories: NewInventoryService(inventories, NewPlaybookService(playbooks)),
-		configs:     NewConfigService(configs, NewPlaybookService(playbooks)),
-		playbooks:   NewPlaybookService(playbooks),
-		namespaces:  NewNamespaceService(namespaces, pods),
-		services:    NewServiceService(services),
+		inventories: playbook.NewInventoryService(inventories, playbook.NewPlaybookService(playbooks)),
+		configs:     playbook.NewConfigService(configs, playbook.NewPlaybookService(playbooks)),
+		playbooks:   playbook.NewPlaybookService(playbooks),
+		namespaces:  resource.NewNamespaceService(namespaces, pods),
+		services:    resource.NewServiceService(services),
 	}
 }
 
 // Inventories returns the Inventory Service from the api
-func (api *api) Inventories() InventoryService {
+func (api *api) Inventories() playbook.InventoryService {
 	return api.inventories
 }
 
 // Namespaces returns the Namespace Service from the api
-func (api *api) Namespaces() NamespaceService {
+func (api *api) Namespaces() resource.NamespaceService {
 	return api.namespaces
 }
 
 // Playbooks returns the Playbook Service from the api
-func (api *api) Playbooks() PlaybookService {
+func (api *api) Playbooks() playbook.PlaybookService {
 	return api.playbooks
 }
 
 // Create is responsible for creating an inventory, a set of kubernetes configs and a kubernetes namespace
 // for a given namespace.
 // If an inventory already exist, Create will log the error and continue the process. Configs will be override.
-func (api *api) Create(namespace string) (Inventory, error) {
+func (api *api) Create(namespace string) (playbook.Inventory, error) {
 	inv, err := api.inventories.Create(namespace)
 	if err != nil {
 		switch e := err.(type) {
 		default:
-			return Inventory{}, e
-		case *ErrorInventoryAlreadyExist:
+			return playbook.Inventory{}, e
+		case *playbook.ErrorInventoryAlreadyExist:
 			log.Println(e.Error())
 			log.Println("Process continue.")
 		}
 	}
 
 	if err := api.configs.Generate(inv); err != nil {
-		return Inventory{}, err
+		return playbook.Inventory{}, err
 	}
 
 	if err := api.namespaces.Create(namespace); err != nil {
-		return Inventory{}, err
+		return playbook.Inventory{}, err
 	}
 
 	return inv, nil
@@ -96,11 +100,11 @@ func (api *api) Delete(namespace string) error {
 	return nil
 }
 
-// GetExposedServices returns a list of services exposed somehow outside of the kubernetes cluster.
+// ListExposedServices returns a list of services exposed somehow outside of the kubernetes cluster.
 // Exposed services could be :
 // * NodePort type services
 // * Http services exposed throw Ingress
-func (api *api) GetExposedServices(namespace string) ([]Service, error) {
+func (api *api) ListExposedServices(namespace string) ([]resource.Service, error) {
 	return api.services.ListExposed(namespace)
 }
 
@@ -150,7 +154,7 @@ func (api *api) Apply(namespace string, configPath string) error {
 
 // Update replace the inventory associated to the given namespace by the one set in parameters
 // and apply the changes to configs and kubernetes namespace (using the Apply method)
-func (api *api) Update(namespace string, inventory Inventory, configPath string) error {
+func (api *api) Update(namespace string, inventory playbook.Inventory, configPath string) error {
 	if err := api.inventories.Update(namespace, inventory); err != nil {
 		return err
 	}

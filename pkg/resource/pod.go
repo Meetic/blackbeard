@@ -1,4 +1,4 @@
-package blackbeard
+package resource
 
 // Pods represent a list of pods.
 type Pods []Pod

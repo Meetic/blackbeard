@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/Meetic/blackbeard/pkg/resource"
 	"k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,7 +26,7 @@ type namespaceRepository struct {
 
 // NewNamespaceRepository returns a new NamespaceRepository.
 // The parameter is a go-client Kubernetes client
-func NewNamespaceRepository(kubernetes kubernetes.Interface) blackbeard.NamespaceRepository {
+func NewNamespaceRepository(kubernetes kubernetes.Interface) resource.NamespaceRepository {
 	return &namespaceRepository{
 		kubernetes: kubernetes,
 	}
@@ -49,6 +49,27 @@ func (ns *namespaceRepository) Delete(namespace string) error {
 	default:
 		return t
 	}
+}
+
+// List returns a slice of Namespace.
+// Name is the namespace name from Kubernetes.
+// Phase is the status phase.
+// List returns an error if the namespace list could not be get from Kubernetes cluster.
+func (ns *namespaceRepository) List() ([]resource.Namespace, error) {
+	nsList, err := ns.kubernetes.CoreV1().Namespaces().List(metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var namespaces []resource.Namespace
+	for _, ns := range nsList.Items {
+		namespaces = append(namespaces, resource.Namespace{
+			Name:  ns.GetName(),
+			Phase: string(ns.Status.Phase),
+		})
+	}
+
+	return namespaces, nil
 }
 
 // ApplyConfig loads configuration files into kubernetes

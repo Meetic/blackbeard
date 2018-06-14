@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"text/template"
 
-	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/Meetic/blackbeard/pkg/playbook"
 )
 
 const (
@@ -53,15 +53,15 @@ const (
 
 type playbooks struct{}
 
-func NewPlaybookRepository() blackbeard.PlaybookRepository {
+func NewPlaybookRepository() playbook.PlaybookRepository {
 	return &playbooks{}
 }
 
-func (p *playbooks) GetTemplate() ([]blackbeard.ConfigTemplate, error) {
+func (p *playbooks) GetTemplate() ([]playbook.ConfigTemplate, error) {
 
-	var templates []blackbeard.ConfigTemplate
+	var templates []playbook.ConfigTemplate
 
-	templates = append(templates, blackbeard.ConfigTemplate{
+	templates = append(templates, playbook.ConfigTemplate{
 		Name:     "template.yml",
 		Template: template.Must(template.New("tpl").Parse(tpl)),
 	})
@@ -69,12 +69,12 @@ func (p *playbooks) GetTemplate() ([]blackbeard.ConfigTemplate, error) {
 	return templates, nil
 }
 
-func (p *playbooks) GetDefault() (blackbeard.Inventory, error) {
+func (p *playbooks) GetDefault() (playbook.Inventory, error) {
 
-	var inventory blackbeard.Inventory
+	var inventory playbook.Inventory
 
 	if err := json.Unmarshal([]byte(def), &inventory); err != nil {
-		return blackbeard.Inventory{}, blackbeard.NewErrorReadingDefaultsFile(err)
+		return playbook.Inventory{}, playbook.NewErrorReadingDefaultsFile(err)
 	}
 
 	return inventory, nil

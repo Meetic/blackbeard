@@ -23,6 +23,8 @@ func NewClient(configFile string) kubernetes.Interface {
 }
 
 // GetKubernetesHost return the kubernetes cluster domain name used in the ~/.kube/config file
+// The returned host takes the form : mydomainname.com
+// Notice : this is just the host, without any schema or port.
 func GetKubernetesHost(configFile string) string {
 
 	config, _ := clientcmd.BuildConfigFromFlags("", configFile)

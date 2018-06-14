@@ -1,4 +1,4 @@
-package blackbeard
+package resource
 
 // Service represent a kubernetes service
 // Name is the service name
@@ -25,8 +25,8 @@ type ServiceService interface {
 
 // ServiceRepository defines the way to interact with Kubernetes
 type ServiceRepository interface {
-	ListNodePort(namespace string) ([]Service, error)
-	ListIngress(namespace string) ([]Service, error)
+	ListNodePort(n string) ([]Service, error)
+	ListIngress(n string) ([]Service, error)
 }
 
 type serviceService struct {

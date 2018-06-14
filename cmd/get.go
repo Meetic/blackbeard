@@ -33,7 +33,7 @@ Using the get command without any sub-command makes no sens. Please use one of t
 {{end}}
 `))
 
-	data := []string{"get services"}
+	data := []string{"get services", "get namespaces"}
 
 	contents := bytes.Buffer{}
 	if err := tpl.Execute(&contents, data); err != nil {

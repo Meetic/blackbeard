@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/Meetic/blackbeard/pkg/playbook"
 )
 
 const (
@@ -20,7 +20,7 @@ type configs struct {
 // It takes as parameters the directory where configs are stored.
 // Typically, the templates files for a given playbook are in a "templates" directory at the root of the playbook
 // and configs are stored in a "configs" directory located at the root of the playbook
-func NewConfigRepository(configPath string) blackbeard.ConfigRepository {
+func NewConfigRepository(configPath string) playbook.ConfigRepository {
 	return &configs{
 		configPath: configPath,
 	}
@@ -28,7 +28,7 @@ func NewConfigRepository(configPath string) blackbeard.ConfigRepository {
 
 // Save writes kubernetes configs for a given namespace in files.
 // files are named after the Config.Name value
-func (cr *configs) Save(namespace string, configs []blackbeard.Config) error {
+func (cr *configs) Save(namespace string, configs []playbook.Config) error {
 
 	//Create config dir for a given namespace
 	configDir := filepath.Join(cr.configPath, namespace)

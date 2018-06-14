@@ -8,7 +8,7 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/Meetic/blackbeard/pkg/playbook"
 	"github.com/spf13/cobra"
 )
 
@@ -57,7 +57,7 @@ func runCreate(namespace string) error {
 	message := bytes.Buffer{}
 	if err := tpl.Execute(&message, struct {
 		File string
-		Inv  blackbeard.Inventory
+		Inv  playbook.Inventory
 	}{
 		File: filepath.Join(inventoryPath, inv.Namespace+"_inventory.json"),
 		Inv:  inv,

@@ -1,4 +1,4 @@
-package blackbeard
+package playbook
 
 import (
 	"fmt"
@@ -17,6 +17,7 @@ type InventoryService interface {
 	Create(namespace string) (Inventory, error)
 	Update(namespace string, inventory Inventory) error
 	Get(namespace string) (Inventory, error)
+	Exists(namespace string) bool
 	List() ([]Inventory, error)
 	Delete(namespace string) error
 	Reset(namespace string) (Inventory, error)
@@ -25,6 +26,7 @@ type InventoryService interface {
 // InventoryRepository define the way inventories are actually managed
 type InventoryRepository interface {
 	Get(namespace string) (Inventory, error)
+	Exists(namespace string) bool
 	Create(Inventory) error
 	Delete(namespace string) error
 	Update(namespace string, inventory Inventory) error
@@ -74,6 +76,12 @@ func (is *inventoryService) Get(namespace string) (Inventory, error) {
 	}
 
 	return is.inventories.Get(namespace)
+}
+
+// Exists return true if an inventory for the given namespace already exists.
+// Else, it return false.
+func (is *inventoryService) Exists(namespace string) bool {
+	return is.inventories.Exists(namespace)
 }
 
 // Delete deletes the inventory for the given namespace

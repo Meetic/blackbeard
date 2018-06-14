@@ -3,8 +3,7 @@ package http
 import (
 	"net/http"
 
-	"github.com/Meetic/blackbeard/pkg/blackbeard"
-
+	"github.com/Meetic/blackbeard/pkg/playbook"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,7 +25,7 @@ func (h *Handler) Create(c *gin.Context) {
 	//Create inventory
 	inv, err := h.api.Create(createQ.Namespace)
 	if err != nil {
-		if alreadyExist, ok := err.(blackbeard.ErrorInventoryAlreadyExist); ok {
+		if alreadyExist, ok := err.(playbook.ErrorInventoryAlreadyExist); ok {
 			c.JSON(http.StatusBadRequest, gin.H{"error": alreadyExist.Error()})
 			return
 		}
@@ -44,7 +43,7 @@ func (h *Handler) Get(c *gin.Context) {
 	inv, err := h.api.Inventories().Get(c.Params.ByName("namespace"))
 
 	if err != nil {
-		if notFound, ok := err.(blackbeard.ErrorInventoryNotFound); ok {
+		if notFound, ok := err.(playbook.ErrorInventoryNotFound); ok {
 			c.JSON(http.StatusNotFound, gin.H{"error": notFound.Error()})
 			return
 		}
@@ -85,7 +84,7 @@ func (h *Handler) List(c *gin.Context) {
 // Update will update inventory for a given namespace
 func (h *Handler) Update(c *gin.Context) {
 
-	var uQ blackbeard.Inventory
+	var uQ playbook.Inventory
 
 	if err := c.BindJSON(&uQ); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

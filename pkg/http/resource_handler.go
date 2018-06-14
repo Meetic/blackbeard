@@ -3,17 +3,17 @@ package http
 import (
 	"net/http"
 
-	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/Meetic/blackbeard/pkg/playbook"
 	"github.com/gin-gonic/gin"
 )
 
 // ListServices returns the list of exposed services (NodePort and ingress configuration) of a given inventory
 func (h *Handler) ListServices(c *gin.Context) {
 
-	services, err := h.api.GetExposedServices(c.Params.ByName("namespace"))
+	services, err := h.api.ListExposedServices(c.Params.ByName("namespace"))
 
 	if err != nil {
-		if notFound, ok := err.(blackbeard.ErrorInventoryNotFound); ok {
+		if notFound, ok := err.(playbook.ErrorInventoryNotFound); ok {
 			c.JSON(http.StatusNotFound, gin.H{"error": notFound.Error()})
 			return
 		}
@@ -30,7 +30,7 @@ func (h *Handler) GetStatus(c *gin.Context) {
 	_, err := h.api.Inventories().Get(c.Params.ByName("namespace"))
 
 	if err != nil {
-		if notFound, ok := err.(blackbeard.ErrorInventoryNotFound); ok {
+		if notFound, ok := err.(playbook.ErrorInventoryNotFound); ok {
 			c.JSON(http.StatusNotFound, gin.H{"error": notFound.Error()})
 			return
 		}
