@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/Meetic/blackbeard/pkg/playbook"
+	"github.com/Meetic/blackbeard/pkg/resource"
 	"github.com/gorilla/websocket"
 )
 
@@ -32,19 +33,19 @@ type Handler interface {
 // Handler represent a websocket handler
 type handler struct {
 	upgrader    websocket.Upgrader
-	namespaces  blackbeard.NamespaceService
-	inventories blackbeard.InventoryService
+	namespaces  resource.NamespaceService
+	inventories playbook.InventoryService
 	conn        *websocket.Conn
 }
 
 type namespaceStatus struct {
 	Namespace  string
 	Status     int
-	PodsStatus blackbeard.Pods
+	PodsStatus resource.Pods
 }
 
 // NewHandler creates a websocket server
-func NewHandler(namespace blackbeard.NamespaceService, inventories blackbeard.InventoryService) Handler {
+func NewHandler(namespace resource.NamespaceService, inventories playbook.InventoryService) Handler {
 	up := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,

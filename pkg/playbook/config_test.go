@@ -1,15 +1,15 @@
-package blackbeard_test
+package playbook_test
 
 import (
 	"testing"
 
-	"github.com/Meetic/blackbeard/pkg/blackbeard"
 	"github.com/Meetic/blackbeard/pkg/mock"
+	"github.com/Meetic/blackbeard/pkg/playbook"
 	"github.com/stretchr/testify/assert"
 )
 
-var configs = blackbeard.NewConfigService(mock.NewConfigRepository(),
-	blackbeard.NewPlaybookService(mock.NewPlaybookRepository()))
+var configs = playbook.NewConfigService(mock.NewConfigRepository(),
+	playbook.NewPlaybookService(mock.NewPlaybookRepository()))
 
 func TestGenerateOk(t *testing.T) {
 	inventories := mock.NewInventoryRepository()

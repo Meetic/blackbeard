@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/Meetic/blackbeard/pkg/playbook"
 )
 
 type playbooks struct {
@@ -15,7 +15,7 @@ type playbooks struct {
 	defaultsPath string
 }
 
-func NewPlaybookRepository(templatePath, defaultsPath string) blackbeard.PlaybookRepository {
+func NewPlaybookRepository(templatePath, defaultsPath string) playbook.PlaybookRepository {
 	return &playbooks{
 		templatePath,
 		defaultsPath,
@@ -24,7 +24,7 @@ func NewPlaybookRepository(templatePath, defaultsPath string) blackbeard.Playboo
 }
 
 // GetTemplate returns the templates from the playbook
-func (p *playbooks) GetTemplate() ([]blackbeard.ConfigTemplate, error) {
+func (p *playbooks) GetTemplate() ([]playbook.ConfigTemplate, error) {
 
 	//Get template list
 	templates, _ := filepath.Glob(fmt.Sprintf("%s/*%s", p.templatePath, tplSuffix))
@@ -33,7 +33,7 @@ func (p *playbooks) GetTemplate() ([]blackbeard.ConfigTemplate, error) {
 		return nil, fmt.Errorf("no template files found in directory %s", p.templatePath)
 	}
 
-	var cfgTpl []blackbeard.ConfigTemplate
+	var cfgTpl []playbook.ConfigTemplate
 
 	for _, templ := range templates {
 
@@ -46,7 +46,7 @@ func (p *playbooks) GetTemplate() ([]blackbeard.ConfigTemplate, error) {
 		ext := filepath.Ext(templ)
 		_, configFile := filepath.Split(templ[0 : len(templ)-len(ext)])
 
-		config := blackbeard.ConfigTemplate{
+		config := playbook.ConfigTemplate{
 			Name:     configFile,
 			Template: tpl,
 		}
@@ -59,18 +59,18 @@ func (p *playbooks) GetTemplate() ([]blackbeard.ConfigTemplate, error) {
 }
 
 // GetDefault reads the default inventory file and return an Inventory where namespace is set to "default"
-func (p *playbooks) GetDefault() (blackbeard.Inventory, error) {
+func (p *playbooks) GetDefault() (playbook.Inventory, error) {
 
 	defaults, err := ioutil.ReadFile(p.defaultsPath)
 
 	if err != nil {
-		return blackbeard.Inventory{}, blackbeard.NewErrorReadingDefaultsFile(err)
+		return playbook.Inventory{}, playbook.NewErrorReadingDefaultsFile(err)
 	}
 
-	var inventory blackbeard.Inventory
+	var inventory playbook.Inventory
 
 	if err := json.Unmarshal(defaults, &inventory); err != nil {
-		return blackbeard.Inventory{}, blackbeard.NewErrorReadingDefaultsFile(err)
+		return playbook.Inventory{}, playbook.NewErrorReadingDefaultsFile(err)
 	}
 
 	return inventory, nil

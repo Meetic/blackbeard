@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/Meetic/blackbeard/pkg/playbook"
 )
 
 const (
@@ -19,9 +19,8 @@ type inventories struct {
 }
 
 // NewInventoryRepository returns a InventoryRepository
-// Parameters is the directory where are stored the inventories
-// aka : the default inventory
-func NewInventoryRepository(inventoryPath string) blackbeard.InventoryRepository {
+// The parameter is the directory where are stored the inventories
+func NewInventoryRepository(inventoryPath string) playbook.InventoryRepository {
 	return &inventories{
 		inventoryPath: inventoryPath,
 	}
@@ -29,21 +28,21 @@ func NewInventoryRepository(inventoryPath string) blackbeard.InventoryRepository
 
 // Get returns an inventory for a given namespace.
 // If the inventory cannot be found based on its path, Get returns an empty inventory and an error
-func (ir *inventories) Get(namespace string) (blackbeard.Inventory, error) {
+func (ir *inventories) Get(namespace string) (playbook.Inventory, error) {
 
-	if !ir.exist(namespace) {
-		return blackbeard.Inventory{}, blackbeard.NewErrorInventoryNotFound(namespace)
+	if !ir.Exists(namespace) {
+		return playbook.Inventory{}, playbook.NewErrorInventoryNotFound(namespace)
 	}
 
 	return ir.read(ir.path(namespace))
 }
 
 // Create writes an inventory file containing the inventory passed as parameter.
-func (ir *inventories) Create(inventory blackbeard.Inventory) error {
+func (ir *inventories) Create(inventory playbook.Inventory) error {
 
-	//Check if an inventory file already exist for this namespace
-	if ir.exist(inventory.Namespace) {
-		return blackbeard.NewErrorInventoryAlreadyExist(inventory.Namespace)
+	// Check if an inventory file already exist for this namespace
+	if ir.Exists(inventory.Namespace) {
+		return playbook.NewErrorInventoryAlreadyExist(inventory.Namespace)
 	}
 
 	j, _ := json.MarshalIndent(inventory, "", "    ")
@@ -54,7 +53,7 @@ func (ir *inventories) Create(inventory blackbeard.Inventory) error {
 // Delete remove an inventory file.
 // if the specified inventory does not exist, Delete return nil and does nothing.
 func (ir *inventories) Delete(namespace string) error {
-	if !ir.exist(namespace) {
+	if !ir.Exists(namespace) {
 		return nil
 	}
 	return os.Remove(ir.path(namespace))
@@ -63,13 +62,13 @@ func (ir *inventories) Delete(namespace string) error {
 // Update will update inventory for a given namespace.
 // If the namespace in the inventory is not the same as the namespace given as first parameters of Update
 // this function will rename the inventory file to match ne new namespace.
-func (ir *inventories) Update(namespace string, inv blackbeard.Inventory) error {
+func (ir *inventories) Update(namespace string, inv playbook.Inventory) error {
 
 	//check if the namespace name has change
 	if namespace != inv.Namespace {
 		//Check if a inventory file already exist for this usr.
-		if ir.exist(inv.Namespace) {
-			return blackbeard.NewErrorInventoryAlreadyExist(inv.Namespace)
+		if ir.Exists(inv.Namespace) {
+			return playbook.NewErrorInventoryAlreadyExist(inv.Namespace)
 		}
 		err := os.Rename(ir.path(namespace), ir.path(inv.Namespace))
 		if err != nil {
@@ -90,8 +89,8 @@ func (ir *inventories) Update(namespace string, inv blackbeard.Inventory) error 
 
 // List return the list of existing inventories
 // If no inventory file exist, the function returns an empty slice.
-func (ir *inventories) List() ([]blackbeard.Inventory, error) {
-	var inventories []blackbeard.Inventory
+func (ir *inventories) List() ([]playbook.Inventory, error) {
+	var inventories []playbook.Inventory
 
 	invFiles, _ := filepath.Glob(filepath.Join(ir.inventoryPath, fmt.Sprintf("*_%s", inventoryFileSuffix)))
 
@@ -107,8 +106,8 @@ func (ir *inventories) List() ([]blackbeard.Inventory, error) {
 
 }
 
-func (ir *inventories) read(path string) (blackbeard.Inventory, error) {
-	var inv blackbeard.Inventory
+func (ir *inventories) read(path string) (playbook.Inventory, error) {
+	var inv playbook.Inventory
 
 	raw, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -119,9 +118,9 @@ func (ir *inventories) read(path string) (blackbeard.Inventory, error) {
 	return inv, nil
 }
 
-// exist return true if an inventory for the given namespace already exist.
+// Exists return true if an inventory for the given namespace already exist.
 // Else, it return false.
-func (ir *inventories) exist(namespace string) bool {
+func (ir *inventories) Exists(namespace string) bool {
 	if _, err := os.Stat(ir.path(namespace)); os.IsNotExist(err) {
 		return false
 	} else if err == nil {

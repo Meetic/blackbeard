@@ -1,4 +1,4 @@
-package blackbeard
+package playbook
 
 import (
 	"bytes"

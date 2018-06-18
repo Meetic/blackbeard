@@ -1,7 +1,7 @@
 package kubernetes
 
 import (
-	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/Meetic/blackbeard/pkg/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -12,7 +12,7 @@ type podRepository struct {
 
 // NewPodRepository returns a new PodRepository.
 // The parameter is a go-client kubernetes client.
-func NewPodRepository(kubernetes kubernetes.Interface) blackbeard.PodRepository {
+func NewPodRepository(kubernetes kubernetes.Interface) resource.PodRepository {
 	return &podRepository{
 		kubernetes: kubernetes,
 	}
@@ -20,18 +20,18 @@ func NewPodRepository(kubernetes kubernetes.Interface) blackbeard.PodRepository 
 
 // GetPods of all the pods in a given namespace.
 // This method returns a Pods slice containing the pod name and the pod status (pod status phase).
-func (rs *podRepository) List(namespace string) (blackbeard.Pods, error) {
-	podsList, err := rs.kubernetes.CoreV1().Pods(namespace).List(metav1.ListOptions{})
+func (rs *podRepository) List(n string) (resource.Pods, error) {
+	podsList, err := rs.kubernetes.CoreV1().Pods(n).List(metav1.ListOptions{})
 
 	if err != nil {
 		return nil, err
 	}
 
-	var pods blackbeard.Pods
+	var pods resource.Pods
 
 	for _, pod := range podsList.Items {
 
-		pods = append(pods, blackbeard.Pod{
+		pods = append(pods, resource.Pod{
 			Name:   pod.ObjectMeta.Name,
 			Status: string(pod.Status.Phase),
 		})

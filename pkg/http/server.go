@@ -3,7 +3,7 @@ package http
 import (
 	"log"
 
-	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/Meetic/blackbeard/pkg/api"
 	"github.com/Meetic/blackbeard/pkg/websocket"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -12,7 +12,7 @@ import (
 // Handler actually handle http requests.
 // It use a router to map uri to HandlerFunc
 type Handler struct {
-	api        blackbeard.Api
+	api        api.Api
 	websocket  websocket.Handler
 	configPath string
 
@@ -22,7 +22,7 @@ type Handler struct {
 // NewHandler create an Handler using defined routes.
 // It takes a client as argument in order to be passe to the handler and be accessible to the HandlerFunc
 // Typically in a CRUD API, the client manage connections to a storage system.
-func NewHandler(api blackbeard.Api, websocket websocket.Handler, configPath string, corsEnable bool) *Handler {
+func NewHandler(api api.Api, websocket websocket.Handler, configPath string, corsEnable bool) *Handler {
 	h := &Handler{
 		api:        api,
 		websocket:  websocket,

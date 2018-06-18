@@ -38,9 +38,9 @@ func runGetServices() error {
 	api := newAPI()
 
 	//get exposed services (NodePort)
-	services, err := api.GetExposedServices(namespace)
+	services, err := api.ListExposedServices(namespace)
 	if err != nil {
-		log.Fatalf("an error occurend when getting information about services : %v", err)
+		return errors.New(fmt.Sprintf("an error occurend when getting information about services : %v", err))
 	}
 
 	w := new(tabwriter.Writer)

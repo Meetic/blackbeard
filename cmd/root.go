@@ -9,7 +9,7 @@ import (
 	"bufio"
 	"strings"
 
-	"github.com/Meetic/blackbeard/pkg/blackbeard"
+	"github.com/Meetic/blackbeard/pkg/api"
 	"github.com/Meetic/blackbeard/pkg/files"
 	"github.com/Meetic/blackbeard/pkg/kubernetes"
 	"github.com/spf13/cobra"
@@ -175,12 +175,12 @@ func askForConfirmation(s string) bool {
 	}
 }
 
-func newAPI() blackbeard.Api {
+func newAPI() api.Api {
 	kube := kubernetes.NewClient(kubeConfigPath)
 
-	return blackbeard.NewApi(
+	return api.NewApi(
 		files.NewInventoryRepository(inventoryPath),
-		files.NewConfigRepository(templatePath),
+		files.NewConfigRepository(configPath),
 		files.NewPlaybookRepository(templatePath, defaultsPath),
 		kubernetes.NewNamespaceRepository(kube),
 		kubernetes.NewPodRepository(kube),

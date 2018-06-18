@@ -1,8 +1,14 @@
-package blackbeard
+package resource
 
 const (
 	running = "Running"
 )
+
+type Namespace struct {
+	Name   string
+	Phase  string
+	Status int
+}
 
 // NamespaceService defined the way namespace are managed.
 type NamespaceService interface {
@@ -10,6 +16,7 @@ type NamespaceService interface {
 	ApplyConfig(namespace string, configPath string) error
 	Delete(namespace string) error
 	GetStatus(namespace string) (int, error)
+	List() ([]Namespace, error)
 	GetPods(namespace string) (Pods, error)
 }
 
@@ -18,6 +25,7 @@ type NamespaceRepository interface {
 	Create(namespace string) error
 	ApplyConfig(namespace string, configPath string) error
 	Delete(namespace string) error
+	List() ([]Namespace, error)
 }
 
 type namespaceService struct {
@@ -48,6 +56,27 @@ func (ns *namespaceService) ApplyConfig(namespace, configPath string) error {
 // Delete deletes a kubernetes namespace
 func (ns *namespaceService) Delete(namespace string) error {
 	return ns.namespaces.Delete(namespace)
+}
+
+// List returns a slice of Namespace from the kubernetes package and enrich each of the
+// returned namespace with its status.
+func (ns *namespaceService) List() ([]Namespace, error) {
+	namespaces, err := ns.namespaces.List()
+	if err != nil {
+		return nil, err
+	}
+
+	for i, namespace := range namespaces {
+		status, err := ns.GetStatus(namespace.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		namespaces[i].Status = status
+	}
+
+	return namespaces, nil
+
 }
 
 // GetStatus returns the status of an inventory
