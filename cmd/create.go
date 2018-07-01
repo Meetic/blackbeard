@@ -41,7 +41,9 @@ func runCreate(namespace string) error {
 		return errors.New("you must specified a namespace using the --namespace flag")
 	}
 
-	api := newAPI()
+	files := newFileClient(dir)
+
+	api := newAPI(files, newKubernetesClient())
 
 	inv, err := api.Create(namespace)
 	if err != nil {
@@ -59,7 +61,7 @@ func runCreate(namespace string) error {
 		File string
 		Inv  playbook.Inventory
 	}{
-		File: filepath.Join(inventoryPath, inv.Namespace+"_inventory.json"),
+		File: filepath.Join(files.InventoryPath(), inv.Namespace+"_inventory.json"),
 		Inv:  inv,
 	}); err != nil {
 		return err

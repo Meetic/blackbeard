@@ -29,7 +29,7 @@ func init() {
 
 func runGetNamespaces() error {
 
-	api := newAPI()
+	api := newAPI(newFileClient(dir), newKubernetesClient())
 
 	namespaces, err := api.ListNamespaces()
 	if err != nil {

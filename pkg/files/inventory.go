@@ -129,7 +129,7 @@ func (ir *inventories) Exists(namespace string) bool {
 	return false
 }
 
-// Path return the inventory file path of a given namespace
+// path return the inventory file path of a given namespace
 func (ir *inventories) path(namespace string) string {
 	return filepath.Join(ir.inventoryPath, fmt.Sprintf("%s_%s", namespace, inventoryFileSuffix))
 }

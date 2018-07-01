@@ -33,10 +33,12 @@ func runReset(namespace string) error {
 		return errors.New("you must specified a namespace using the --namespace flag")
 	}
 
-	api := newAPI()
+	files := newFileClient(dir)
+
+	api := newAPI(files, newKubernetesClient())
 
 	//Reset inventory file
-	err := api.Reset(namespace, configPath)
+	err := api.Reset(namespace, files.ConfigPath())
 	if err != nil {
 		return err
 	}

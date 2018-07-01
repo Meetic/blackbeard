@@ -25,11 +25,13 @@ func init() {
 
 func runServe() {
 
-	api := newAPI()
+	files := newFileClient(dir)
+
+	api := newAPI(files, newKubernetesClient())
 
 	wh := websocket.NewHandler(api.Namespaces(), api.Inventories())
 
-	h := http.NewHandler(api, wh, configPath, cors)
+	h := http.NewHandler(api, wh, files.ConfigPath(), cors)
 	s := http.NewServer(h)
 	s.Serve()
 

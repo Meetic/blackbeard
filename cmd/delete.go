@@ -35,7 +35,7 @@ func runDelete(namespace string) error {
 
 	askForConfirmation(fmt.Sprintf("You are about to delete the inventory %s and all its associated files. Are you sure?", namespace))
 
-	api := newAPI()
+	api := newAPI(newFileClient(dir), newKubernetesClient())
 
 	err := api.Delete(namespace)
 	if err != nil {

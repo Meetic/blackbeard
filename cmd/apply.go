@@ -36,9 +36,10 @@ func runApply(namespace string) error {
 		return errors.New("you must specified a namespace using the --namespace flag")
 	}
 
-	api := newAPI()
+	files := newFileClient(dir)
+	api := newAPI(files, newKubernetesClient())
 
-	err := api.Apply(namespace, configPath)
+	err := api.Apply(namespace, files.ConfigPath())
 	if err != nil {
 		return err
 	}
