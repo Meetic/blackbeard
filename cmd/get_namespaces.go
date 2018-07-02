@@ -12,8 +12,9 @@ import (
 
 var getNamespaceCmd = &cobra.Command{
 	Use:   "namespaces",
-	Short: "todo",
-	Long:  `todo`,
+	Short: "Show informations about kubernetes namespaces.",
+	Long: `Show informations about kubernetes namespaces such as names, status (percentage of pods in a running status),
+managed or not with the current playbook, etc.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := runGetNamespaces()
 		if err != nil {
