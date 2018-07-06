@@ -1,8 +1,6 @@
 package resource
 
-const (
-	running = "Running"
-)
+import "k8s.io/api/core/v1"
 
 type Namespace struct {
 	Name   string
@@ -17,7 +15,6 @@ type NamespaceService interface {
 	Delete(namespace string) error
 	GetStatus(namespace string) (int, error)
 	List() ([]Namespace, error)
-	GetPods(namespace string) (Pods, error)
 }
 
 // NamespaceService defined the way namespace area actually managed.
@@ -97,7 +94,7 @@ func (ns *namespaceService) GetStatus(namespace string) (int, error) {
 	var i int
 
 	for _, pod := range pods {
-		if pod.Status == running {
+		if pod.Status == v1.PodRunning {
 			i++
 		}
 	}
@@ -106,9 +103,4 @@ func (ns *namespaceService) GetStatus(namespace string) (int, error) {
 
 	return status, nil
 
-}
-
-// GetPods returns the list of pods in a kubernetes namespace with their associated status.
-func (ns *namespaceService) GetPods(namespace string) (Pods, error) {
-	return ns.pods.List(namespace)
 }

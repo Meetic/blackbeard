@@ -34,6 +34,7 @@ type Handler interface {
 type handler struct {
 	upgrader    websocket.Upgrader
 	namespaces  resource.NamespaceService
+	pods        resource.PodService
 	inventories playbook.InventoryService
 	conn        *websocket.Conn
 }
@@ -45,7 +46,7 @@ type namespaceStatus struct {
 }
 
 // NewHandler creates a websocket server
-func NewHandler(namespace resource.NamespaceService, inventories playbook.InventoryService) Handler {
+func NewHandler(namespace resource.NamespaceService, inventories playbook.InventoryService, pods resource.PodService) Handler {
 	up := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -57,6 +58,7 @@ func NewHandler(namespace resource.NamespaceService, inventories playbook.Invent
 		upgrader:    up,
 		namespaces:  namespace,
 		inventories: inventories,
+		pods:        pods,
 	}
 
 	return &h
@@ -151,7 +153,7 @@ func (h *handler) readNamespacesStatus() ([]namespaceStatus, error) {
 			return nil, err
 		}
 
-		pods, err := h.namespaces.GetPods(i.Namespace)
+		pods, err := h.pods.List(i.Namespace)
 		if err != nil {
 			return nil, err
 		}

@@ -2,6 +2,7 @@ package api
 
 import (
 	"log"
+	"time"
 
 	"github.com/Meetic/blackbeard/pkg/playbook"
 	"github.com/Meetic/blackbeard/pkg/resource"
@@ -13,6 +14,7 @@ type Api interface {
 	Inventories() playbook.InventoryService
 	Namespaces() resource.NamespaceService
 	Playbooks() playbook.PlaybookService
+	Pods() resource.PodService
 	Create(namespace string) (playbook.Inventory, error)
 	Delete(namespace string) error
 	ListExposedServices(namespace string) ([]resource.Service, error)
@@ -20,6 +22,7 @@ type Api interface {
 	Reset(namespace string, configPath string) error
 	Apply(namespace string, configPath string) error
 	Update(namespace string, inventory playbook.Inventory, configPath string) error
+	WaitForNamespaceReady(namespace string, timeout time.Duration, bar progress) error
 }
 
 type api struct {
@@ -27,6 +30,7 @@ type api struct {
 	configs     playbook.ConfigService
 	playbooks   playbook.PlaybookService
 	namespaces  resource.NamespaceService
+	pods        resource.PodService
 	services    resource.ServiceService
 }
 
@@ -38,6 +42,7 @@ func NewApi(inventories playbook.InventoryRepository, configs playbook.ConfigRep
 		configs:     playbook.NewConfigService(configs, playbook.NewPlaybookService(playbooks)),
 		playbooks:   playbook.NewPlaybookService(playbooks),
 		namespaces:  resource.NewNamespaceService(namespaces, pods),
+		pods:        resource.NewPodService(pods),
 		services:    resource.NewServiceService(services),
 	}
 }
@@ -55,6 +60,10 @@ func (api *api) Namespaces() resource.NamespaceService {
 // Playbooks returns the Playbook Service from the api
 func (api *api) Playbooks() playbook.PlaybookService {
 	return api.playbooks
+}
+
+func (api *api) Pods() resource.PodService {
+	return api.pods
 }
 
 // Create is responsible for creating an inventory, a set of kubernetes configs and a kubernetes namespace

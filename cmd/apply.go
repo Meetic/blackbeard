@@ -4,8 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/gosuri/uiprogress"
 	"github.com/spf13/cobra"
+)
+
+const (
+	defaultTimeout = 5 * time.Minute
 )
 
 // applyCmd represents the apply command
@@ -27,7 +33,8 @@ and apply the changes to the Kubernetes namespace.
 func init() {
 	RootCmd.AddCommand(applyCmd)
 	applyCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace where to apply configuration")
-
+	applyCmd.Flags().BoolVar(&wait, "wait", false, "wait until all pods are running")
+	applyCmd.Flags().DurationVarP(&timeout, "timeout", "t", defaultTimeout, "The max time to wait for pods to be all running.")
 }
 
 func runApply(namespace string) error {
@@ -44,7 +51,22 @@ func runApply(namespace string) error {
 		return err
 	}
 
-	fmt.Println("Playbook has been deployed!")
+	fmt.Println("Playbook has been deployed.")
+
+	if wait {
+
+		fmt.Println("Waiting for namespace to be ready...")
+		//init progress bar
+		uiprogress.Start()
+		bar := uiprogress.AddBar(100).AppendCompleted().PrependElapsed()
+
+		if err := api.WaitForNamespaceReady(namespace, timeout, bar); err != nil {
+			return err
+		}
+
+		fmt.Println("Namespace is ready.")
+
+	}
 
 	return nil
 }

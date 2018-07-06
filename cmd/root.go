@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"bufio"
 	"strings"
@@ -19,6 +20,8 @@ var cfgFile string
 var dir string
 var namespace string
 var cors bool
+var wait bool
+var timeout time.Duration
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{

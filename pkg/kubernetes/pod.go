@@ -20,8 +20,8 @@ func NewPodRepository(kubernetes kubernetes.Interface) resource.PodRepository {
 
 // GetPods of all the pods in a given namespace.
 // This method returns a Pods slice containing the pod name and the pod status (pod status phase).
-func (rs *podRepository) List(n string) (resource.Pods, error) {
-	podsList, err := rs.kubernetes.CoreV1().Pods(n).List(metav1.ListOptions{})
+func (pr *podRepository) List(n string) (resource.Pods, error) {
+	podsList, err := pr.kubernetes.CoreV1().Pods(n).List(metav1.ListOptions{})
 
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func (rs *podRepository) List(n string) (resource.Pods, error) {
 
 		pods = append(pods, resource.Pod{
 			Name:   pod.ObjectMeta.Name,
-			Status: string(pod.Status.Phase),
+			Status: pod.Status.Phase,
 		})
 	}
 
