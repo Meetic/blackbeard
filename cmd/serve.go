@@ -29,7 +29,7 @@ func runServe() {
 
 	api := newAPI(files, newKubernetesClient())
 
-	wh := websocket.NewHandler(api.Namespaces(), api.Inventories())
+	wh := websocket.NewHandler(api.Namespaces(), api.Inventories(), api.Pods())
 
 	h := http.NewHandler(api, wh, files.ConfigPath(), cors)
 	s := http.NewServer(h)

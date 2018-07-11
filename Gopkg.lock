@@ -143,6 +143,21 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/gosuri/uilive"
+  packages = ["."]
+  revision = "ac356e6e42cd31fcef8e6aec13ae9ed6fe87713e"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/gosuri/uiprogress"
+  packages = [
+    ".",
+    "util/strutil"
+  ]
+  revision = "d0567a9d84a1c40dd7568115ea66f4887bf57b33"
+
+[[projects]]
+  branch = "master"
   name = "github.com/gregjones/httpcache"
   packages = [
     ".",
@@ -548,6 +563,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "10c45dc333ec5a03fc222737ab87d87779f31dd6982ddf7212d16fd55154528b"
+  inputs-digest = "4af2bbd9759273d614fa995ac1478e599ddf42274b075d635b17fae3b5cdcb8b"
   solver-name = "gps-cdcl"
   solver-version = 1
