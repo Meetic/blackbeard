@@ -1,0 +1,19 @@
+builds:
+  - binary: blackbeard
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+archive:
+  replacements:
+    darwin: macos
+    linux: linux
+    windows: windows
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
