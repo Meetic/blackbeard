@@ -3,7 +3,7 @@
   "info": {
     "version": "1.0.0",
     "title": "Blackbeard API",
-    "description": "This is a REST API to manage Blackbeard. See https://github.com/Meetic/blackbeard",
+    "description": "A REST API served from Blackbeard. See https://github.com/Meetic/blackbeard",
     "contact": {
       "name": "Sébastien Le gall",
       "url": "http://le-gall.bzh",
@@ -28,6 +28,7 @@
     "/inventories/{namespace}": {
       "get": {
         "description": "Read inventory file for a given namespace and return it as a json object.",
+        "summary": "Return inventory for the given namespace",
         "operationId": "get-inventory",
         "consumes": [
           "application/json"
@@ -113,6 +114,7 @@
       },
       "delete": {
         "description": "Delete inventory file, configs and namespace for the given namespace",
+        "summary": "Delete inventory file and associated namespace",
         "operationId": "delete-inventory",
         "produces": [
           "application/json"
@@ -142,6 +144,7 @@
     "/inventories/{namespace}/status": {
       "get": {
         "description": "Read the namespace status : either ready or not ready",
+        "summary": "Return the namespace status",
         "operationId": "get-inventory-status",
         "consumes": [
           "application/json"
@@ -183,13 +186,13 @@
     "/inventories/{namespace}/reset": {
       "post": {
         "description": "Reset a namespace to defaults. This will reset the inventory and apply the changes to kubernetes.",
+        "summary": "Reset a namespace to defaults",
         "consumes": [
           "application/json"
         ],
         "produces": [
           "application/json"
         ],
-        "summary": "Reset a namespace to defaults",
         "operationId": "reset-inventory",
         "parameters": [
           {
@@ -321,6 +324,7 @@
     "/inventories/{namespace}/services": {
       "get": {
         "description": "Returns the list of exposed services (NodePort and ingress configuration) of a given inventory",
+        "summary": "Returns the list of exposed services",
         "operationId": "get-services",
         "consumes": [
           "application/json"
