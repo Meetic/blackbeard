@@ -1,0 +1,11 @@
+{
+    "namespace" : "default",
+    "values": {
+        "api": {
+            "version": "v1"
+        },
+        "front": {
+            "version": "v1"
+        }
+    }
+}
