@@ -1,7 +1,7 @@
 ---
 title: "Templates"
 anchor: "templates"
-weight: 31
+weight: 41
 ---
 
 Playbooks expect `templates` and a *default* inventory.

@@ -1,7 +1,7 @@
 ---
 title: "HTTP"
 anchor: "http"
-weight: 21
+weight: 31
 ---
 
 Blackbeard also provide a web server and a websocket server exposing a REST api.

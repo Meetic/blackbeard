@@ -1,7 +1,7 @@
 ---
 title: "defaults.json"
 anchor: "defaults.json"
-weight: 33
+weight: 43
 ---
 
 The `defaults.json` file is the default inventory. It contains defaults values to apply on the templates. Blackbeard uses it to generated per namespace inventory.

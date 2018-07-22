@@ -1,7 +1,7 @@
 ---
 title: "CLI"
 anchor: "cli"
-weight: 21
+weight: 31
 ---
 Blackbeard provide a set of CLI command.
 

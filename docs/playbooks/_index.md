@@ -1,7 +1,7 @@
 ---
 title: "Playbooks"
 anchor: "playbooks"
-weight: 30
+weight: 40
 ---
 
 Blackbeard uses `Playbooks` to manage technical stack deployments across multiple namespaces.

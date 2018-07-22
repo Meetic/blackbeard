@@ -1,7 +1,7 @@
 ---
 title: "Installation"
 anchor: "installation"
-weight: 16
+weight: 21
 ---
 ### Recommanded
 

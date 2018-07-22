@@ -1,7 +1,7 @@
 ---
 title: "Inventories"
 anchor: "inventories"
-weight: 32
+weight: 42
 ---
 
 An inventory is a file containing a json object. This object is made available inside the templates by Blackbeard.

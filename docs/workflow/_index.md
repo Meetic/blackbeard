@@ -1,7 +1,7 @@
 ---
 title: "Workflow"
 anchor: "workflow"
-weight: 20
+weight: 30
 ---
 
 Working with Blackbeard actually means working with a `playbook`. Blackbeard manage Kubernetes namespaces based on a playbook.
