@@ -1,6 +1,5 @@
 ---
 title: "Installation"
-date: 2018-07-18T12:42:17+01:00
 anchor: "installation"
 weight: 16
 ---

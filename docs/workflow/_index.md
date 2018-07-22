@@ -1,6 +1,5 @@
 ---
 title: "Workflow"
-date: 2018-07-18T09:14:17+01:00
 anchor: "workflow"
 weight: 20
 ---

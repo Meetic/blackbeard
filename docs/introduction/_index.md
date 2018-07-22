@@ -1,11 +1,10 @@
 ---
 title: "What is Blackbeard?"
-date: 2018-07-11T12:42:17+01:00
 anchor: "introduction"
 weight: 10
 ---
 
-**Blackbeard is a namespace manager for Kubernetes.** It helps you to develop and test with Kubernetes using namespaces.
+**Blackbeard is a namespace manager for Kubernetes.** :thumbsup: It helps you to develop and test with Kubernetes using namespaces.
 
 {{% block tip %}}
 Kubernetes namespaces provide an easy way to isolate your components, your development environment, or your staging environment.
