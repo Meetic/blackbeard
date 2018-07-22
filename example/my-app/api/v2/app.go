@@ -15,7 +15,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	log.Print("API running")
+	log.Printf("API version %d is running", version)
 	http.HandleFunc("/", handler)
 	http.ListenAndServe(":50051", nil)
 }
