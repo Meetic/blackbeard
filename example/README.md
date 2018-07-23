@@ -27,6 +27,12 @@ You must have `kubectl` installed and configured and a Kubernetes cluster ready.
 
 *Tips: On MacOS and Windows, you may use the built-in Kubernetes cluster with docker-for-desktop*
 
+You must be located in the `playbook` directory : 
+
+```sh
+cd my-app-playbook
+```
+
 ### Create a namespace using the v1 api
 
 ```sh
