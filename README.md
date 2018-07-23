@@ -1,4 +1,7 @@
 # Blackbeard
+[![Build Status](https://travis-ci.org/Meetic/blackbeard.svg?branch=master)](https://travis-ci.org/Meetic/blackbeard) [![Go Report Card](https://goreportcard.com/badge/github.com/Meetic/blackbeard)](https://goreportcard.com/report/github.com/Meetic/blackbeard) [![GitHub license](https://img.shields.io/github/license/Meetic/blackbeard.svg)](https://github.com/Meetic/blackbeard/blob/master/LICENSE) 
+[![GitHub release](https://img.shields.io/github/release/Meetic/blackbeard.svg)](https://github.com/Meetic/blackbeard) [![Twitter](https://img.shields.io/twitter/url/https/github.com/Meetic/blackbeard.svg?style=social)](https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2FMeetic%2Fblackbeard) 
+
 
 Blackbeard is a tool that let you manage multiple version of the same stack using kubernetes and namespaces.
 
