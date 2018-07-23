@@ -2,157 +2,26 @@
 [![Build Status](https://travis-ci.org/Meetic/blackbeard.svg?branch=master)](https://travis-ci.org/Meetic/blackbeard) [![Go Report Card](https://goreportcard.com/badge/github.com/Meetic/blackbeard)](https://goreportcard.com/report/github.com/Meetic/blackbeard) [![GitHub license](https://img.shields.io/github/license/Meetic/blackbeard.svg)](https://github.com/Meetic/blackbeard/blob/master/LICENSE) 
 [![GitHub release](https://img.shields.io/github/release/Meetic/blackbeard.svg)](https://github.com/Meetic/blackbeard) [![Twitter](https://img.shields.io/twitter/url/https/github.com/Meetic/blackbeard.svg?style=social)](https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2FMeetic%2Fblackbeard) 
 
+## Introduction
+**Blackbeard is a namespace manager for Kubernetes.** It helps you to develop and test with Kubernetes using namespaces.
 
-Blackbeard is a tool that let you manage multiple version of the same stack using kubernetes and namespaces.
+Blackbeard helps you to deploy your Kubernetes manifests on multiple namespaces, making each of them running a different version of your microservices. You may use it to manage development environment (one namespace per developer) or for testing purpose (one namespace for each feature to test before deploying in production).
 
-If you need to deploy and use mutiple version of a stack (a group of applications), Blackbeard is the tool you need.
+Blackbeard use *playbooks* to manage namespaces. A playbook is a collection of kubernetes manifest describing your stack, written as templates. A playbook also require a `default.json`, providing the default values to apply to the templates.
 
-Blackbeard is made to be executed using a directory containing configuration files and directories called a *Playbook*.
+Playbooks are created as files laid out in a particular directory tree.
 
-A *Playbook* is a directory that contains :
+## Requirements
 
-* A `defaults.json` file that defines the default values to apply.
-* A `templates` directory that contains the configuration templates. Those are typically kubernetes configuration files (yaml).
-* An `inventories` directory that will contains the future inventories (One per namespace). The content of this directory should not be versioned.
-* A `configs` directory that will contains the future configuration files (one sub-dir per namespace). The content of this directory should not be versioned as well.
+You must have `kubectl` installed and configured to use Blackbeard
 
-By default, Blackbeard will try to use the current directory as a Playbook. You can also specify a default playbook using a configuration file (see configuration).
-
-## Usage
-
-### Requirement
-
-* A working and configure kubectl
-
-### Cli usage
-
-Blackbeard can be use as a cli tool.
-
-You can find examples bellow.
-
-#### Creatin a new env :
+## Installation
 
 ```sh
-cd {your playbook}
-blackbeard create -n {namespace name}
+curl -sf https://raw.githubusercontent.com/Meetic/blackbeard/master/install.sh | sh
 ```
 
-#### Apply a change :
+## Documentation
 
-```sh
-cd {your playbook}/inventories
-## edit the inventory file you want to update
-cd ..
-blackbeard apply -n {namespace name}
-```
-
-#### Getting Help
-
-```sh
-blackbeard -h
-blackbeard create -h
-blackbeard apply -h
-```
-
-### REST API / websocket server
-
-blackbeard also provide a webserver able to handle REST queries and a websocket server.
-
-The REST api can be used to do the same thing that you can do using blackbeard as cli tool.
-
-API specifications can be found in the `swagger.json` file.
-
-## Playbooks
-
-A `playbook` is a bunch of kubernetes configuration files using some variables that may be different depending on what we want to do.
-
-Under the hood, a `playbook` is a suit of templates containing references to variables. The value of those variables are defined in an `inventory` file.
-
-An `inventory` is a file containing a JSON object with at leat to fields :
-
-* `namespace`
-* `values`
-
-Inventories are not part of a `playbook`. They are generated from a `defaults.json` file that is part of the playbook and define :
-
-* The structure of the values to be used in the templates
-* The default values.
-
-Since templates are Go template, you just have to follow [the rules of the go template engine](https://golang.org/pkg/text/template/). It is very similar to any well known template engine (Jinja,twig, etc.)
-
-There are some rules you need to follow.
-
-### defaults rules
-
-`defaults.json` must contains a JSON object with at leat to fields :
-
-* `namespace`
-* `values`
-
-The `namespace` must be a string. It's a common practice to set the value to "default". This value will be replaced for each new generated inventory.
-
-The `values` can be what ever you want : a JSON object, an array of JSON object, etc.
-
-### templates rules
-
-* Templates files must be located in the `templates` directory.
-* All templates files must end with `.tpl` extension.
-
-### values rules
-
-You can put whatever you want in the default `values` field. The objects you put in this field will be used to execute the template.
-
-Example :
-If you choose to defines values like that : 
-
-```json
-{
-    "namespace": "test",
-    "values": {
-        "apis": [
-            {
-                "name": "test",
-                "url": "http://test.kube",
-                "version": "1.2.3"
-            }
-        ]
-    }
-}
-```
-
-You will be able to use those values in the template following the template engine rules : 
-
-```
-{{range .Values.apis}}
----
-kind: Deployment
-apiVersion: extensions/v1beta1
-metadata:
-  name: {{.name}}
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: fpm-{{.name}}
-    spec:
-      containers:
-        - name: {{.name}}
-          image:  artifact-docker-rd.meetic.ilius.net/meetic/api-private/{{.name}}:{{.version}}
-          imagePullPolicy: Always
-{{end}}
-
-```
-
-**Caution :** First letter of `namespace` and `value` must be capitalized when called in the template.
-
-## Configuration
-
-Using a configuration file is not mandatory. But if you use the webserver or always work with the same playbook, it may be easier.
-
-Create a new file `~/.blackbeard.yml` following this guide line : 
-
-```yaml
-working-dir: /path/to/your/playbook
-```
+You can find Blackbeard documentation on the [Blackbeard website](https://blackbeard.netlify.com)
 
