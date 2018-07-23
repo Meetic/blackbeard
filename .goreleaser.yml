@@ -6,11 +6,11 @@ builds:
       - linux
     goarch:
       - amd64
-archive:
-  replacements:
-    darwin: macos
-    linux: linux
-    windows: windows
+# archive:
+#   replacements:
+#     darwin: macos
+#     linux: linux
+#     windows: windows
 changelog:
   sort: asc
   filters:
