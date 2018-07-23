@@ -1,4 +1,10 @@
-# Blackbeard
+<p align="center">
+  <img alt="Blackbeard Logo" src="https://blackbeard.netlify.com/img/blackbeard.png" height="160" />
+  <h3 align="center">Blackbeard</h3>
+  <p align="center">A namespace manager for Kubernetes.</p>
+</p>
+
+---
 [![Build Status](https://travis-ci.org/Meetic/blackbeard.svg?branch=master)](https://travis-ci.org/Meetic/blackbeard) [![Go Report Card](https://goreportcard.com/badge/github.com/Meetic/blackbeard)](https://goreportcard.com/report/github.com/Meetic/blackbeard) [![GitHub license](https://img.shields.io/github/license/Meetic/blackbeard.svg)](https://github.com/Meetic/blackbeard/blob/master/LICENSE) 
 [![GitHub release](https://img.shields.io/github/release/Meetic/blackbeard.svg)](https://github.com/Meetic/blackbeard) [![Twitter](https://img.shields.io/twitter/url/https/github.com/Meetic/blackbeard.svg?style=social)](https://twitter.com/intent/tweet?text=Wow:&url=https%3A%2F%2Fgithub.com%2FMeetic%2Fblackbeard) 
 
