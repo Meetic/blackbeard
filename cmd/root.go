@@ -100,7 +100,7 @@ func askForConfirmation(s string) bool {
 
 		if response == "y" || response == "yes" {
 			return true
-		} else if response == "n" || response == "no" {
+		} else {
 			return false
 		}
 	}
