@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"log"
+	"os"
 
 	"fmt"
 
@@ -33,8 +34,8 @@ func runDelete(namespace string) error {
 		return errors.New("you must specified a namespace using the --namespace flag")
 	}
 
-	if !askForConfirmation(fmt.Sprintf("You are about to delete the inventory %s and all its associated files. Are you sure?", namespace)) {
-	    return nil
+	if !askForConfirmation(fmt.Sprintf("You are about to delete the inventory %s and all its associated files. Are you sure?", namespace), os.Stdin) {
+		return nil
 	}
 
 	api := newAPI(newFileClient(dir), newKubernetesClient())
