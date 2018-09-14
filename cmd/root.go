@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"time"
@@ -85,13 +86,14 @@ func initConfig() {
 
 }
 
-func askForConfirmation(s string) bool {
-	reader := bufio.NewReader(os.Stdin)
+func askForConfirmation(message string, reader io.Reader) bool {
+
+	r := bufio.NewReader(reader)
 
 	for {
-		fmt.Printf("%s [y/n]: ", s)
+		fmt.Printf("%s [y/n]: ", message)
 
-		response, err := reader.ReadString('\n')
+		response, err := r.ReadString('\n')
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -100,7 +102,7 @@ func askForConfirmation(s string) bool {
 
 		if response == "y" || response == "yes" {
 			return true
-		} else if response == "n" || response == "no" {
+		} else {
 			return false
 		}
 	}
