@@ -19,6 +19,7 @@ import (
 
 var cfgFile string
 var dir string
+var kubectlConfigPath string
 var namespace string
 var cors bool
 var wait bool
@@ -54,9 +55,9 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.blackbeard.yaml)")
 	RootCmd.PersistentFlags().StringVar(&dir, "dir", "", "Use the specified dir as root path to execute commands. Default is the current dir.")
+	RootCmd.PersistentFlags().StringVar(&kubectlConfigPath, "kube-config-path", kubernetes.KubeConfigDefaultPath(), "kubectl config file")
 
 	viper.BindPFlag("dir", RootCmd.PersistentFlags().Lookup("dir"))
-
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -109,7 +110,7 @@ func askForConfirmation(message string, reader io.Reader) bool {
 }
 
 func newKubernetesClient() *kubernetes.Client {
-	kube, err := kubernetes.NewClient()
+	kube, err := kubernetes.NewClient(kubectlConfigPath)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
