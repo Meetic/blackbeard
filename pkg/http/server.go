@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/Meetic/blackbeard/pkg/api"
@@ -72,6 +73,6 @@ func NewServer(h *Handler) *Server {
 }
 
 // Serve launch the webserver
-func (s *Server) Serve() {
-	s.handler.Engine().Run(":8080")
+func (s *Server) Serve(port int) {
+	s.handler.Engine().Run(fmt.Sprintf(":%d", port))
 }

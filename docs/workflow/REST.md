@@ -15,8 +15,9 @@ Usage:
   blackbeard serve [flags]
 
 Flags:
-      --cors   Enable cors
-  -h, --help   help for serve
+      --cors        Enable cors
+      --port string Use a specific port (default "8080")
+  -h, --help        help for serve
 
 Global Flags:
       --config string   config file (default is $HOME/.blackbeard.yaml)
