@@ -88,9 +88,11 @@ Available Commands:
   serve       Launch the blackbeard server
 
 Flags:
-      --config string   config file (default is $HOME/.blackbeard.yaml)
-      --dir string      Use the specified dir as root path to execute commands. Default is the current dir.
-  -h, --help            help for blackbeard
+      --config string             config file (default is $HOME/.blackbeard.yaml)
+      --dir string                Use the specified dir as root path to execute commands. Default is the current dir.
+  -h, --help                      help for blackbeard
+      --kube-config-path string   kubectl config file (default "$HOME/.kube/config")
+
 
 Use "blackbeard [command] --help" for more information about a command.
 ```

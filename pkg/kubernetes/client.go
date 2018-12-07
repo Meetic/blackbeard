@@ -25,9 +25,9 @@ type Client struct {
 }
 
 // NewClient return a new kubernetes client
-func NewClient() (*Client, error) {
+func NewClient(configFilePath string) (*Client, error) {
 
-	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath())
+	config, err := clientcmd.BuildConfigFromFlags("", configFilePath)
 	if err != nil {
 		return &Client{}, err
 	}
@@ -41,7 +41,7 @@ func NewClient() (*Client, error) {
 		kubernetes: clientSet,
 		namespaces: NewNamespaceRepository(clientSet),
 		pods:       NewPodRepository(clientSet),
-		services:   NewServiceRepository(clientSet, GetKubernetesHost()),
+		services:   NewServiceRepository(clientSet, GetKubernetesHost(configFilePath)),
 	}, nil
 }
 
@@ -57,7 +57,8 @@ func (c *Client) Services() resource.ServiceRepository {
 	return c.services
 }
 
-func kubeConfigPath() string {
+// KubeConfigDefaultPath return the kubernetes default config path
+func KubeConfigDefaultPath() string {
 	return filepath.Join(homeDir(), configDir, configFile)
 }
 
@@ -71,9 +72,9 @@ func homeDir() string {
 // GetKubernetesHost return the kubernetes cluster domain name used in the ~/.kube/config file
 // The returned host takes the form : mydomainname.com
 // Notice : this is just the host, without any schema or port.
-func GetKubernetesHost() string {
+func GetKubernetesHost(configFilePath string) string {
 
-	config, _ := clientcmd.BuildConfigFromFlags("", kubeConfigPath())
+	config, _ := clientcmd.BuildConfigFromFlags("", configFilePath)
 
 	u, err := url.Parse(config.Host)
 	if err != nil {
