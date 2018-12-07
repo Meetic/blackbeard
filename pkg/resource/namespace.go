@@ -40,7 +40,13 @@ func NewNamespaceService(namespaces NamespaceRepository, pods PodRepository) Nam
 
 // Create creates a kubernetes namespace
 func (ns *namespaceService) Create(n string) error {
-	return ns.namespaces.Create(n)
+	err := ns.namespaces.Create(n)
+
+	if err != nil {
+		return ErrorCreateNamespace{err.Error()}
+	}
+
+	return nil
 }
 
 // ApplyConfig apply kubernetes configurations to the given namespace.
@@ -103,4 +109,14 @@ func (ns *namespaceService) GetStatus(namespace string) (int, error) {
 
 	return status, nil
 
+}
+
+// ErrorCreateNamespace represents an error due to a namespace creation failure on kubernetes cluster
+type ErrorCreateNamespace struct {
+	msg string
+}
+
+// Error returns the error message
+func (err ErrorCreateNamespace) Error() string {
+	return err.msg
 }

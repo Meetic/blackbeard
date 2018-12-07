@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Meetic/blackbeard/pkg/playbook"
+	"github.com/Meetic/blackbeard/pkg/resource"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,11 +23,17 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	//Create inventory
+	// Create inventory
 	inv, err := h.api.Create(createQ.Namespace)
+
 	if err != nil {
 		if alreadyExist, ok := err.(playbook.ErrorInventoryAlreadyExist); ok {
 			c.JSON(http.StatusBadRequest, gin.H{"error": alreadyExist.Error()})
+			return
+		}
+
+		if namespaceError, ok := err.(resource.ErrorCreateNamespace); ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": namespaceError.Error()})
 			return
 		}
 
