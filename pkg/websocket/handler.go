@@ -160,7 +160,7 @@ func (h *handler) readNamespacesStatus() ([]namespaceStatus, error) {
 
 		status = append(status, namespaceStatus{
 			Namespace:  i.Namespace,
-			Status:     s,
+			Status:     s.Status,
 			PodsStatus: pods,
 		})
 	}

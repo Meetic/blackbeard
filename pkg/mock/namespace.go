@@ -28,6 +28,10 @@ func (ns *namespaceRepository) Create(namespace string) error {
 	return nil
 }
 
+func (ns *namespaceRepository) Get(namespace string) (*resource.Namespace, error) {
+	return &resource.Namespace{Name: namespace, Phase: "Active", Status: 100}, nil
+}
+
 // Delete deletes a given namespace
 func (ns *namespaceRepository) Delete(namespace string) error {
 	return nil

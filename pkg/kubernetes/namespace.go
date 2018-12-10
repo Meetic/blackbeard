@@ -38,6 +38,17 @@ func (ns *namespaceRepository) Create(namespace string) error {
 	return err
 }
 
+// Get namespace with status
+func (ns *namespaceRepository) Get(namespace string) (*resource.Namespace, error) {
+	n, err := ns.kubernetes.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &resource.Namespace{Name: n.GetName(), Phase: string(n.Status.Phase)}, nil
+}
+
 // Delete deletes a given namespace
 func (ns *namespaceRepository) Delete(namespace string) error {
 	err := ns.kubernetes.CoreV1().Namespaces().Delete(namespace, &metav1.DeleteOptions{})

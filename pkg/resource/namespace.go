@@ -13,13 +13,14 @@ type NamespaceService interface {
 	Create(namespace string) error
 	ApplyConfig(namespace string, configPath string) error
 	Delete(namespace string) error
-	GetStatus(namespace string) (int, error)
+	GetStatus(namespace string) (*NamespaceStatus, error)
 	List() ([]Namespace, error)
 }
 
 // NamespaceRepository defined the way namespace area actually managed.
 type NamespaceRepository interface {
 	Create(namespace string) error
+	Get(namespace string) (*Namespace, error)
 	ApplyConfig(namespace string, configPath string) error
 	Delete(namespace string) error
 	List() ([]Namespace, error)
@@ -28,6 +29,11 @@ type NamespaceRepository interface {
 type namespaceService struct {
 	namespaces NamespaceRepository
 	pods       PodRepository
+}
+
+type NamespaceStatus struct {
+	Status int
+	Phase  string
 }
 
 // NewNamespaceService creates a new NamespaceService
@@ -75,7 +81,7 @@ func (ns *namespaceService) List() ([]Namespace, error) {
 			return nil, err
 		}
 
-		namespaces[i].Status = status
+		namespaces[i].Status = status.Status
 	}
 
 	return namespaces, nil
@@ -83,17 +89,24 @@ func (ns *namespaceService) List() ([]Namespace, error) {
 
 // GetStatus returns the status of an inventory
 // The status is an int that represents the percentage of pods in a "running" state inside the given namespace
-func (ns *namespaceService) GetStatus(namespace string) (int, error) {
+func (ns *namespaceService) GetStatus(namespace string) (*NamespaceStatus, error) {
 
+	// get namespace state
+	n, err := ns.namespaces.Get(namespace)
+	if err != nil {
+		return &NamespaceStatus{0, ""}, err
+	}
+
+	//  get pod's namespace
 	pods, err := ns.pods.List(namespace)
 	if err != nil {
-		return 0, err
+		return &NamespaceStatus{0, ""}, err
 	}
 
 	totalPods := len(pods)
 
 	if totalPods == 0 {
-		return 0, nil
+		return &NamespaceStatus{0, ""}, nil
 	}
 
 	var i int
@@ -106,7 +119,7 @@ func (ns *namespaceService) GetStatus(namespace string) (int, error) {
 
 	status := i * 100 / totalPods
 
-	return status, nil
+	return &NamespaceStatus{status, n.Phase}, nil
 }
 
 // ErrorCreateNamespace represents an error due to a namespace creation failure on kubernetes cluster

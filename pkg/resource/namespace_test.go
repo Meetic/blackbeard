@@ -18,14 +18,14 @@ func TestGetStatusOk(t *testing.T) {
 	status, err := namespaces.GetStatus("test")
 
 	assert.Nil(t, err)
-	assert.Equal(t, 100, status)
+	assert.Equal(t, 100, status.Status)
 }
 
 func TestGetStatusUncomplete(t *testing.T) {
 	status, err := namespaces.GetStatus("testko")
 
 	assert.Nil(t, err)
-	assert.Equal(t, 0, status)
+	assert.Equal(t, 0, status.Status)
 }
 
 func TestNamespaceCreate(t *testing.T) {
