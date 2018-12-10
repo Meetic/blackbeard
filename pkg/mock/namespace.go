@@ -6,19 +6,25 @@ import (
 )
 
 type namespaceRepository struct {
-	kubernetes kubernetes.Interface
+	kubernetes    kubernetes.Interface
+	createFailure bool
 }
 
 // NewNamespaceRepository returns a new NamespaceRepository.
 // The parameter is a go-client Kubernetes client
-func NewNamespaceRepository(kubernetes kubernetes.Interface) resource.NamespaceRepository {
+func NewNamespaceRepository(kubernetes kubernetes.Interface, createFailure bool) resource.NamespaceRepository {
 	return &namespaceRepository{
-		kubernetes: kubernetes,
+		kubernetes:    kubernetes,
+		createFailure: createFailure,
 	}
 }
 
 // Create creates a namespace
 func (ns *namespaceRepository) Create(namespace string) error {
+	if ns.createFailure {
+		return resource.ErrorCreateNamespace{Msg: "namespace " + namespace + " already exist"}
+	}
+
 	return nil
 }
 

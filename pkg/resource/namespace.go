@@ -17,7 +17,7 @@ type NamespaceService interface {
 	List() ([]Namespace, error)
 }
 
-// NamespaceService defined the way namespace area actually managed.
+// NamespaceRepository defined the way namespace area actually managed.
 type NamespaceRepository interface {
 	Create(namespace string) error
 	ApplyConfig(namespace string, configPath string) error
@@ -79,7 +79,6 @@ func (ns *namespaceService) List() ([]Namespace, error) {
 	}
 
 	return namespaces, nil
-
 }
 
 // GetStatus returns the status of an inventory
@@ -108,15 +107,14 @@ func (ns *namespaceService) GetStatus(namespace string) (int, error) {
 	status := i * 100 / totalPods
 
 	return status, nil
-
 }
 
 // ErrorCreateNamespace represents an error due to a namespace creation failure on kubernetes cluster
 type ErrorCreateNamespace struct {
-	msg string
+	Msg string
 }
 
 // Error returns the error message
 func (err ErrorCreateNamespace) Error() string {
-	return err.msg
+	return err.Msg
 }

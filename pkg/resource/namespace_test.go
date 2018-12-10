@@ -11,7 +11,7 @@ import (
 
 var (
 	kube       = fake.NewSimpleClientset()
-	namespaces = resource.NewNamespaceService(mock.NewNamespaceRepository(kube), mock.NewPodRepository(kube))
+	namespaces = resource.NewNamespaceService(mock.NewNamespaceRepository(kube, false), mock.NewPodRepository(kube))
 )
 
 func TestGetStatusOk(t *testing.T) {
@@ -26,4 +26,18 @@ func TestGetStatusUncomplete(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, 0, status)
+}
+
+func TestNamespaceCreate(t *testing.T) {
+	err := namespaces.Create("mynamespace")
+
+	assert.Nil(t, err)
+}
+
+func TestNamespaceCreateError(t *testing.T) {
+	namespaces = resource.NewNamespaceService(mock.NewNamespaceRepository(kube, true), mock.NewPodRepository(kube))
+
+	err := namespaces.Create("foobar")
+
+	assert.Equal(t, resource.ErrorCreateNamespace{Msg: "namespace foobar already exist"}, err)
 }
