@@ -42,6 +42,7 @@ type handler struct {
 type namespaceStatus struct {
 	Namespace  string
 	Status     int
+	Phase      string
 	PodsStatus resource.Pods
 }
 
@@ -62,7 +63,6 @@ func NewHandler(namespace resource.NamespaceService, inventories playbook.Invent
 	}
 
 	return &h
-
 }
 
 // Handle upgrade user request to websocket and start a connexion
@@ -161,6 +161,7 @@ func (h *handler) readNamespacesStatus() ([]namespaceStatus, error) {
 		status = append(status, namespaceStatus{
 			Namespace:  i.Namespace,
 			Status:     s.Status,
+			Phase:      s.Phase,
 			PodsStatus: pods,
 		})
 	}
