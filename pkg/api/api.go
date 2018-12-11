@@ -94,17 +94,25 @@ func (api *api) Create(namespace string) (playbook.Inventory, error) {
 
 // Delete deletes the inventory, configs and kubernetes namespace for the given namespace.
 func (api *api) Delete(namespace string) error {
-	if err := api.inventories.Delete(namespace); err != nil {
-		return err
-	}
-
-	if err := api.configs.Delete(namespace); err != nil {
-		return err
-	}
-
+	// delete namespace
 	if err := api.namespaces.Delete(namespace); err != nil {
 		return err
 	}
+
+	go func() {
+		// handle delete of inventories and configs files
+		for event := range api.namespaces.Events() {
+			if event.Type == "DELETED" {
+				if inv, _ := api.inventories.Get(event.Namespace); inv.Namespace == event.Namespace {
+					api.inventories.Delete(event.Namespace)
+					api.configs.Delete(event.Namespace)
+
+					log.Println("[WATCHER] Inventories and configs for namespace " + event.Namespace + " was deleted")
+					break
+				}
+			}
+		}
+	}()
 
 	return nil
 }

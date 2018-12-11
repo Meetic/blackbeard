@@ -1,6 +1,10 @@
 package resource
 
-import "k8s.io/api/core/v1"
+import (
+	"time"
+
+	"k8s.io/api/core/v1"
+)
 
 type Namespace struct {
 	Name   string
@@ -15,6 +19,7 @@ type NamespaceService interface {
 	Delete(namespace string) error
 	GetStatus(namespace string) (*NamespaceStatus, error)
 	List() ([]Namespace, error)
+	Events() chan NamespaceEvent
 }
 
 // NamespaceRepository defined the way namespace area actually managed.
@@ -24,24 +29,122 @@ type NamespaceRepository interface {
 	ApplyConfig(namespace string, configPath string) error
 	Delete(namespace string) error
 	List() ([]Namespace, error)
+	WatchPhase(chan NamespaceEvent) error
 }
 
 type namespaceService struct {
 	namespaces NamespaceRepository
 	pods       PodRepository
+	c          chan NamespaceEvent
 }
 
+// NamespaceStatus represent namespace with percentage of pods running and status phase (Active or Terminating)
 type NamespaceStatus struct {
 	Status int
 	Phase  string
 }
 
+// NamespaceEvent represent a namespace event happened on kubernetes cluster
+type NamespaceEvent struct {
+	Type       string
+	Namespace  string
+	Phase      string
+	Status     int
+	PodsStatus Pods
+}
+
 // NewNamespaceService creates a new NamespaceService
 func NewNamespaceService(namespaces NamespaceRepository, pods PodRepository) NamespaceService {
-	return &namespaceService{
+
+	ns := &namespaceService{
 		namespaces: namespaces,
 		pods:       pods,
+		c:          make(chan NamespaceEvent),
 	}
+
+	ns.WatchNamespaces()
+
+	return ns
+}
+
+// WatchNamespaces create a watcher on namespace events from kubernetes cluster and send result over received channel
+func (ns *namespaceService) WatchNamespaces() error {
+	go ns.namespaces.WatchPhase(ns.c)
+	go ns.watchStatus()
+
+	return nil
+}
+
+func (ns *namespaceService) watchStatus() error {
+
+	ticker := time.NewTicker(10 * time.Second)
+
+	defer ticker.Stop()
+
+	var lastEvents []NamespaceEvent
+
+	for range ticker.C {
+		namespaces, err := ns.List()
+		if err != nil {
+			return err
+		}
+
+		var events []NamespaceEvent
+
+		for _, n := range namespaces {
+			pods, err := ns.pods.List(n.Name)
+			if err != nil {
+				return err
+			}
+
+			events = append(events, NamespaceEvent{
+				Type:       "STATUS.UPDATE",
+				Namespace:  n.Name,
+				Phase:      n.Phase,
+				Status:     n.Status,
+				PodsStatus: pods,
+			})
+		}
+
+		returnedEvents := diff(events, lastEvents)
+		lastEvents = events
+
+		for _, e := range returnedEvents {
+			ns.c <- e
+		}
+	}
+
+	return nil
+}
+
+func diff(now []NamespaceEvent, before []NamespaceEvent) []NamespaceEvent {
+	var diff []NamespaceEvent
+
+	for i := 0; i < 2; i++ {
+		for _, s1 := range now {
+			found := false
+			statusDiff := true
+			for _, s2 := range before {
+				if s1.Namespace == s2.Namespace {
+					found = true
+					if s1.Status == s2.Status {
+						statusDiff = false
+					}
+					break
+				}
+			}
+
+			if !found || statusDiff {
+				diff = append(diff, s1)
+			}
+		}
+
+		if i == 0 {
+			now, before = before, now
+		}
+	}
+
+	return diff
 }
 
 // Create creates a kubernetes namespace
@@ -53,6 +156,10 @@ func (ns *namespaceService) Create(n string) error {
 	}
 
 	return nil
+}
+
+func (ns *namespaceService) Events() chan NamespaceEvent {
+	return ns.c
 }
 
 // ApplyConfig apply kubernetes configurations to the given namespace.
@@ -97,6 +204,10 @@ func (ns *namespaceService) GetStatus(namespace string) (*NamespaceStatus, error
 		return &NamespaceStatus{0, ""}, err
 	}
 
+	if n.Phase == "Terminating" {
+		return &NamespaceStatus{0, n.Phase}, nil
+	}
+
 	//  get pod's namespace
 	pods, err := ns.pods.List(namespace)
 	if err != nil {
@@ -106,7 +217,7 @@ func (ns *namespaceService) GetStatus(namespace string) (*NamespaceStatus, error
 	totalPods := len(pods)
 
 	if totalPods == 0 {
-		return &NamespaceStatus{0, ""}, nil
+		return &NamespaceStatus{0, n.Phase}, nil
 	}
 
 	var i int

@@ -41,7 +41,7 @@ func (h *Handler) GetStatus(c *gin.Context) {
 	status, err := h.api.Namespaces().GetStatus(c.Params.ByName("namespace"))
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

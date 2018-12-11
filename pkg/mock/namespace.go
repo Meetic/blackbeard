@@ -37,6 +37,10 @@ func (ns *namespaceRepository) Delete(namespace string) error {
 	return nil
 }
 
+func (ns *namespaceRepository) WatchPhase(chan resource.NamespaceEvent) error {
+	return nil
+}
+
 // List returns a slice of Namespace.
 // Name is the namespace name from Kubernetes.
 // Phase is the status phase.
