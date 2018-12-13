@@ -19,7 +19,8 @@ type NamespaceService interface {
 	Delete(namespace string) error
 	GetStatus(namespace string) (*NamespaceStatus, error)
 	List() ([]Namespace, error)
-	Events() chan NamespaceEvent
+	Events(name string) chan NamespaceEvent
+	AddListener(name string)
 }
 
 // NamespaceRepository defined the way namespace area actually managed.
@@ -29,13 +30,13 @@ type NamespaceRepository interface {
 	ApplyConfig(namespace string, configPath string) error
 	Delete(namespace string) error
 	List() ([]Namespace, error)
-	WatchPhase(chan NamespaceEvent) error
+	WatchPhase(emit EventEmitter) error
 }
 
 type namespaceService struct {
-	namespaces NamespaceRepository
-	pods       PodRepository
-	c          chan NamespaceEvent
+	namespaces      NamespaceRepository
+	pods            PodRepository
+	namespaceEvents map[string]chan NamespaceEvent
 }
 
 // NamespaceStatus represent namespace with percentage of pods running and status phase (Active or Terminating)
@@ -46,12 +47,14 @@ type NamespaceStatus struct {
 
 // NamespaceEvent represent a namespace event happened on kubernetes cluster
 type NamespaceEvent struct {
-	Type       string
-	Namespace  string
-	Phase      string
-	Status     int
-	PodsStatus Pods
+	Type       string `json:"type"`
+	Namespace  string `json:"namespace"`
+	Phase      string `json:"phase"`
+	Status     int    `json:"status"`
+	PodsStatus Pods   `json:"pods_status"`
 }
+
+type EventEmitter func(event NamespaceEvent)
 
 // NewNamespaceService creates a new NamespaceService
 func NewNamespaceService(namespaces NamespaceRepository, pods PodRepository) NamespaceService {
@@ -59,7 +62,6 @@ func NewNamespaceService(namespaces NamespaceRepository, pods PodRepository) Nam
 	ns := &namespaceService{
 		namespaces: namespaces,
 		pods:       pods,
-		c:          make(chan NamespaceEvent),
 	}
 
 	ns.WatchNamespaces()
@@ -67,9 +69,25 @@ func NewNamespaceService(namespaces NamespaceRepository, pods PodRepository) Nam
 	return ns
 }
 
+func (ns *namespaceService) AddListener(name string) {
+	if ns.namespaceEvents == nil {
+		ns.namespaceEvents = make(map[string]chan NamespaceEvent)
+	}
+
+	ns.namespaceEvents[name] = make(chan NamespaceEvent)
+}
+
+func (ns *namespaceService) Emit(event NamespaceEvent) {
+	for _, ch := range ns.namespaceEvents {
+		go func(handler chan NamespaceEvent) {
+			handler <- event
+		}(ch)
+	}
+}
+
 // WatchNamespaces create a watcher on namespace events from kubernetes cluster and send result over received channel
 func (ns *namespaceService) WatchNamespaces() error {
-	go ns.namespaces.WatchPhase(ns.c)
+	go ns.namespaces.WatchPhase(ns.Emit)
 	go ns.watchStatus()
 
 	return nil
@@ -110,7 +128,7 @@ func (ns *namespaceService) watchStatus() error {
 		lastEvents = events
 
 		for _, e := range returnedEvents {
-			ns.c <- e
+			ns.Emit(e)
 		}
 	}
 
@@ -158,8 +176,13 @@ func (ns *namespaceService) Create(n string) error {
 	return nil
 }
 
-func (ns *namespaceService) Events() chan NamespaceEvent {
-	return ns.c
+// Events
+func (ns *namespaceService) Events(name string) chan NamespaceEvent {
+	if ns.namespaceEvents[name] != nil {
+		return ns.namespaceEvents[name]
+	}
+
+	return make(chan NamespaceEvent)
 }
 
 // ApplyConfig apply kubernetes configurations to the given namespace.

@@ -3,8 +3,9 @@ package cmd
 import (
 	"github.com/Meetic/blackbeard/pkg/websocket"
 
-	"github.com/Meetic/blackbeard/pkg/http"
 	"github.com/spf13/cobra"
+
+	"github.com/Meetic/blackbeard/pkg/http"
 )
 
 // serveCmd represents the serve command

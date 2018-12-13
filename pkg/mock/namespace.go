@@ -37,7 +37,7 @@ func (ns *namespaceRepository) Delete(namespace string) error {
 	return nil
 }
 
-func (ns *namespaceRepository) WatchPhase(chan resource.NamespaceEvent) error {
+func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
 	return nil
 }
 

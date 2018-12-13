@@ -28,7 +28,7 @@ type handler struct {
 	upgrader websocket.Upgrader
 	api      api.Api
 	conn     *websocket.Conn
-	mutex   sync.Mutex
+	mutex    sync.Mutex
 }
 
 // NewHandler creates a websocket server
@@ -40,6 +40,9 @@ func NewHandler(api api.Api) *handler {
 			return true
 		},
 	}
+
+	api.Namespaces().AddListener("websocket")
+
 	h := handler{
 		upgrader: up,
 		api:      api,
@@ -84,7 +87,7 @@ func (h *handler) writer() {
 
 	for {
 		select {
-		case e := <-h.api.Namespaces().Events():
+		case e := <-h.api.Namespaces().Events("websocket"):
 			h.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			jsonEvent, _ := json.Marshal(e)
 			h.send(websocket.TextMessage, jsonEvent)
@@ -95,6 +98,7 @@ func (h *handler) writer() {
 	}
 }
 
+// Prevent concurrent write to websocket connection
 func (h *handler) send(messageType int, message []byte) error {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()

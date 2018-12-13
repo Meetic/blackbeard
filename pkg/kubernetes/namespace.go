@@ -84,7 +84,7 @@ func (ns *namespaceRepository) List() ([]resource.Namespace, error) {
 	return namespaces, nil
 }
 
-func (ns *namespaceRepository) WatchPhase(c chan resource.NamespaceEvent) error {
+func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
 
 	watcher, err := ns.kubernetes.CoreV1().Namespaces().Watch(metav1.ListOptions{})
 
@@ -104,7 +104,7 @@ func (ns *namespaceRepository) WatchPhase(c chan resource.NamespaceEvent) error 
 			PodsStatus: nil,
 		}
 
-		c <- namespaceEvent
+		emit(namespaceEvent)
 	}
 
 	return nil

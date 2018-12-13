@@ -37,7 +37,7 @@ type api struct {
 // NewApi creates a blackbeard api. The blackbeard api is responsible for managing playbooks and namespaces.
 // Parameters are struct implementing respectively Inventory, Config, Namespace, Pod and Service interfaces.
 func NewApi(inventories playbook.InventoryRepository, configs playbook.ConfigRepository, playbooks playbook.PlaybookRepository, namespaces resource.NamespaceRepository, pods resource.PodRepository, services resource.ServiceRepository) Api {
-	return &api{
+	api := &api{
 		inventories: playbook.NewInventoryService(inventories, playbook.NewPlaybookService(playbooks)),
 		configs:     playbook.NewConfigService(configs, playbook.NewPlaybookService(playbooks)),
 		playbooks:   playbook.NewPlaybookService(playbooks),
@@ -45,6 +45,10 @@ func NewApi(inventories playbook.InventoryRepository, configs playbook.ConfigRep
 		pods:        resource.NewPodService(pods),
 		services:    resource.NewServiceService(services),
 	}
+
+	api.namespaces.AddListener("http")
+
+	return api
 }
 
 // Inventories returns the Inventory Service from the api
@@ -101,7 +105,7 @@ func (api *api) Delete(namespace string) error {
 
 	go func() {
 		// handle delete of inventories and configs files
-		for event := range api.namespaces.Events() {
+		for event := range api.namespaces.Events("http") {
 			if event.Type == "DELETED" {
 				if inv, _ := api.inventories.Get(event.Namespace); inv.Namespace == event.Namespace {
 					api.inventories.Delete(event.Namespace)
