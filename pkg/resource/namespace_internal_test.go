@@ -115,7 +115,7 @@ var dataset = []struct {
 
 func TestDiff(t *testing.T) {
 	for _, data := range dataset {
-		namespaceDiff := diff(data.now, data.before)
+		namespaceDiff := compareEvents(data.now, data.before)
 
 		assert.Equal(t, data.expected, namespaceDiff)
 	}

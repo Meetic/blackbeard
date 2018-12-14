@@ -19,7 +19,7 @@ type NamespaceService interface {
 	Delete(namespace string) error
 	GetStatus(namespace string) (*NamespaceStatus, error)
 	List() ([]Namespace, error)
-	Events(name string) chan NamespaceEvent
+	Events(listener string) chan NamespaceEvent
 	AddListener(name string)
 	Emit(event NamespaceEvent)
 }
@@ -128,7 +128,7 @@ func (ns *namespaceService) watchStatus() error {
 			})
 		}
 
-		returnedEvents := diff(events, lastEvents)
+		returnedEvents := compareEvents(events, lastEvents)
 		lastEvents = events
 
 		for _, e := range returnedEvents {
@@ -139,7 +139,7 @@ func (ns *namespaceService) watchStatus() error {
 	return nil
 }
 
-func diff(now []NamespaceEvent, before []NamespaceEvent) []NamespaceEvent {
+func compareEvents(now []NamespaceEvent, before []NamespaceEvent) []NamespaceEvent {
 	var diff []NamespaceEvent
 
 	for _, s1 := range now {
@@ -176,9 +176,9 @@ func (ns *namespaceService) Create(n string) error {
 }
 
 // Events
-func (ns *namespaceService) Events(name string) chan NamespaceEvent {
-	if ns.namespaceEvents[name] != nil {
-		return ns.namespaceEvents[name]
+func (ns *namespaceService) Events(listener string) chan NamespaceEvent {
+	if ns.namespaceEvents[listener] != nil {
+		return ns.namespaceEvents[listener]
 	}
 
 	return make(chan NamespaceEvent)

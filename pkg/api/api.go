@@ -16,7 +16,7 @@ type Api interface {
 	Playbooks() playbook.PlaybookService
 	Pods() resource.PodService
 	Create(namespace string) (playbook.Inventory, error)
-	Delete(namespace string, wait bool) error
+	Delete(namespace string) error
 	ListExposedServices(namespace string) ([]resource.Service, error)
 	ListNamespaces() ([]Namespace, error)
 	Reset(namespace string, configPath string) error
@@ -46,7 +46,7 @@ func NewApi(inventories playbook.InventoryRepository, configs playbook.ConfigRep
 		services:    resource.NewServiceService(services),
 	}
 
-	api.namespaces.AddListener("http")
+	go api.WatchDelete()
 
 	return api
 }
@@ -97,39 +97,11 @@ func (api *api) Create(namespace string) (playbook.Inventory, error) {
 }
 
 // Delete deletes the inventory, configs and kubernetes namespace for the given namespace.
-func (api *api) Delete(namespace string, wait bool) error {
+func (api *api) Delete(namespace string) error {
 	// delete namespace
 	if err := api.namespaces.Delete(namespace); err != nil {
 		return err
 	}
-
-	if wait == false {
-		if err := api.inventories.Delete(namespace); err != nil {
-			return err
-		}
-
-		if err := api.configs.Delete(namespace); err != nil {
-			return err
-		}
-
-		return nil
-	}
-
-	go func() {
-		// handle delete of inventories and configs files
-		for event := range api.namespaces.Events("http") {
-			if event.Type == "DELETED" {
-				if inv, _ := api.inventories.Get(event.Namespace); inv.Namespace == event.Namespace {
-					api.inventories.Delete(event.Namespace)
-					api.configs.Delete(event.Namespace)
-
-					// TODO: add log
-					log.Println("[WATCHER] Inventories and configs for namespace " + event.Namespace + " was deleted")
-					break
-				}
-			}
-		}
-	}()
 
 	return nil
 }
@@ -198,4 +170,21 @@ func (api *api) Update(namespace string, inventory playbook.Inventory, configPat
 	}
 
 	return nil
+}
+
+func (api *api) WatchDelete() {
+	api.namespaces.AddListener("http")
+
+	// handle delete of inventories and configs files
+	for event := range api.namespaces.Events("http") {
+		if event.Type == "DELETED" {
+			if inv, _ := api.inventories.Get(event.Namespace); inv.Namespace == event.Namespace {
+				api.inventories.Delete(event.Namespace)
+				api.configs.Delete(event.Namespace)
+
+				// TODO: add better log
+				log.Println("[WATCHER] Inventories and configs for namespace " + event.Namespace + " was deleted")
+			}
+		}
+	}
 }

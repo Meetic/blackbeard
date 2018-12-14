@@ -40,7 +40,7 @@ func runDelete(namespace string) error {
 
 	api := newAPI(newFileClient(dir), newKubernetesClient())
 
-	err := api.Delete(namespace, false)
+	err := api.Delete(namespace)
 	if err != nil {
 		return err
 	}
