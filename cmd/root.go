@@ -24,6 +24,7 @@ var namespace string
 var cors bool
 var wait bool
 var timeout time.Duration
+var port int
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{

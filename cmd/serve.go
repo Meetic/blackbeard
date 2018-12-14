@@ -21,6 +21,7 @@ This API let the client use all the features provided by Blackbeard such as crea
 func init() {
 	RootCmd.AddCommand(serveCmd)
 	serveCmd.Flags().BoolVar(&cors, "cors", false, "Enable cors")
+	serveCmd.Flags().IntVar(&port, "port", 8080, "Use a specific port")
 }
 
 func runServe() {
@@ -33,6 +34,5 @@ func runServe() {
 
 	h := http.NewHandler(api, wh, files.ConfigPath(), cors)
 	s := http.NewServer(h)
-	s.Serve()
-
+	s.Serve(port)
 }
