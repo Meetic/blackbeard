@@ -81,7 +81,7 @@ func (ns *namespaceService) AddListener(name string) {
 
 // Emit event to all registered listener
 func (ns *namespaceService) Emit(event NamespaceEvent) {
-	// TODO: add log
+	//log.Println(fmt.Sprintf("[EVENT] %s %s %d %s", event.Type, event.Namespace, event.Status, event.Phase))
 	for _, ch := range ns.namespaceEvents {
 		go func(handler chan NamespaceEvent) {
 			handler <- event

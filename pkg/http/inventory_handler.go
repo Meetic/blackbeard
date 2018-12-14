@@ -125,7 +125,7 @@ func (h *Handler) Delete(c *gin.Context) {
 	namespace := c.Params.ByName("namespace")
 
 	//Delete inventory
-	if err := h.api.Delete(namespace); err != nil {
+	if err := h.api.Delete(namespace, true); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

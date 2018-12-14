@@ -16,7 +16,7 @@ type Api interface {
 	Playbooks() playbook.PlaybookService
 	Pods() resource.PodService
 	Create(namespace string) (playbook.Inventory, error)
-	Delete(namespace string) error
+	Delete(namespace string, wait bool) error
 	ListExposedServices(namespace string) ([]resource.Service, error)
 	ListNamespaces() ([]Namespace, error)
 	Reset(namespace string, configPath string) error
@@ -97,10 +97,22 @@ func (api *api) Create(namespace string) (playbook.Inventory, error) {
 }
 
 // Delete deletes the inventory, configs and kubernetes namespace for the given namespace.
-func (api *api) Delete(namespace string) error {
+func (api *api) Delete(namespace string, wait bool) error {
 	// delete namespace
 	if err := api.namespaces.Delete(namespace); err != nil {
 		return err
+	}
+
+	if wait == false {
+		if err := api.inventories.Delete(namespace); err != nil {
+			return err
+		}
+
+		if err := api.configs.Delete(namespace); err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	go func() {
