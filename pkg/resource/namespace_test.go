@@ -41,3 +41,20 @@ func TestNamespaceCreateError(t *testing.T) {
 
 	assert.Equal(t, resource.ErrorCreateNamespace{Msg: "namespace foobar already exist"}, err)
 }
+
+func TestAddListener(t *testing.T) {
+	namespaces.AddListener("foobar")
+	ch := namespaces.Events("foobar")
+
+	assert.NotNil(t, ch)
+}
+
+func TestEmit(t *testing.T) {
+	namespaces.AddListener("foobar")
+	event := resource.NamespaceEvent{Type: "ADDED", Namespace: "namespace"}
+
+	namespaces.Emit(event)
+	ch := namespaces.Events("foobar")
+
+	assert.Equal(t, event, <-ch)
+}

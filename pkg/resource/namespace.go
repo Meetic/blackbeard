@@ -21,6 +21,7 @@ type NamespaceService interface {
 	List() ([]Namespace, error)
 	Events(name string) chan NamespaceEvent
 	AddListener(name string)
+	Emit(event NamespaceEvent)
 }
 
 // NamespaceRepository defined the way namespace area actually managed.
@@ -69,6 +70,7 @@ func NewNamespaceService(namespaces NamespaceRepository, pods PodRepository) Nam
 	return ns
 }
 
+// AddListener register a new listener
 func (ns *namespaceService) AddListener(name string) {
 	if ns.namespaceEvents == nil {
 		ns.namespaceEvents = make(map[string]chan NamespaceEvent)
@@ -77,7 +79,9 @@ func (ns *namespaceService) AddListener(name string) {
 	ns.namespaceEvents[name] = make(chan NamespaceEvent)
 }
 
+// Emit event to all registered listener
 func (ns *namespaceService) Emit(event NamespaceEvent) {
+	// TODO: add log
 	for _, ch := range ns.namespaceEvents {
 		go func(handler chan NamespaceEvent) {
 			handler <- event
@@ -138,27 +142,22 @@ func (ns *namespaceService) watchStatus() error {
 func diff(now []NamespaceEvent, before []NamespaceEvent) []NamespaceEvent {
 	var diff []NamespaceEvent
 
-	for i := 0; i < 2; i++ {
-		for _, s1 := range now {
-			found := false
-			statusDiff := true
-			for _, s2 := range before {
-				if s1.Namespace == s2.Namespace {
-					found = true
-					if s1.Status == s2.Status {
-						statusDiff = false
-					}
-					break
+	for _, s1 := range now {
+		found := false
+		statusDiff := true
+		for _, s2 := range before {
+			if s1.Namespace == s2.Namespace {
+				found = true
+				if s1.Status == s2.Status {
+					statusDiff = false
 				}
-			}
-
-			if !found || statusDiff {
-				diff = append(diff, s1)
+				break
 			}
 		}
 
-		if i == 0 {
-			now, before = before, now
+		// not found before or status diff
+		if !found || statusDiff {
+			diff = append(diff, s1)
 		}
 	}
 

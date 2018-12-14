@@ -111,6 +111,7 @@ func (api *api) Delete(namespace string) error {
 					api.inventories.Delete(event.Namespace)
 					api.configs.Delete(event.Namespace)
 
+					// TODO: add log
 					log.Println("[WATCHER] Inventories and configs for namespace " + event.Namespace + " was deleted")
 					break
 				}
