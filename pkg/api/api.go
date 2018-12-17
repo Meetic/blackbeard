@@ -16,7 +16,7 @@ type Api interface {
 	Playbooks() playbook.PlaybookService
 	Pods() resource.PodService
 	Create(namespace string) (playbook.Inventory, error)
-	Delete(namespace string) error
+	Delete(namespace string, wait bool) error
 	ListExposedServices(namespace string) ([]resource.Service, error)
 	ListNamespaces() ([]Namespace, error)
 	Reset(namespace string, configPath string) error
@@ -37,7 +37,7 @@ type api struct {
 // NewApi creates a blackbeard api. The blackbeard api is responsible for managing playbooks and namespaces.
 // Parameters are struct implementing respectively Inventory, Config, Namespace, Pod and Service interfaces.
 func NewApi(inventories playbook.InventoryRepository, configs playbook.ConfigRepository, playbooks playbook.PlaybookRepository, namespaces resource.NamespaceRepository, pods resource.PodRepository, services resource.ServiceRepository) Api {
-	return &api{
+	api := &api{
 		inventories: playbook.NewInventoryService(inventories, playbook.NewPlaybookService(playbooks)),
 		configs:     playbook.NewConfigService(configs, playbook.NewPlaybookService(playbooks)),
 		playbooks:   playbook.NewPlaybookService(playbooks),
@@ -45,6 +45,10 @@ func NewApi(inventories playbook.InventoryRepository, configs playbook.ConfigRep
 		pods:        resource.NewPodService(pods),
 		services:    resource.NewServiceService(services),
 	}
+
+	go api.WatchDelete()
+
+	return api
 }
 
 // Inventories returns the Inventory Service from the api
@@ -93,17 +97,14 @@ func (api *api) Create(namespace string) (playbook.Inventory, error) {
 }
 
 // Delete deletes the inventory, configs and kubernetes namespace for the given namespace.
-func (api *api) Delete(namespace string) error {
-	if err := api.inventories.Delete(namespace); err != nil {
-		return err
-	}
-
-	if err := api.configs.Delete(namespace); err != nil {
-		return err
-	}
-
+func (api *api) Delete(namespace string, wait bool) error {
+	// delete namespace
 	if err := api.namespaces.Delete(namespace); err != nil {
 		return err
+	}
+
+	if !wait {
+		api.deletePlaybook(namespace)
 	}
 
 	return nil
@@ -173,4 +174,23 @@ func (api *api) Update(namespace string, inventory playbook.Inventory, configPat
 	}
 
 	return nil
+}
+
+func (api *api) deletePlaybook(namespace string) {
+	if inv, _ := api.inventories.Get(namespace); inv.Namespace == namespace {
+		api.inventories.Delete(namespace)
+		api.configs.Delete(namespace)
+	}
+}
+
+func (api *api) WatchDelete() {
+	api.namespaces.AddListener("http")
+
+	// handle delete of inventories and configs files
+	for event := range api.namespaces.Events("http") {
+		if event.Type == "DELETED" {
+			api.deletePlaybook(event.Namespace)
+			log.Println("[WATCHER] Inventories and configs for namespace " + event.Namespace + " was deleted")
+		}
+	}
 }

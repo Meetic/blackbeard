@@ -71,8 +71,8 @@ func (api *api) WaitForNamespaceReady(namespace string, timeout time.Duration, b
 			if err != nil {
 				ticker.Stop()
 			}
-			bar.Set(status)
-			if status == 100 {
+			bar.Set(status.Status)
+			if status.Status == 100 {
 				doneCh <- true
 			}
 		}

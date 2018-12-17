@@ -3,9 +3,9 @@ package http
 import (
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/Meetic/blackbeard/pkg/api"
-	"github.com/Meetic/blackbeard/pkg/websocket"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -14,16 +14,21 @@ import (
 // It use a router to map uri to HandlerFunc
 type Handler struct {
 	api        api.Api
-	websocket  websocket.Handler
+	websocket  WsHandler
 	configPath string
 
 	engine *gin.Engine
 }
 
+// WebsocketHandler defines the way Websocket should be handled
+type WsHandler interface {
+	Handle(http.ResponseWriter, *http.Request)
+}
+
 // NewHandler create an Handler using defined routes.
 // It takes a client as argument in order to be passe to the handler and be accessible to the HandlerFunc
 // Typically in a CRUD API, the client manage connections to a storage system.
-func NewHandler(api api.Api, websocket websocket.Handler, configPath string, corsEnable bool) *Handler {
+func NewHandler(api api.Api, websocket WsHandler, configPath string, corsEnable bool) *Handler {
 	h := &Handler{
 		api:        api,
 		websocket:  websocket,

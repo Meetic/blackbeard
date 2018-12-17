@@ -41,14 +41,16 @@ func (h *Handler) GetStatus(c *gin.Context) {
 	status, err := h.api.Namespaces().GetStatus(c.Params.ByName("namespace"))
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, struct {
-		Status int `json:"status"`
+		Status int    `json:"status"`
+		Phase  string `json:"phase"`
 	}{
-		Status: status,
+		Status: status.Status,
+		Phase:  status.Phase,
 	})
 }
 
@@ -60,6 +62,7 @@ func (h *Handler) GetStatuses(c *gin.Context) {
 	var statuses []struct {
 		Namespace string `json:"namespace"`
 		Status    int    `json:"status"`
+		Phase     string `json:"phase"`
 	}
 
 	for _, i := range invs {
@@ -72,9 +75,11 @@ func (h *Handler) GetStatuses(c *gin.Context) {
 		statuses = append(statuses, struct {
 			Namespace string `json:"namespace"`
 			Status    int    `json:"status"`
+			Phase     string `json:"phase"`
 		}{
 			Namespace: i.Namespace,
-			Status:    s,
+			Status:    s.Status,
+			Phase:     s.Phase,
 		})
 	}
 

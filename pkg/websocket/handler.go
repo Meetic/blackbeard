@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
-	"github.com/Meetic/blackbeard/pkg/playbook"
-	"github.com/Meetic/blackbeard/pkg/resource"
 	"github.com/gorilla/websocket"
+
+	"github.com/Meetic/blackbeard/pkg/api"
 )
 
 const (
@@ -20,33 +21,18 @@ const (
 
 	// Send pings to client with this period. Must be less than pongWait.
 	pingPeriod = (pongWait * 9) / 10
-
-	// Poll kubernetes for changes with this period.
-	kubernetesPeriod = 10 * time.Second
 )
-
-// WebsocketHandler defines the way Websocket should be handled
-type Handler interface {
-	Handle(http.ResponseWriter, *http.Request)
-}
 
 // Handler represent a websocket handler
 type handler struct {
-	upgrader    websocket.Upgrader
-	namespaces  resource.NamespaceService
-	pods        resource.PodService
-	inventories playbook.InventoryService
-	conn        *websocket.Conn
-}
-
-type namespaceStatus struct {
-	Namespace  string
-	Status     int
-	PodsStatus resource.Pods
+	upgrader websocket.Upgrader
+	api      api.Api
+	conn     *websocket.Conn
+	mutex    sync.Mutex
 }
 
 // NewHandler creates a websocket server
-func NewHandler(namespace resource.NamespaceService, inventories playbook.InventoryService, pods resource.PodService) Handler {
+func NewHandler(api api.Api) *handler {
 	up := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -54,15 +40,15 @@ func NewHandler(namespace resource.NamespaceService, inventories playbook.Invent
 			return true
 		},
 	}
+
+	api.Namespaces().AddListener("websocket")
+
 	h := handler{
-		upgrader:    up,
-		namespaces:  namespace,
-		inventories: inventories,
-		pods:        pods,
+		upgrader: up,
+		api:      api,
 	}
 
 	return &h
-
 }
 
 // Handle upgrade user request to websocket and start a connexion
@@ -93,107 +79,29 @@ func (h *handler) reader() {
 }
 
 func (h *handler) writer() {
-	lastError := ""
-	var lastStatus []namespaceStatus
 	pingTicker := time.NewTicker(pingPeriod)
-	kubeTicker := time.NewTicker(kubernetesPeriod)
 	defer func() {
 		pingTicker.Stop()
-		kubeTicker.Stop()
 		h.conn.Close()
 	}()
 
 	for {
 		select {
-		case <-kubeTicker.C:
-
-			status, err := h.readNamespacesStatus()
-
-			if err != nil {
-				if s := err.Error(); s != lastError {
-					lastError = s
-					h.conn.SetWriteDeadline(time.Now().Add(writeWait))
-					if err := h.conn.WriteMessage(websocket.TextMessage, []byte(lastError)); err != nil {
-						return
-					}
-				}
-			} else {
-				lastError = ""
-			}
-
-			returnStatus := diff(status, lastStatus)
-
-			lastStatus = status
-
-			if returnStatus != nil {
-				h.conn.SetWriteDeadline(time.Now().Add(writeWait))
-				jsonStatus, _ := json.Marshal(returnStatus)
-				if err := h.conn.WriteMessage(websocket.TextMessage, jsonStatus); err != nil {
-					return
-				}
-			}
+		case e := <-h.api.Namespaces().Events("websocket"):
+			h.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			jsonEvent, _ := json.Marshal(e)
+			h.send(websocket.TextMessage, jsonEvent)
 		case <-pingTicker.C:
 			h.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := h.conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-				return
-			}
+			h.send(websocket.PingMessage, []byte{})
 		}
 	}
 }
 
-func (h *handler) readNamespacesStatus() ([]namespaceStatus, error) {
+// Prevent concurrent write to websocket connection
+func (h *handler) send(messageType int, message []byte) error {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
 
-	invs, _ := h.inventories.List()
-
-	var status []namespaceStatus
-
-	for _, i := range invs {
-		s, err := h.namespaces.GetStatus(i.Namespace)
-		if err != nil {
-			return nil, err
-		}
-
-		pods, err := h.pods.List(i.Namespace)
-		if err != nil {
-			return nil, err
-		}
-
-		status = append(status, namespaceStatus{
-			Namespace:  i.Namespace,
-			Status:     s,
-			PodsStatus: pods,
-		})
-	}
-
-	return status, nil
-}
-
-func diff(now []namespaceStatus, before []namespaceStatus) []namespaceStatus {
-	var diff []namespaceStatus
-
-	for i := 0; i < 2; i++ {
-		for _, s1 := range now {
-			found := false
-			statusDiff := true
-			for _, s2 := range before {
-				if s1.Namespace == s2.Namespace {
-					found = true
-					if s1.Status == s2.Status {
-						statusDiff = false
-					}
-					break
-				}
-			}
-
-			if !found || statusDiff {
-				diff = append(diff, s1)
-			}
-		}
-
-		if i == 0 {
-			now, before = before, now
-		}
-	}
-
-	return diff
+	return h.conn.WriteMessage(messageType, message)
 }

@@ -14,7 +14,7 @@ var (
 		mock.NewInventoryRepository(),
 		mock.NewConfigRepository(),
 		mock.NewPlaybookRepository(),
-		mock.NewNamespaceRepository(kube),
+		mock.NewNamespaceRepository(kube, false),
 		kubernetes.NewPodRepository(kube),
 		kubernetes.NewServiceRepository(kube, "kube.test"))
 )

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Meetic/blackbeard/pkg/playbook"
+	"github.com/Meetic/blackbeard/pkg/resource"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,11 +23,17 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	//Create inventory
+	// Create inventory
 	inv, err := h.api.Create(createQ.Namespace)
+
 	if err != nil {
 		if alreadyExist, ok := err.(playbook.ErrorInventoryAlreadyExist); ok {
 			c.JSON(http.StatusBadRequest, gin.H{"error": alreadyExist.Error()})
+			return
+		}
+
+		if namespaceError, ok := err.(resource.ErrorCreateNamespace); ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": namespaceError.Error()})
 			return
 		}
 
@@ -118,7 +125,7 @@ func (h *Handler) Delete(c *gin.Context) {
 	namespace := c.Params.ByName("namespace")
 
 	//Delete inventory
-	if err := h.api.Delete(namespace); err != nil {
+	if err := h.api.Delete(namespace, true); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

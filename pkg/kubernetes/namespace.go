@@ -9,11 +9,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Meetic/blackbeard/pkg/resource"
 	"k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/Meetic/blackbeard/pkg/resource"
 )
 
 const (
@@ -36,6 +37,17 @@ func NewNamespaceRepository(kubernetes kubernetes.Interface) resource.NamespaceR
 func (ns *namespaceRepository) Create(namespace string) error {
 	_, err := ns.kubernetes.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}})
 	return err
+}
+
+// Get namespace with status
+func (ns *namespaceRepository) Get(namespace string) (*resource.Namespace, error) {
+	n, err := ns.kubernetes.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &resource.Namespace{Name: n.GetName(), Phase: string(n.Status.Phase)}, nil
 }
 
 // Delete deletes a given namespace
@@ -70,6 +82,32 @@ func (ns *namespaceRepository) List() ([]resource.Namespace, error) {
 	}
 
 	return namespaces, nil
+}
+
+func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
+
+	watcher, err := ns.kubernetes.CoreV1().Namespaces().Watch(metav1.ListOptions{})
+
+	if err != nil {
+		return err
+	}
+
+	defer watcher.Stop()
+
+	for event := range watcher.ResultChan() {
+		n := event.Object.(*v1.Namespace)
+		namespaceEvent := resource.NamespaceEvent{
+			Type:       string(event.Type),
+			Namespace:  n.GetName(),
+			Phase:      string(n.Status.Phase),
+			Status:     0,
+			PodsStatus: nil,
+		}
+
+		emit(namespaceEvent)
+	}
+
+	return nil
 }
 
 // ApplyConfig loads configuration files into kubernetes
