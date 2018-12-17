@@ -16,7 +16,7 @@ type Api interface {
 	Playbooks() playbook.PlaybookService
 	Pods() resource.PodService
 	Create(namespace string) (playbook.Inventory, error)
-	Delete(namespace string) error
+	Delete(namespace string, wait bool) error
 	ListExposedServices(namespace string) ([]resource.Service, error)
 	ListNamespaces() ([]Namespace, error)
 	Reset(namespace string, configPath string) error
@@ -97,10 +97,14 @@ func (api *api) Create(namespace string) (playbook.Inventory, error) {
 }
 
 // Delete deletes the inventory, configs and kubernetes namespace for the given namespace.
-func (api *api) Delete(namespace string) error {
+func (api *api) Delete(namespace string, wait bool) error {
 	// delete namespace
 	if err := api.namespaces.Delete(namespace); err != nil {
 		return err
+	}
+
+	if !wait {
+		api.deletePlaybook(namespace)
 	}
 
 	return nil
@@ -172,19 +176,21 @@ func (api *api) Update(namespace string, inventory playbook.Inventory, configPat
 	return nil
 }
 
+func (api *api) deletePlaybook(namespace string) {
+	if inv, _ := api.inventories.Get(namespace); inv.Namespace == namespace {
+		api.inventories.Delete(namespace)
+		api.configs.Delete(namespace)
+	}
+}
+
 func (api *api) WatchDelete() {
 	api.namespaces.AddListener("http")
 
 	// handle delete of inventories and configs files
 	for event := range api.namespaces.Events("http") {
 		if event.Type == "DELETED" {
-			if inv, _ := api.inventories.Get(event.Namespace); inv.Namespace == event.Namespace {
-				api.inventories.Delete(event.Namespace)
-				api.configs.Delete(event.Namespace)
-
-				// TODO: add better log
-				log.Println("[WATCHER] Inventories and configs for namespace " + event.Namespace + " was deleted")
-			}
+			api.deletePlaybook(event.Namespace)
+			log.Println("[WATCHER] Inventories and configs for namespace " + event.Namespace + " was deleted")
 		}
 	}
 }

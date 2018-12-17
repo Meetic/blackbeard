@@ -177,8 +177,8 @@ func (ns *namespaceService) Create(n string) error {
 
 // Events
 func (ns *namespaceService) Events(listener string) chan NamespaceEvent {
-	if ns.namespaceEvents[listener] != nil {
-		return ns.namespaceEvents[listener]
+	if ch, ok := ns.namespaceEvents[listener]; ok {
+		return ch
 	}
 
 	return make(chan NamespaceEvent)
