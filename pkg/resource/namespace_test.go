@@ -3,10 +3,11 @@ package resource_test
 import (
 	"testing"
 
-	"github.com/Meetic/blackbeard/pkg/mock"
-	"github.com/Meetic/blackbeard/pkg/resource"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/kubernetes/fake"
+
+	"github.com/Meetic/blackbeard/pkg/mock"
+	"github.com/Meetic/blackbeard/pkg/resource"
 )
 
 var (
@@ -57,4 +58,16 @@ func TestEmit(t *testing.T) {
 	ch := namespaces.Events("foobar")
 
 	assert.Equal(t, event, <-ch)
+}
+
+func TestRemoveListener(t *testing.T) {
+	namespaces.AddListener("foobar")
+	ch := namespaces.Events("foobar")
+
+	assert.NotNil(t, ch)
+
+	namespaces.RemoveListener("foobar")
+	chNil := namespaces.Events("foobar")
+
+	assert.Nil(t, chNil)
 }

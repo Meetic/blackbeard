@@ -3,11 +3,13 @@ package websocket
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/satori/go.uuid"
 
 	"github.com/Meetic/blackbeard/pkg/api"
 )
@@ -27,8 +29,12 @@ const (
 type handler struct {
 	upgrader websocket.Upgrader
 	api      api.Api
-	conn     *websocket.Conn
+}
+
+type client struct {
+	socket   *websocket.Conn
 	mutex    sync.Mutex
+	listener string
 }
 
 // NewHandler creates a websocket server
@@ -40,8 +46,6 @@ func NewHandler(api api.Api) *handler {
 			return true
 		},
 	}
-
-	api.Namespaces().AddListener("websocket")
 
 	h := handler{
 		upgrader: up,
@@ -59,49 +63,63 @@ func (h *handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.conn = conn
+	listener := fmt.Sprintf("ws_client_%s", uuid.NewV4())
+	h.api.Namespaces().AddListener(listener)
+	log.Println(fmt.Sprintf("[LISTENER] add %s", listener))
 
-	go h.writer()
-	h.reader()
+	client := &client{
+		socket:   conn,
+		listener: listener,
+	}
+
+	go h.writer(client)
+	h.reader(client)
 }
 
-func (h *handler) reader() {
-	defer h.conn.Close()
-	h.conn.SetReadLimit(512)
-	h.conn.SetReadDeadline(time.Now().Add(pongWait))
-	h.conn.SetPongHandler(func(string) error { h.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+func (h *handler) reader(client *client) {
+	client.socket.SetReadLimit(512)
+	client.socket.SetReadDeadline(time.Now().Add(pongWait))
+	client.socket.SetPongHandler(func(string) error { client.socket.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+
 	for {
-		_, _, err := h.conn.ReadMessage()
+		_, _, err := client.socket.ReadMessage()
+
 		if err != nil {
-			break
+			h.close(client)
+			return
 		}
 	}
 }
 
-func (h *handler) writer() {
+func (h *handler) writer(client *client) {
 	pingTicker := time.NewTicker(pingPeriod)
-	defer func() {
-		pingTicker.Stop()
-		h.conn.Close()
-	}()
+
+	defer pingTicker.Stop()
+	defer h.close(client)
 
 	for {
 		select {
-		case e := <-h.api.Namespaces().Events("websocket"):
-			h.conn.SetWriteDeadline(time.Now().Add(writeWait))
+		case e := <-h.api.Namespaces().Events(client.listener):
+			client.socket.SetWriteDeadline(time.Now().Add(writeWait))
 			jsonEvent, _ := json.Marshal(e)
-			h.send(websocket.TextMessage, jsonEvent)
+			h.send(client, websocket.TextMessage, jsonEvent)
 		case <-pingTicker.C:
-			h.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			h.send(websocket.PingMessage, []byte{})
+			client.socket.SetWriteDeadline(time.Now().Add(writeWait))
+			h.send(client, websocket.PingMessage, []byte{})
 		}
 	}
 }
 
 // Prevent concurrent write to websocket connection
-func (h *handler) send(messageType int, message []byte) error {
-	h.mutex.Lock()
-	defer h.mutex.Unlock()
+func (h *handler) send(client *client, messageType int, message []byte) error {
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
 
-	return h.conn.WriteMessage(messageType, message)
+	return client.socket.WriteMessage(messageType, message)
+}
+
+func (h *handler) close(client *client) {
+	client.socket.Close()
+	h.api.Namespaces().RemoveListener(client.listener)
+	log.Println(fmt.Sprintf("[LISTENER] remove %s", client.listener))
 }

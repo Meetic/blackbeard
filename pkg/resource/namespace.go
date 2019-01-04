@@ -1,6 +1,8 @@
 package resource
 
 import (
+	"fmt"
+	"log"
 	"time"
 
 	"k8s.io/api/core/v1"
@@ -21,6 +23,7 @@ type NamespaceService interface {
 	List() ([]Namespace, error)
 	Events(listener string) chan NamespaceEvent
 	AddListener(name string)
+	RemoveListener(name string) error
 	Emit(event NamespaceEvent)
 }
 
@@ -79,9 +82,20 @@ func (ns *namespaceService) AddListener(name string) {
 	ns.namespaceEvents[name] = make(chan NamespaceEvent)
 }
 
+// RemoveListener close channel and remove listener
+func (ns *namespaceService) RemoveListener(name string) error {
+	if listener, ok := ns.namespaceEvents[name]; ok {
+		close(listener)
+		delete(ns.namespaceEvents, name)
+		return nil
+	}
+
+	return fmt.Errorf("listener does not exist")
+}
+
 // Emit event to all registered listener
 func (ns *namespaceService) Emit(event NamespaceEvent) {
-	//log.Println(fmt.Sprintf("[EVENT] %s %s %d %s", event.Type, event.Namespace, event.Status, event.Phase))
+	log.Println(fmt.Sprintf("[EVENT] %s %s %d %s", event.Type, event.Namespace, event.Status, event.Phase))
 	for _, ch := range ns.namespaceEvents {
 		go func(handler chan NamespaceEvent) {
 			handler <- event
@@ -181,7 +195,7 @@ func (ns *namespaceService) Events(listener string) chan NamespaceEvent {
 		return ch
 	}
 
-	return make(chan NamespaceEvent)
+	return nil
 }
 
 // ApplyConfig apply kubernetes configurations to the given namespace.
