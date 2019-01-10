@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -89,10 +90,15 @@ func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
 	watcher, err := ns.kubernetes.CoreV1().Namespaces().Watch(metav1.ListOptions{})
 
 	if err != nil {
+		log.Printf("[WATCHER] %s", err.Error())
 		return err
 	}
 
-	defer watcher.Stop()
+	defer func() {
+		watcher.Stop()
+		log.Printf("[WATCHER] restart watcher due to connection close")
+		ns.WatchPhase(emit) // restart watcher if stop
+	}()
 
 	for event := range watcher.ResultChan() {
 		n := event.Object.(*v1.Namespace)
