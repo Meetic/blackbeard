@@ -1,7 +1,11 @@
 package api
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
+	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/Meetic/blackbeard/pkg/playbook"
@@ -23,6 +27,7 @@ type Api interface {
 	Apply(namespace string, configPath string) error
 	Update(namespace string, inventory playbook.Inventory, configPath string) error
 	WaitForNamespaceReady(namespace string, timeout time.Duration, bar progress) error
+	GetVersion() (*Version, error)
 }
 
 type api struct {
@@ -32,11 +37,20 @@ type api struct {
 	namespaces  resource.NamespaceService
 	pods        resource.PodService
 	services    resource.ServiceService
+	version     string
 }
 
 // NewApi creates a blackbeard api. The blackbeard api is responsible for managing playbooks and namespaces.
 // Parameters are struct implementing respectively Inventory, Config, Namespace, Pod and Service interfaces.
-func NewApi(inventories playbook.InventoryRepository, configs playbook.ConfigRepository, playbooks playbook.PlaybookRepository, namespaces resource.NamespaceRepository, pods resource.PodRepository, services resource.ServiceRepository) Api {
+func NewApi(
+	inventories playbook.InventoryRepository,
+	configs playbook.ConfigRepository,
+	playbooks playbook.PlaybookRepository,
+	namespaces resource.NamespaceRepository,
+	pods resource.PodRepository,
+	services resource.ServiceRepository,
+	version string,
+) Api {
 	api := &api{
 		inventories: playbook.NewInventoryService(inventories, playbook.NewPlaybookService(playbooks)),
 		configs:     playbook.NewConfigService(configs, playbook.NewPlaybookService(playbooks)),
@@ -44,6 +58,7 @@ func NewApi(inventories playbook.InventoryRepository, configs playbook.ConfigRep
 		namespaces:  resource.NewNamespaceService(namespaces, pods),
 		pods:        resource.NewPodService(pods),
 		services:    resource.NewServiceService(services),
+		version:     version,
 	}
 
 	go api.WatchDelete()
@@ -193,4 +208,49 @@ func (api *api) WatchDelete() {
 			log.Println("[WATCHER] Inventories and configs for namespace " + event.Namespace + " was deleted")
 		}
 	}
+}
+
+type Version struct {
+	Blackbeard string `json:"blackbeard"`
+	Kubernetes string `json:"kubernetes"`
+	Kubectl    string `json:"kubectl"`
+}
+
+func (api *api) GetVersion() (*Version, error) {
+	cmd := exec.Command("/bin/sh", "-c", "kubectl version --output json")
+	cmdReader, _ := cmd.StdoutPipe()
+
+	err := cmd.Start()
+
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := ioutil.ReadAll(cmdReader)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var version interface{}
+	err = json.Unmarshal(data, &version)
+
+	if err != nil {
+		return nil, err
+	}
+
+	clientVersion := (version.(map[string]interface{}))["clientVersion"]
+	serverVersion := (version.(map[string]interface{}))["serverVersion"]
+
+	return &Version{
+		Blackbeard: api.version,
+		Kubernetes: strings.Join([]string{
+			(clientVersion.(map[string]interface{})["major"]).(string),
+			(clientVersion.(map[string]interface{})["minor"]).(string),
+		}, "."),
+		Kubectl: strings.Join([]string{
+			(serverVersion.(map[string]interface{})["major"]).(string),
+			(serverVersion.(map[string]interface{})["minor"]).(string),
+		}, "."),
+	}, nil
 }

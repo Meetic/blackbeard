@@ -1,20 +1,20 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
 	"os"
+	"strings"
 	"time"
 
-	"bufio"
-	"strings"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/Meetic/blackbeard/pkg/api"
 	"github.com/Meetic/blackbeard/pkg/files"
 	"github.com/Meetic/blackbeard/pkg/kubernetes"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var cfgFile string
@@ -27,7 +27,7 @@ var timeout time.Duration
 var port int
 
 var (
-	Version string
+	version string
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -50,8 +50,8 @@ This action can be done using the "apply" command.
 
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute(version string) {
-	Version = version
+func Execute(appVersion string) {
+	version = appVersion
 
 	if err := RootCmd.Execute(); err != nil {
 		log.Fatal(err)
@@ -142,5 +142,7 @@ func newAPI(files *files.Client, kube *kubernetes.Client) api.Api {
 		files.Playbooks(),
 		kube.Namespaces(),
 		kube.Pods(),
-		kube.Services())
+		kube.Services(),
+		version,
+	)
 }

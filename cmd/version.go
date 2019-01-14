@@ -21,5 +21,5 @@ func init() {
 }
 
 func runVersion() {
-	fmt.Println(fmt.Sprintf("blackbeard version %s", Version))
+	fmt.Println(fmt.Sprintf("blackbeard version %s", version))
 }
