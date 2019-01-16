@@ -30,9 +30,9 @@ Feel free to edit this file before applying changes.
 	},
 }
 
-func init() {
-	RootCmd.AddCommand(createCmd)
-	createCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace where to apply configuration")
+func NewCreateCommand() *cobra.Command {
+	addCommonNamespaceCommandFlags(createCmd)
+	return createCmd
 }
 
 func runCreate(namespace string) error {

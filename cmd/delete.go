@@ -24,9 +24,10 @@ var deleteCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	RootCmd.AddCommand(deleteCmd)
-	deleteCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace where to apply configuration")
+func NewDeleteCommand() *cobra.Command {
+	addCommonNamespaceCommandFlags(deleteCmd)
+
+	return deleteCmd
 }
 
 func runDelete(namespace string) error {

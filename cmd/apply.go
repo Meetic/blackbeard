@@ -30,11 +30,12 @@ and apply the changes to the Kubernetes namespace.
 	},
 }
 
-func init() {
-	RootCmd.AddCommand(applyCmd)
-	applyCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace where to apply configuration")
+func NewApplyCommand() *cobra.Command {
+	addCommonNamespaceCommandFlags(applyCmd)
 	applyCmd.Flags().BoolVar(&wait, "wait", false, "wait until all pods are running")
 	applyCmd.Flags().DurationVarP(&timeout, "timeout", "t", defaultTimeout, "The max time to wait for pods to be all running.")
+
+	return applyCmd
 }
 
 func runApply(namespace string) error {

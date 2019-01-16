@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var getNamespaceCmd = &cobra.Command{
+var getNamespacesCmd = &cobra.Command{
 	Use:   "namespaces",
 	Short: "Show informations about kubernetes namespaces.",
 	Long: `Show informations about kubernetes namespaces such as names, status (percentage of pods in a running status),
@@ -24,8 +24,8 @@ managed or not with the current playbook, etc.`,
 	},
 }
 
-func init() {
-	getCmd.AddCommand(getNamespaceCmd)
+func NewGetNamespacesCommand() *cobra.Command {
+	return getNamespacesCmd
 }
 
 func runGetNamespaces() error {

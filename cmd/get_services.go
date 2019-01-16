@@ -24,9 +24,9 @@ or the url where you can join services throw ingress.`,
 	},
 }
 
-func init() {
-	getCmd.AddCommand(getServicesCmd)
-	getServicesCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace from which get info")
+func NewGetServicesCommand() *cobra.Command {
+	addCommonNamespaceCommandFlags(getServicesCmd)
+	return getServicesCmd
 }
 
 func runGetServices() error {
