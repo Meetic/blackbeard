@@ -19,10 +19,13 @@ or the url where you can join services throw ingress.`,
 	},
 }
 
-func init() {
-	RootCmd.AddCommand(getCmd)
+func NewGetCommand() *cobra.Command {
+	addCommonNamespaceCommandFlags(getCmd)
 
-	getCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace from which get info")
+	getCmd.AddCommand(NewGetNamespacesCommand())
+	getCmd.AddCommand(NewGetServicesCommand())
+
+	return getCmd
 }
 
 func runGet() {

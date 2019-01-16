@@ -1,9 +1,13 @@
 package main
 
 import (
+	"log"
+
 	"github.com/Meetic/blackbeard/cmd"
 )
 
 func main() {
-	cmd.Execute()
+	if err := cmd.NewBlackbeardCommand().Execute(); err != nil {
+		log.Fatal(err)
+	}
 }

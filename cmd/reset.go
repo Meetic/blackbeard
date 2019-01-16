@@ -22,9 +22,9 @@ var resetCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	RootCmd.AddCommand(resetCmd)
-	resetCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace where to apply configuration")
+func NewResetCommand() *cobra.Command {
+	addCommonNamespaceCommandFlags(resetCmd)
+	return resetCmd
 }
 
 func runReset(namespace string) error {
