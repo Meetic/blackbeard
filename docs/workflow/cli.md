@@ -86,6 +86,7 @@ Available Commands:
   help        Help about any command
   reset       Reset a namespace based on the template files and the default inventory.
   serve       Launch the blackbeard server
+  version     Print blackbeard version
 
 Flags:
       --config string             config file (default is $HOME/.blackbeard.yaml)

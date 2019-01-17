@@ -365,6 +365,30 @@
           }
         }
       }
+    },
+    "/version": {
+      "get": {
+        "description": "Return blackbeard, kubernetes and kubectl version",
+        "summary": "Return blackbeard, kubernetes and kubectl version",
+        "operationId": "get-version",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Version",
+            "schema": {
+              "type": "object",
+              "schema": {
+                "$ref": "#/definitions/blackbeard.Version"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -404,8 +428,22 @@
         }
       }
     },
+    "blackbeard.Version": {
+      "type": "object",
+      "properties": {
+        "blackbeard": {
+          "type": "string"
+        },
+        "kubernetes": {
+          "type": "string"
+        },
+        "kubectl": {
+          "type": "string"
+        }
+      }
+    },
     "service.Port": {
-      "type" : "object",
+      "type": "object",
       "properties": {
         "port": {
           "type": "integer"
