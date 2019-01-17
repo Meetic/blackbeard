@@ -232,25 +232,28 @@ func (api *api) GetVersion() (*Version, error) {
 		return nil, err
 	}
 
-	var version interface{}
+	type response struct {
+		ClientVersion struct {
+			Major string `json:"major"`
+			Minor string `json:"minor"`
+		} `json:"clientVersion"`
+		ServerVersion struct {
+			Major string `json:"major"`
+			Minor string `json:"minor"`
+		} `json:"serverVersion"`
+	}
+
+	var version response
+
 	err = json.Unmarshal(data, &version)
 
 	if err != nil {
 		return nil, err
 	}
 
-	clientVersion := (version.(map[string]interface{}))["clientVersion"]
-	serverVersion := (version.(map[string]interface{}))["serverVersion"]
-
 	return &Version{
 		Blackbeard: api.version,
-		Kubernetes: strings.Join([]string{
-			(clientVersion.(map[string]interface{})["major"]).(string),
-			(clientVersion.(map[string]interface{})["minor"]).(string),
-		}, "."),
-		Kubectl: strings.Join([]string{
-			(serverVersion.(map[string]interface{})["major"]).(string),
-			(serverVersion.(map[string]interface{})["minor"]).(string),
-		}, "."),
+		Kubernetes: strings.Join([]string{version.ClientVersion.Major, version.ClientVersion.Minor}, "."),
+		Kubectl:    strings.Join([]string{version.ServerVersion.Major, version.ServerVersion.Minor}, "."),
 	}, nil
 }
