@@ -2,8 +2,10 @@ language: go
 go:
   - 1.11
   - master
+env:
+  - GO111MODULE=on
 before_install:
-  make dep
+  make install
 install:
   make build
 script:
@@ -11,7 +13,7 @@ script:
 
 after_success:
   make cross-build
-  
+
 # deploy:
 #   provider: releases
 #   file_glob: true
