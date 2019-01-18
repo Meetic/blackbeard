@@ -1,13 +1,13 @@
 package api
 
 import (
-	"log"
 	"strings"
 	"time"
 
 	"github.com/Meetic/blackbeard/pkg/playbook"
 	"github.com/Meetic/blackbeard/pkg/resource"
 	"github.com/Meetic/blackbeard/pkg/version"
+	"github.com/sirupsen/logrus"
 )
 
 // Api represents the blackbeard entrypoint by defining the list of actions
@@ -93,8 +93,8 @@ func (api *api) Create(namespace string) (playbook.Inventory, error) {
 		default:
 			return playbook.Inventory{}, e
 		case *playbook.ErrorInventoryAlreadyExist:
-			log.Println(e.Error())
-			log.Println("Process continue.")
+			logrus.Warn(e.Error())
+			logrus.Info("Process continue")
 		}
 	}
 
@@ -203,7 +203,11 @@ func (api *api) WatchDelete() {
 	for event := range api.namespaces.Events("http") {
 		if event.Type == "DELETED" {
 			api.deletePlaybook(event.Namespace)
-			log.Println("[WATCHER] Inventories and configs for namespace " + event.Namespace + " was deleted")
+			logrus.WithFields(logrus.Fields{
+				"component": "watcher",
+				"event":     "delete",
+				"namespace": event.Namespace,
+			}).Debug("Playbook deleted")
 		}
 	}
 }

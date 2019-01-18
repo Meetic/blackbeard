@@ -18,8 +18,8 @@ var versionCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	RootCmd.AddCommand(versionCmd)
+func NewVersionCommand() *cobra.Command {
+	return versionCmd
 }
 
 func runVersion() {

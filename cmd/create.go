@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"log"
 	"path/filepath"
 
 	"github.com/Meetic/blackbeard/pkg/playbook"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +25,7 @@ Feel free to edit this file before applying changes.
 	Run: func(cmd *cobra.Command, args []string) {
 		err := runCreate(namespace)
 		if err != nil {
-			log.Fatal(err.Error())
+			logrus.Fatal(err.Error())
 		}
 	},
 }

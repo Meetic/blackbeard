@@ -3,10 +3,10 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"text/tabwriter"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,7 @@ managed or not with the current playbook, etc.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := runGetNamespaces()
 		if err != nil {
-			log.Fatal(err.Error())
+			logrus.Fatal(err.Error())
 		}
 
 	},

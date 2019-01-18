@@ -111,6 +111,35 @@ var dataset = []struct {
 		}},
 		expected: []NamespaceEvent(nil),
 	},
+	{
+		now: []NamespaceEvent{{
+			Namespace: "foo",
+			Status:    0,
+			Phase:     "Active",
+		}, {
+			Namespace: "bar",
+			Status:    100,
+			Phase:     "Active",
+		}, {
+			Namespace: "baz",
+			Status:    80,
+			Phase:     "Active",
+		}},
+		before: []NamespaceEvent{{
+			Namespace: "foo",
+			Status:    0,
+			Phase:     "Active",
+		}, {
+			Namespace: "bar",
+			Status:    100,
+			Phase:     "Active",
+		}},
+		expected: []NamespaceEvent{{
+			Namespace: "baz",
+			Status:    80,
+			Phase:     "Active",
+		}},
+	},
 }
 
 func TestDiff(t *testing.T) {

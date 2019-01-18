@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"log"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -40,7 +40,7 @@ Using the get command without any sub-command makes no sens. Please use one of t
 
 	contents := bytes.Buffer{}
 	if err := tpl.Execute(&contents, data); err != nil {
-		log.Fatalf("error when executing template : %v", err)
+		logrus.Fatalf("error when executing template : %v", err)
 	}
 
 	fmt.Println(contents.String())

@@ -2,10 +2,10 @@ package resource
 
 import (
 	"fmt"
-	"log"
 	"time"
 
-	"k8s.io/api/core/v1"
+	"github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 )
 
 type Namespace struct {
@@ -94,7 +94,12 @@ func (ns *namespaceService) RemoveListener(name string) error {
 
 // Emit event to all registered listener
 func (ns *namespaceService) Emit(event NamespaceEvent) {
-	log.Println(fmt.Sprintf("[EVENT] %s %s %d %s", event.Type, event.Namespace, event.Status, event.Phase))
+	logrus.WithFields(logrus.Fields{
+		"component": "emmiter",
+		"event":     event.Type,
+		"namespace": event.Namespace,
+	}).Debugf("new status : %d | new phase %s", event.Status, event.Phase)
+
 	for _, ch := range ns.namespaceEvents {
 		go func(handler chan NamespaceEvent) {
 			handler <- event
@@ -109,7 +114,9 @@ func (ns *namespaceService) WatchNamespaces() error {
 	go func() {
 		for {
 			ns.namespaces.WatchPhase(ns.Emit)
-			log.Printf("[WATCHER] restart watcher due to connection close")
+			logrus.WithFields(logrus.Fields{
+				"component": "watcher",
+			}).Debug("Phase watcher restarted due to closed http connection")
 		}
 	}()
 
