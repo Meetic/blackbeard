@@ -2,10 +2,10 @@ package resource
 
 import (
 	"fmt"
-	"log"
 	"time"
 
-	"k8s.io/api/core/v1"
+	"github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 )
 
 type Namespace struct {
@@ -25,6 +25,7 @@ type NamespaceService interface {
 	AddListener(name string)
 	RemoveListener(name string) error
 	Emit(event NamespaceEvent)
+	WatchNamespaces() error
 }
 
 // NamespaceRepository defined the way namespace area actually managed.
@@ -68,8 +69,6 @@ func NewNamespaceService(namespaces NamespaceRepository, pods PodRepository) Nam
 		pods:       pods,
 	}
 
-	ns.WatchNamespaces()
-
 	return ns
 }
 
@@ -95,7 +94,12 @@ func (ns *namespaceService) RemoveListener(name string) error {
 
 // Emit event to all registered listener
 func (ns *namespaceService) Emit(event NamespaceEvent) {
-	log.Println(fmt.Sprintf("[EVENT] %s %s %d %s", event.Type, event.Namespace, event.Status, event.Phase))
+	logrus.WithFields(logrus.Fields{
+		"component": "emmiter",
+		"event":     event.Type,
+		"namespace": event.Namespace,
+	}).Debugf("new status : %d | new phase %s", event.Status, event.Phase)
+
 	for _, ch := range ns.namespaceEvents {
 		go func(handler chan NamespaceEvent) {
 			handler <- event
@@ -154,6 +158,21 @@ func (ns *namespaceService) watchStatus() error {
 }
 
 func compareEvents(now []NamespaceEvent, before []NamespaceEvent) []NamespaceEvent {
+
+	var s1 []string
+	var s2 []string
+	logrus.Debug("before")
+	for _, e := range before {
+		s1 = append(s1, e.Namespace)
+	}
+	logrus.Debugf("before : %s", s1)
+
+	logrus.Debug("after")
+	for _, e := range now {
+		s2 = append(s2, e.Namespace)
+	}
+	logrus.Debugf("after : %s", s2)
+
 	var diff []NamespaceEvent
 
 	for _, s1 := range now {

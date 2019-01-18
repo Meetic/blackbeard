@@ -2,9 +2,8 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
-	"log"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +16,7 @@ var resetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := runReset(namespace)
 		if err != nil {
-			log.Fatal(err.Error())
+			logrus.Fatal(err.Error())
 		}
 	},
 }
@@ -43,7 +42,9 @@ func runReset(namespace string) error {
 		return err
 	}
 
-	fmt.Println("Namespace has been reset successfully")
+	logrus.WithFields(logrus.Fields{
+		"namespace": namespace,
+	}).Info("namespace has been reset successfully")
 
 	return nil
 }

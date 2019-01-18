@@ -1,16 +1,15 @@
 package kubernetes
 
 import (
-	"log"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/Meetic/blackbeard/pkg/resource"
+	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-
-	"github.com/Meetic/blackbeard/pkg/resource"
 )
 
 const (
@@ -85,7 +84,7 @@ func GetKubernetesHost(configFilePath string) string {
 
 	u, err := url.Parse(config.Host)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatalf("Impossible to get K8s host : %s", err.Error())
 	}
 
 	return strings.Split(u.Host, ":")[0]

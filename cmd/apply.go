@@ -2,11 +2,10 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
-	"log"
 	"time"
 
 	"github.com/gosuri/uiprogress"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +23,7 @@ and apply the changes to the Kubernetes namespace.
 	Run: func(cmd *cobra.Command, args []string) {
 		err := runApply(namespace)
 		if err != nil {
-			log.Fatal(err)
+			logrus.Fatal(err)
 		}
 
 	},
@@ -52,11 +51,14 @@ func runApply(namespace string) error {
 		return err
 	}
 
-	fmt.Println("Playbook has been deployed.")
+	logrus.WithFields(logrus.Fields{
+		"namespace": namespace,
+	}).Info("Playbook has been deployed")
 
 	if wait {
-
-		fmt.Println("Waiting for namespace to be ready...")
+		logrus.WithFields(logrus.Fields{
+			"namespace": namespace,
+		}).Info("Waiting for namespace to be ready...")
 		//init progress bar
 		uiprogress.Start()
 		bar := uiprogress.AddBar(100).AppendCompleted().PrependElapsed()
@@ -65,7 +67,9 @@ func runApply(namespace string) error {
 			return err
 		}
 
-		fmt.Println("Namespace is ready.")
+		logrus.WithFields(logrus.Fields{
+			"namespace": namespace,
+		}).Info("Namespace is ready")
 
 	}
 

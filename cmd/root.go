@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -65,11 +64,12 @@ func NewBlackbeardCommand() *cobra.Command {
 	rootCmd.AddCommand(NewDeleteCommand())
 	rootCmd.AddCommand(NewGetCommand())
 	rootCmd.AddCommand(NewResetCommand())
+	rootCmd.AddCommand(NewVersionCommand())
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.blackbeard.yaml)")
 	rootCmd.PersistentFlags().StringVar(&dir, "dir", "", "Use the specified dir as root path to execute commands. Default is the current dir.")
 	rootCmd.PersistentFlags().StringVar(&kubectlConfigPath, "kube-config-path", kubernetes.KubeConfigDefaultPath(), "kubectl config file")
-	rootCmd.PersistentFlags().StringVarP(&v, "verbosity", "v", logrus.WarnLevel.String(), "Log level (debug, info, warn, error, fatal, panic")
+	rootCmd.PersistentFlags().StringVarP(&v, "verbosity", "v", logrus.InfoLevel.String(), "Log level (debug, info, warn, error, fatal, panic")
 
 	viper.BindPFlag("dir", rootCmd.PersistentFlags().Lookup("dir"))
 
@@ -93,14 +93,14 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		logrus.Infof("Using config file: %s", viper.ConfigFileUsed())
 	}
 
 	if dir == "" {
 		//Define current working dir as default value
 		currentDir, err := os.Getwd()
 		if err != nil {
-			log.Fatal("Error when getting the working dir : ", err)
+			logrus.Fatal("Error when getting the working dir : ", err)
 		}
 		viper.SetDefault("working-dir", currentDir)
 		dir = viper.GetString("working-dir")
@@ -117,7 +117,7 @@ func askForConfirmation(message string, reader io.Reader) bool {
 
 		response, err := r.ReadString('\n')
 		if err != nil {
-			log.Fatal(err)
+			logrus.Fatal(err)
 		}
 
 		response = strings.ToLower(strings.TrimSpace(response))
@@ -133,7 +133,7 @@ func askForConfirmation(message string, reader io.Reader) bool {
 func newKubernetesClient() *kubernetes.Client {
 	kube, err := kubernetes.NewClient(kubectlConfigPath)
 	if err != nil {
-		log.Fatal(err.Error())
+		logrus.Fatal(err.Error())
 	}
 
 	return kube
@@ -142,7 +142,7 @@ func newKubernetesClient() *kubernetes.Client {
 func newFileClient(dir string) *files.Client {
 	f, err := files.NewClient(dir)
 	if err != nil {
-		log.Fatal(err.Error())
+		logrus.Fatal(err.Error())
 	}
 
 	return f

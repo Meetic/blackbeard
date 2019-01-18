@@ -3,13 +3,13 @@ package websocket
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
+	"github.com/sirupsen/logrus"
 
 	"github.com/Meetic/blackbeard/pkg/api"
 )
@@ -59,13 +59,17 @@ func NewHandler(api api.Api) *handler {
 func (h *handler) Handle(w http.ResponseWriter, r *http.Request) {
 	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Println("Failed to set websocket upgrade: ", err)
+		logrus.Warnf("Failed to set websocket upgrade: ", err)
 		return
 	}
 
 	listener := fmt.Sprintf("ws_client_%s", uuid.NewV4())
 	h.api.Namespaces().AddListener(listener)
-	log.Println(fmt.Sprintf("[LISTENER] add %s", listener))
+
+	logrus.WithFields(logrus.Fields{
+		"component": "listener",
+		"listener":  listener,
+	}).Debugf("adding new listener")
 
 	client := &client{
 		socket:   conn,
@@ -119,7 +123,16 @@ func (h *handler) send(client *client, messageType int, message []byte) error {
 }
 
 func (h *handler) close(client *client) {
-	client.socket.Close()
-	h.api.Namespaces().RemoveListener(client.listener)
-	log.Println(fmt.Sprintf("[LISTENER] remove %s", client.listener))
+	if err := client.socket.Close(); err != nil {
+		logrus.Warnf("Impossible to close socket connection : %s", err.Error())
+	}
+
+	if err := h.api.Namespaces().RemoveListener(client.listener); err != nil {
+		logrus.Warnf("Impossible to remove listener: %s", err.Error())
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"component": "listener",
+		"listener":  client.listener,
+	}).Debugf("removing listener")
 }
