@@ -10,7 +10,10 @@ func (h *Handler) Version(c *gin.Context) {
 	version, err := h.api.GetVersion()
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Unable to get blackbeard version"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Unable to get blackbeard version",
+			"message": err.Error(),
+		})
 	}
 
 	c.JSON(http.StatusOK, version)

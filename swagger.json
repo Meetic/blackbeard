@@ -381,10 +381,7 @@
           "200": {
             "description": "Version",
             "schema": {
-              "type": "object",
-              "schema": {
-                "$ref": "#/definitions/blackbeard.Version"
-              }
+              "$ref": "#/definitions/blackbeard.Version"
             }
           }
         }

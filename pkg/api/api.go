@@ -1,10 +1,7 @@
 package api
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"log"
-	"os/exec"
 	"strings"
 	"time"
 
@@ -38,6 +35,7 @@ type api struct {
 	namespaces  resource.NamespaceService
 	pods        resource.PodService
 	services    resource.ServiceService
+	cluster     resource.ClusterService
 }
 
 // NewApi creates a blackbeard api. The blackbeard api is responsible for managing playbooks and namespaces.
@@ -49,6 +47,7 @@ func NewApi(
 	namespaces resource.NamespaceRepository,
 	pods resource.PodRepository,
 	services resource.ServiceRepository,
+	cluster resource.ClusterRepository,
 ) Api {
 	api := &api{
 		inventories: playbook.NewInventoryService(inventories, playbook.NewPlaybookService(playbooks)),
@@ -57,6 +56,7 @@ func NewApi(
 		namespaces:  resource.NewNamespaceService(namespaces, pods),
 		pods:        resource.NewPodService(pods),
 		services:    resource.NewServiceService(services),
+		cluster:     resource.NewClusterService(cluster),
 	}
 
 	go api.WatchDelete()
@@ -215,35 +215,7 @@ type Version struct {
 }
 
 func (api *api) GetVersion() (*Version, error) {
-	cmd := exec.Command("/bin/sh", "-c", "kubectl version --output json")
-	cmdReader, _ := cmd.StdoutPipe()
-
-	err := cmd.Start()
-
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := ioutil.ReadAll(cmdReader)
-
-	if err != nil {
-		return nil, err
-	}
-
-	type response struct {
-		ClientVersion struct {
-			Major string `json:"major"`
-			Minor string `json:"minor"`
-		} `json:"clientVersion"`
-		ServerVersion struct {
-			Major string `json:"major"`
-			Minor string `json:"minor"`
-		} `json:"serverVersion"`
-	}
-
-	var v response
-
-	err = json.Unmarshal(data, &v)
+	v, err := api.cluster.GetVersion()
 
 	if err != nil {
 		return nil, err
