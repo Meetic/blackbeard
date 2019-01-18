@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"github.com/Meetic/blackbeard/pkg/version"
 )
 
 var versionCmd = &cobra.Command{
@@ -21,5 +23,5 @@ func init() {
 }
 
 func runVersion() {
-	fmt.Println(fmt.Sprintf("blackbeard version %s", version))
+	fmt.Println(fmt.Sprintf("blackbeard version %s", version.GetVersion()))
 }

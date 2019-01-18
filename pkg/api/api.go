@@ -10,6 +10,7 @@ import (
 
 	"github.com/Meetic/blackbeard/pkg/playbook"
 	"github.com/Meetic/blackbeard/pkg/resource"
+	"github.com/Meetic/blackbeard/pkg/version"
 )
 
 // Api represents the blackbeard entrypoint by defining the list of actions
@@ -37,7 +38,6 @@ type api struct {
 	namespaces  resource.NamespaceService
 	pods        resource.PodService
 	services    resource.ServiceService
-	version     string
 }
 
 // NewApi creates a blackbeard api. The blackbeard api is responsible for managing playbooks and namespaces.
@@ -49,7 +49,6 @@ func NewApi(
 	namespaces resource.NamespaceRepository,
 	pods resource.PodRepository,
 	services resource.ServiceRepository,
-	version string,
 ) Api {
 	api := &api{
 		inventories: playbook.NewInventoryService(inventories, playbook.NewPlaybookService(playbooks)),
@@ -58,7 +57,6 @@ func NewApi(
 		namespaces:  resource.NewNamespaceService(namespaces, pods),
 		pods:        resource.NewPodService(pods),
 		services:    resource.NewServiceService(services),
-		version:     version,
 	}
 
 	go api.WatchDelete()
@@ -243,17 +241,17 @@ func (api *api) GetVersion() (*Version, error) {
 		} `json:"serverVersion"`
 	}
 
-	var version response
+	var v response
 
-	err = json.Unmarshal(data, &version)
+	err = json.Unmarshal(data, &v)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return &Version{
-		Blackbeard: api.version,
-		Kubernetes: strings.Join([]string{version.ClientVersion.Major, version.ClientVersion.Minor}, "."),
-		Kubectl:    strings.Join([]string{version.ServerVersion.Major, version.ServerVersion.Minor}, "."),
+		Blackbeard: version.GetVersion(),
+		Kubernetes: strings.Join([]string{v.ClientVersion.Major, v.ClientVersion.Minor}, "."),
+		Kubectl:    strings.Join([]string{v.ServerVersion.Major, v.ServerVersion.Minor}, "."),
 	}, nil
 }
