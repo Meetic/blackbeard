@@ -58,6 +58,7 @@ func NewHandler(api api.Api, websocket WsHandler, configPath string, corsEnable 
 	h.engine.GET("/ws", func(c *gin.Context) {
 		websocket.Handle(c.Writer, c.Request)
 	})
+	h.engine.GET("/version", h.Version)
 
 	return h
 }

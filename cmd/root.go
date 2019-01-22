@@ -1,20 +1,20 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
 	"os"
+	"strings"
 	"time"
 
-	"bufio"
-	"strings"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/Meetic/blackbeard/pkg/api"
 	"github.com/Meetic/blackbeard/pkg/files"
 	"github.com/Meetic/blackbeard/pkg/kubernetes"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var cfgFile string
@@ -136,5 +136,7 @@ func newAPI(files *files.Client, kube *kubernetes.Client) api.Api {
 		files.Playbooks(),
 		kube.Namespaces(),
 		kube.Pods(),
-		kube.Services())
+		kube.Services(),
+		kube.Cluster(),
+	)
 }

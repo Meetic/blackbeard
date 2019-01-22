@@ -2,10 +2,12 @@ package api
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"github.com/Meetic/blackbeard/pkg/playbook"
 	"github.com/Meetic/blackbeard/pkg/resource"
+	"github.com/Meetic/blackbeard/pkg/version"
 )
 
 // Api represents the blackbeard entrypoint by defining the list of actions
@@ -23,6 +25,7 @@ type Api interface {
 	Apply(namespace string, configPath string) error
 	Update(namespace string, inventory playbook.Inventory, configPath string) error
 	WaitForNamespaceReady(namespace string, timeout time.Duration, bar progress) error
+	GetVersion() (*Version, error)
 }
 
 type api struct {
@@ -32,11 +35,20 @@ type api struct {
 	namespaces  resource.NamespaceService
 	pods        resource.PodService
 	services    resource.ServiceService
+	cluster     resource.ClusterService
 }
 
 // NewApi creates a blackbeard api. The blackbeard api is responsible for managing playbooks and namespaces.
 // Parameters are struct implementing respectively Inventory, Config, Namespace, Pod and Service interfaces.
-func NewApi(inventories playbook.InventoryRepository, configs playbook.ConfigRepository, playbooks playbook.PlaybookRepository, namespaces resource.NamespaceRepository, pods resource.PodRepository, services resource.ServiceRepository) Api {
+func NewApi(
+	inventories playbook.InventoryRepository,
+	configs playbook.ConfigRepository,
+	playbooks playbook.PlaybookRepository,
+	namespaces resource.NamespaceRepository,
+	pods resource.PodRepository,
+	services resource.ServiceRepository,
+	cluster resource.ClusterRepository,
+) Api {
 	api := &api{
 		inventories: playbook.NewInventoryService(inventories, playbook.NewPlaybookService(playbooks)),
 		configs:     playbook.NewConfigService(configs, playbook.NewPlaybookService(playbooks)),
@@ -44,6 +56,7 @@ func NewApi(inventories playbook.InventoryRepository, configs playbook.ConfigRep
 		namespaces:  resource.NewNamespaceService(namespaces, pods),
 		pods:        resource.NewPodService(pods),
 		services:    resource.NewServiceService(services),
+		cluster:     resource.NewClusterService(cluster),
 	}
 
 	go api.WatchDelete()
@@ -193,4 +206,24 @@ func (api *api) WatchDelete() {
 			log.Println("[WATCHER] Inventories and configs for namespace " + event.Namespace + " was deleted")
 		}
 	}
+}
+
+type Version struct {
+	Blackbeard string `json:"blackbeard"`
+	Kubernetes string `json:"kubernetes"`
+	Kubectl    string `json:"kubectl"`
+}
+
+func (api *api) GetVersion() (*Version, error) {
+	v, err := api.cluster.GetVersion()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &Version{
+		Blackbeard: version.GetVersion(),
+		Kubernetes: strings.Join([]string{v.ClientVersion.Major, v.ClientVersion.Minor}, "."),
+		Kubectl:    strings.Join([]string{v.ServerVersion.Major, v.ServerVersion.Minor}, "."),
+	}, nil
 }

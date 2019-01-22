@@ -7,9 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Meetic/blackbeard/pkg/resource"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/Meetic/blackbeard/pkg/resource"
 )
 
 const (
@@ -22,6 +23,7 @@ type Client struct {
 	namespaces resource.NamespaceRepository
 	pods       resource.PodRepository
 	services   resource.ServiceRepository
+	cluster    resource.ClusterRepository
 }
 
 // NewClient return a new kubernetes client
@@ -42,6 +44,7 @@ func NewClient(configFilePath string) (*Client, error) {
 		namespaces: NewNamespaceRepository(clientSet),
 		pods:       NewPodRepository(clientSet),
 		services:   NewServiceRepository(clientSet, GetKubernetesHost(configFilePath)),
+		cluster:    NewClusterRepository(),
 	}, nil
 }
 
@@ -55,6 +58,10 @@ func (c *Client) Pods() resource.PodRepository {
 
 func (c *Client) Services() resource.ServiceRepository {
 	return c.services
+}
+
+func (c *Client) Cluster() resource.ClusterRepository {
+	return c.cluster
 }
 
 // KubeConfigDefaultPath return the kubernetes default config path

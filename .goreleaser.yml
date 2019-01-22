@@ -6,6 +6,8 @@ builds:
       - linux
     goarch:
       - amd64
+    ldflags:
+      - -s -w -X github.com/Meetic/blackbeard/pkg/version.version={{.Version}}
 # archive:
 #   replacements:
 #     darwin: macos
