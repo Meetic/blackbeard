@@ -84,7 +84,7 @@ func (ns *namespaceRepository) List() ([]resource.Namespace, error) {
 	return namespaces, nil
 }
 
-func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
+func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter, restarter chan<- int) error {
 
 	watcher, err := ns.kubernetes.CoreV1().Namespaces().Watch(metav1.ListOptions{})
 
@@ -95,8 +95,8 @@ func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
 
 	defer func() {
 		watcher.Stop()
-		logrus.Info("restarting pahse watcher due to connection close")
-		ns.WatchPhase(emit) // restart watcher if stop
+		logrus.Info("restarting phase watcher due to connection close")
+		restarter <- 1 // restart watcher if stop
 	}()
 
 	for event := range watcher.ResultChan() {

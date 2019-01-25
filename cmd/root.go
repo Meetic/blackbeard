@@ -11,10 +11,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/Meetic/blackbeard/pkg/api"
 	"github.com/Meetic/blackbeard/pkg/files"
 	"github.com/Meetic/blackbeard/pkg/kubernetes"
-	"github.com/sirupsen/logrus"
 )
 
 var (
