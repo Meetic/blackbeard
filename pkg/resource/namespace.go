@@ -35,7 +35,7 @@ type NamespaceRepository interface {
 	ApplyConfig(namespace string, configPath string) error
 	Delete(namespace string) error
 	List() ([]Namespace, error)
-	WatchPhase(emit EventEmitter, restarter chan<- int) error
+	WatchPhase(emit EventEmitter) error
 }
 
 type namespaceService struct {
@@ -106,14 +106,12 @@ func (ns *namespaceService) Emit(event NamespaceEvent) {
 func (ns *namespaceService) WatchNamespaces() error {
 	go ns.watchStatus()
 
-	// notify parent process when watch phase crash using channel
-	restarter := make(chan int, 1)
-	restarter <- 1 // init watch phase by putting something into the channel
-	defer close(restarter)
-
-	for range restarter {
-		go ns.namespaces.WatchPhase(ns.Emit, restarter)
-	}
+	go func() {
+		for {
+			ns.namespaces.WatchPhase(ns.Emit)
+			log.Printf("[WATCHER] restart watcher due to connection close")
+		}
+	}()
 
 	return nil
 }

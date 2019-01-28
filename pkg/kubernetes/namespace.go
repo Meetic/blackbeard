@@ -85,7 +85,7 @@ func (ns *namespaceRepository) List() ([]resource.Namespace, error) {
 	return namespaces, nil
 }
 
-func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter, restarter chan<- int) error {
+func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
 
 	watcher, err := ns.kubernetes.CoreV1().Namespaces().Watch(metav1.ListOptions{})
 
@@ -93,12 +93,6 @@ func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter, restarter 
 		log.Printf("[WATCHER] %s", err.Error())
 		return err
 	}
-
-	defer func() {
-		watcher.Stop()
-		log.Printf("[WATCHER] restart watcher due to connection close")
-		restarter <- 1 // restart watcher if stop
-	}()
 
 	for event := range watcher.ResultChan() {
 		n := event.Object.(*v1.Namespace)
