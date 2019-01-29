@@ -94,12 +94,6 @@ func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
 		return err
 	}
 
-	defer func() {
-		watcher.Stop()
-		log.Printf("[WATCHER] restart watcher due to connection close")
-		ns.WatchPhase(emit) // restart watcher if stop
-	}()
-
 	for event := range watcher.ResultChan() {
 		n := event.Object.(*v1.Namespace)
 		namespaceEvent := resource.NamespaceEvent{

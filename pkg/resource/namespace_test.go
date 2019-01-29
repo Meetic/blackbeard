@@ -71,3 +71,30 @@ func TestRemoveListener(t *testing.T) {
 
 	assert.Nil(t, chNil)
 }
+
+func TestDelete(t *testing.T) {
+	err := namespaces.Delete("foobar")
+
+	assert.Nil(t, err)
+}
+
+func TestApplyConfig(t *testing.T) {
+	err := namespaces.ApplyConfig("foobar", "config")
+
+	assert.Nil(t, err)
+}
+
+func TestList(t *testing.T) {
+	namespaces, err := namespaces.List()
+
+	expectedNamespaces := []resource.Namespace{
+		{
+			Name:   "test",
+			Phase:  "active",
+			Status: 100,
+		},
+	}
+
+	assert.Nil(t, err)
+	assert.Equal(t, expectedNamespaces, namespaces)
+}

@@ -5,9 +5,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Meetic/blackbeard/pkg/api"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
+	"github.com/Meetic/blackbeard/pkg/api"
 )
 
 // Handler actually handle http requests.
@@ -80,5 +81,13 @@ func NewServer(h *Handler) *Server {
 
 // Serve launch the webserver
 func (s *Server) Serve(port int) {
+
+	go func() {
+		err := s.handler.api.Namespaces().WatchNamespaces()
+		if err != nil {
+			log.Println(fmt.Sprintf("error while trying to watch namespace : %s", err.Error()))
+		}
+	}()
+
 	s.handler.Engine().Run(fmt.Sprintf(":%d", port))
 }

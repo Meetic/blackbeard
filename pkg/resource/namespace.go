@@ -25,6 +25,7 @@ type NamespaceService interface {
 	AddListener(name string)
 	RemoveListener(name string) error
 	Emit(event NamespaceEvent)
+	WatchNamespaces() error
 }
 
 // NamespaceRepository defined the way namespace area actually managed.
@@ -68,8 +69,6 @@ func NewNamespaceService(namespaces NamespaceRepository, pods PodRepository) Nam
 		pods:       pods,
 	}
 
-	ns.WatchNamespaces()
-
 	return ns
 }
 
@@ -105,8 +104,14 @@ func (ns *namespaceService) Emit(event NamespaceEvent) {
 
 // WatchNamespaces create a watcher on namespace events from kubernetes cluster and send result over received channel
 func (ns *namespaceService) WatchNamespaces() error {
-	go ns.namespaces.WatchPhase(ns.Emit)
 	go ns.watchStatus()
+
+	go func() {
+		for {
+			ns.namespaces.WatchPhase(ns.Emit)
+			log.Printf("[WATCHER] restart watcher due to connection close")
+		}
+	}()
 
 	return nil
 }
