@@ -138,11 +138,12 @@ func execute(c string, t time.Duration) error {
 		}
 	}()
 
-	//Start process. Exit code 127 if process fail to start.
+	// Start process. Exit code 127 if process fail to start.
 	if err := cmd.Start(); err != nil {
-		fmt.Fprintln(os.Stderr, "Error stating Cmd")
+		fmt.Fprintln(os.Stderr, "Error starting Cmd")
 		return err
 	}
+
 	var timer *time.Timer
 	if t > 0 {
 		timer = time.NewTimer(t)
