@@ -2,7 +2,6 @@ package kubernetes
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os/exec"
 
 	"github.com/Meetic/blackbeard/pkg/resource"
@@ -16,15 +15,7 @@ func NewClusterRepository() resource.ClusterRepository {
 
 func (r ClusterRepository) GetVersion() (*resource.Version, error) {
 	cmd := exec.Command("/bin/sh", "-c", "kubectl version --output json")
-	cmdReader, _ := cmd.StdoutPipe()
-
-	err := cmd.Start()
-
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := ioutil.ReadAll(cmdReader)
+	result, err := cmd.Output()
 
 	if err != nil {
 		return nil, err
@@ -32,7 +23,7 @@ func (r ClusterRepository) GetVersion() (*resource.Version, error) {
 
 	var v resource.Version
 
-	err = json.Unmarshal(data, &v)
+	err = json.Unmarshal(result, &v)
 
 	if err != nil {
 		return nil, err
