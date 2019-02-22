@@ -34,6 +34,9 @@ func NewClient(configFilePath string) (*Client, error) {
 		return &Client{}, err
 	}
 
+	config.QPS = float32(250)
+	config.Burst = 500
+
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return &Client{}, err

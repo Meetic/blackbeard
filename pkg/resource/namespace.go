@@ -46,8 +46,8 @@ type namespaceService struct {
 
 // NamespaceStatus represent namespace with percentage of pods running and status phase (Active or Terminating)
 type NamespaceStatus struct {
-	Status int
-	Phase  string
+	Status int    `json:"status"`
+	Phase  string `json:"phase"`
 }
 
 // NamespaceEvent represent a namespace event happened on kubernetes cluster

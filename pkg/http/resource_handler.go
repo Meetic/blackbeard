@@ -3,8 +3,9 @@ package http
 import (
 	"net/http"
 
-	"github.com/Meetic/blackbeard/pkg/playbook"
 	"github.com/gin-gonic/gin"
+
+	"github.com/Meetic/blackbeard/pkg/playbook"
 )
 
 // ListServices returns the list of exposed services (NodePort and ingress configuration) of a given inventory
@@ -45,13 +46,7 @@ func (h *Handler) GetStatus(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, struct {
-		Status int    `json:"status"`
-		Phase  string `json:"phase"`
-	}{
-		Status: status.Status,
-		Phase:  status.Phase,
-	})
+	c.JSON(http.StatusOK, status)
 }
 
 // GetStatuses returns an array of namespaces and their associated status
