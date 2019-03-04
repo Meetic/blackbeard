@@ -2,13 +2,13 @@ package http
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
 	"github.com/Meetic/blackbeard/pkg/api"
+	"github.com/sirupsen/logrus"
 )
 
 // Handler actually handle http requests.
@@ -43,7 +43,7 @@ func NewHandler(api api.Api, websocket WsHandler, configPath string, corsEnable 
 		config.AllowAllOrigins = true
 		config.AddAllowHeaders("authorization")
 		h.engine.Use(cors.New(config))
-		log.Println("cors are enabled")
+		logrus.Info("CORS are enabled")
 	}
 
 	h.engine.POST("/inventories", h.Create)
@@ -85,7 +85,7 @@ func (s *Server) Serve(port int) {
 	go func() {
 		err := s.handler.api.Namespaces().WatchNamespaces()
 		if err != nil {
-			log.Println(fmt.Sprintf("error while trying to watch namespace : %s", err.Error()))
+			logrus.Errorf("Error while trying to watch namespace : %s", err.Error())
 		}
 	}()
 

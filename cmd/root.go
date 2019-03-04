@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -15,19 +14,23 @@ import (
 	"github.com/Meetic/blackbeard/pkg/api"
 	"github.com/Meetic/blackbeard/pkg/files"
 	"github.com/Meetic/blackbeard/pkg/kubernetes"
+	"github.com/sirupsen/logrus"
 )
 
-var cfgFile string
-var dir string
-var kubectlConfigPath string
-var namespace string
-var cors bool
-var wait bool
-var timeout time.Duration
-var port int
+var (
+	cfgFile           string
+	dir               string
+	kubectlConfigPath string
+	v                 string
+	namespace         string
+	cors              bool
+	wait              bool
+	timeout           time.Duration
+	port              int
+)
 
-// RootCmd represents the base command when called without any subcommands
-var RootCmd = &cobra.Command{
+// rootCmd represents the base command when called without any subcommands
+var rootCmd = &cobra.Command{
 	Use:   "blackbeard",
 	Short: "Blackbeard is a tool that let you create and manage multiple version of the same stack using Kubernetes and namespace",
 	Long: `Blackbeard let you apply a bunch of configuration files template into different namespaces using some provided values.
@@ -44,21 +47,38 @@ This action can be done using the "apply" command.
 	`,
 }
 
-// Execute adds all child commands to the root command sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := RootCmd.Execute(); err != nil {
-		log.Fatal(err)
+func NewBlackbeardCommand() *cobra.Command {
+
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if err := setUpLogs(os.Stdout, v); err != nil {
+			return err
+		}
+		return nil
 	}
+
+	initConfig()
+
+	rootCmd.AddCommand(NewServeCommand())
+	rootCmd.AddCommand(NewApplyCommand())
+	rootCmd.AddCommand(NewCreateCommand())
+	rootCmd.AddCommand(NewDeleteCommand())
+	rootCmd.AddCommand(NewGetCommand())
+	rootCmd.AddCommand(NewResetCommand())
+	rootCmd.AddCommand(NewVersionCommand())
+
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.blackbeard.yaml)")
+	rootCmd.PersistentFlags().StringVar(&dir, "dir", "", "Use the specified dir as root path to execute commands. Default is the current dir.")
+	rootCmd.PersistentFlags().StringVar(&kubectlConfigPath, "kube-config-path", kubernetes.KubeConfigDefaultPath(), "kubectl config file")
+	rootCmd.PersistentFlags().StringVarP(&v, "verbosity", "v", logrus.InfoLevel.String(), "Log level (debug, info, warn, error, fatal, panic")
+
+	viper.BindPFlag("dir", rootCmd.PersistentFlags().Lookup("dir"))
+
+	return rootCmd
+
 }
 
-func init() {
-	cobra.OnInitialize(initConfig)
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.blackbeard.yaml)")
-	RootCmd.PersistentFlags().StringVar(&dir, "dir", "", "Use the specified dir as root path to execute commands. Default is the current dir.")
-	RootCmd.PersistentFlags().StringVar(&kubectlConfigPath, "kube-config-path", kubernetes.KubeConfigDefaultPath(), "kubectl config file")
-
-	viper.BindPFlag("dir", RootCmd.PersistentFlags().Lookup("dir"))
+func addCommonNamespaceCommandFlags(cmd *cobra.Command) {
+	cmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace where to apply configuration")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -73,14 +93,14 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		logrus.Infof("Using config file: %s", viper.ConfigFileUsed())
 	}
 
 	if dir == "" {
 		//Define current working dir as default value
 		currentDir, err := os.Getwd()
 		if err != nil {
-			log.Fatal("Error when getting the working dir : ", err)
+			logrus.Fatal("Error when getting the working dir : ", err)
 		}
 		viper.SetDefault("working-dir", currentDir)
 		dir = viper.GetString("working-dir")
@@ -97,7 +117,7 @@ func askForConfirmation(message string, reader io.Reader) bool {
 
 		response, err := r.ReadString('\n')
 		if err != nil {
-			log.Fatal(err)
+			logrus.Fatal(err)
 		}
 
 		response = strings.ToLower(strings.TrimSpace(response))
@@ -113,7 +133,7 @@ func askForConfirmation(message string, reader io.Reader) bool {
 func newKubernetesClient() *kubernetes.Client {
 	kube, err := kubernetes.NewClient(kubectlConfigPath)
 	if err != nil {
-		log.Fatal(err.Error())
+		logrus.Fatal(err.Error())
 	}
 
 	return kube
@@ -122,7 +142,7 @@ func newKubernetesClient() *kubernetes.Client {
 func newFileClient(dir string) *files.Client {
 	f, err := files.NewClient(dir)
 	if err != nil {
-		log.Fatal(err.Error())
+		logrus.Fatal(err.Error())
 	}
 
 	return f
@@ -139,4 +159,19 @@ func newAPI(files *files.Client, kube *kubernetes.Client) api.Api {
 		kube.Services(),
 		kube.Cluster(),
 	)
+}
+
+func setUpLogs(out io.Writer, level string) error {
+
+	logrus.SetOutput(out)
+	lvl, err := logrus.ParseLevel(level)
+	if err != nil {
+		return err
+	}
+	logrus.SetLevel(lvl)
+	logrus.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "2006-01-02 15:04:05",
+	})
+	return nil
 }

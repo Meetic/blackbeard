@@ -3,14 +3,14 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"text/tabwriter"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-var getNamespaceCmd = &cobra.Command{
+var getNamespacesCmd = &cobra.Command{
 	Use:   "namespaces",
 	Short: "Show informations about kubernetes namespaces.",
 	Long: `Show informations about kubernetes namespaces such as names, status (percentage of pods in a running status),
@@ -18,14 +18,14 @@ managed or not with the current playbook, etc.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := runGetNamespaces()
 		if err != nil {
-			log.Fatal(err.Error())
+			logrus.Fatal(err.Error())
 		}
 
 	},
 }
 
-func init() {
-	getCmd.AddCommand(getNamespaceCmd)
+func NewGetNamespacesCommand() *cobra.Command {
+	return getNamespacesCmd
 }
 
 func runGetNamespaces() error {

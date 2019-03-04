@@ -4,13 +4,12 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"log"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
 
-	"k8s.io/api/core/v1"
+	"github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -90,7 +89,7 @@ func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
 	watcher, err := ns.kubernetes.CoreV1().Namespaces().Watch(metav1.ListOptions{})
 
 	if err != nil {
-		log.Printf("[WATCHER] %s", err.Error())
+		logrus.Errorf("Error when watching phase : %s", err.Error())
 		return err
 	}
 
@@ -127,20 +126,20 @@ func execute(c string, t time.Duration) error {
 
 	cmdReader, err := cmd.StdoutPipe()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error creating StdoutPipe for Cmd")
+		logrus.Warn("Error creating StdoutPipe for Cmd")
 		return err
 	}
 
 	scanner := bufio.NewScanner(cmdReader)
 	go func() {
 		for scanner.Scan() {
-			fmt.Println(scanner.Text())
+			logrus.Info(scanner.Text())
 		}
 	}()
 
 	// Start process. Exit code 127 if process fail to start.
 	if err := cmd.Start(); err != nil {
-		fmt.Fprintln(os.Stderr, "Error starting Cmd")
+		logrus.Warn("Error stating Cmd")
 		return err
 	}
 

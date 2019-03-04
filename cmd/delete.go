@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"errors"
-	"log"
 	"os"
 
 	"fmt"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -19,14 +19,15 @@ var deleteCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := runDelete(namespace)
 		if err != nil {
-			log.Fatal(err.Error())
+			logrus.Fatal(err.Error())
 		}
 	},
 }
 
-func init() {
-	RootCmd.AddCommand(deleteCmd)
-	deleteCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace where to apply configuration")
+func NewDeleteCommand() *cobra.Command {
+	addCommonNamespaceCommandFlags(deleteCmd)
+
+	return deleteCmd
 }
 
 func runDelete(namespace string) error {
@@ -45,7 +46,9 @@ func runDelete(namespace string) error {
 		return err
 	}
 
-	fmt.Printf("Namespace %s has been sucessfully deleted.\n", namespace)
+	logrus.WithFields(logrus.Fields{
+		"namespace": namespace,
+	}).Info("namespace deleted")
 
 	return nil
 }

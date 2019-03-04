@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"log"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -19,10 +19,13 @@ or the url where you can join services throw ingress.`,
 	},
 }
 
-func init() {
-	RootCmd.AddCommand(getCmd)
+func NewGetCommand() *cobra.Command {
+	addCommonNamespaceCommandFlags(getCmd)
 
-	getCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace from which get info")
+	getCmd.AddCommand(NewGetNamespacesCommand())
+	getCmd.AddCommand(NewGetServicesCommand())
+
+	return getCmd
 }
 
 func runGet() {
@@ -37,7 +40,7 @@ Using the get command without any sub-command makes no sens. Please use one of t
 
 	contents := bytes.Buffer{}
 	if err := tpl.Execute(&contents, data); err != nil {
-		log.Fatalf("error when executing template : %v", err)
+		logrus.Fatalf("error when executing template : %v", err)
 	}
 
 	fmt.Println(contents.String())

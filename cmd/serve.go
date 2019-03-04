@@ -18,14 +18,14 @@ This API let the client use all the features provided by Blackbeard such as crea
 	},
 }
 
-func init() {
-	RootCmd.AddCommand(serveCmd)
+func NewServeCommand() *cobra.Command {
 	serveCmd.Flags().BoolVar(&cors, "cors", false, "Enable cors")
 	serveCmd.Flags().IntVar(&port, "port", 8080, "Use a specific port")
+
+	return serveCmd
 }
 
 func runServe() {
-
 	files := newFileClient(dir)
 
 	api := newAPI(files, newKubernetesClient())

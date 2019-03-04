@@ -3,10 +3,10 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"text/tabwriter"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -18,15 +18,15 @@ or the url where you can join services throw ingress.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := runGetServices()
 		if err != nil {
-			log.Fatal(err.Error())
+			logrus.Fatal(err.Error())
 		}
 
 	},
 }
 
-func init() {
-	getCmd.AddCommand(getServicesCmd)
-	getServicesCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "The namespace from which get info")
+func NewGetServicesCommand() *cobra.Command {
+	addCommonNamespaceCommandFlags(getServicesCmd)
+	return getServicesCmd
 }
 
 func runGetServices() error {

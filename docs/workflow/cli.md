@@ -93,7 +93,7 @@ Flags:
       --dir string                Use the specified dir as root path to execute commands. Default is the current dir.
   -h, --help                      help for blackbeard
       --kube-config-path string   kubectl config file (default "$HOME/.kube/config")
-
+  -v, --verbosity string          Log level (debug, info, warn, error, fatal, panic (default "info")
 
 Use "blackbeard [command] --help" for more information about a command.
 ```
