@@ -2,7 +2,6 @@ package api
 
 import (
 	"strings"
-	"time"
 
 	"github.com/Meetic/blackbeard/pkg/playbook"
 	"github.com/Meetic/blackbeard/pkg/resource"
@@ -24,7 +23,6 @@ type Api interface {
 	Reset(namespace string, configPath string) error
 	Apply(namespace string, configPath string) error
 	Update(namespace string, inventory playbook.Inventory, configPath string) error
-	WaitForNamespaceReady(namespace string, timeout time.Duration, bar progress) error
 	GetVersion() (*Version, error)
 }
 
