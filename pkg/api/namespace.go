@@ -1,10 +1,7 @@
 package api
 
 import (
-	"fmt"
 	"time"
-
-	"github.com/Meetic/blackbeard/pkg/resource"
 )
 
 const (
@@ -51,40 +48,4 @@ func (api *api) ListNamespaces() ([]Namespace, error) {
 
 	return namespaces, nil
 
-}
-
-type progress interface {
-	Set(int) error
-}
-
-// WaitForNamespaceReady wait until all pods in the specified namespace are ready.
-// And error is returned if the timeout is reach.
-func (api *api) WaitForNamespaceReady(namespace string, timeout time.Duration, bar progress) error {
-
-	ticker := time.NewTicker(tickerDuration)
-	timerCh := time.NewTimer(timeout).C
-	doneCh := make(chan bool)
-
-	go func(bar progress, ns resource.NamespaceService, namespace string) {
-		for range ticker.C {
-			status, err := ns.GetStatus(namespace)
-			if err != nil {
-				ticker.Stop()
-			}
-			bar.Set(status.Status)
-			if status.Status == 100 {
-				doneCh <- true
-			}
-		}
-	}(bar, api.namespaces, namespace)
-
-	for {
-		select {
-		case <-timerCh:
-			ticker.Stop()
-			return fmt.Errorf("time out : Some pods are not yet ready")
-		case <-doneCh:
-			return nil
-		}
-	}
 }

@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
+	"github.com/Meetic/blackbeard/pkg/resource"
 	"github.com/gosuri/uiprogress"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -29,6 +31,7 @@ and apply the changes to the Kubernetes namespace.
 	},
 }
 
+//NewApplyCommand returns the apply cobra command
 func NewApplyCommand() *cobra.Command {
 	addCommonNamespaceCommandFlags(applyCmd)
 	applyCmd.Flags().BoolVar(&wait, "wait", false, "wait until all pods are running")
@@ -59,19 +62,70 @@ func runApply(namespace string) error {
 		logrus.WithFields(logrus.Fields{
 			"namespace": namespace,
 		}).Info("Waiting for namespace to be ready...")
-		//init progress bar
-		uiprogress.Start()
-		bar := uiprogress.AddBar(100).AppendCompleted().PrependElapsed()
 
-		if err := api.WaitForNamespaceReady(namespace, timeout, bar); err != nil {
+		if err := waitForNamespaceReady(api.Namespaces(), namespace); err != nil {
 			return err
 		}
-
-		logrus.WithFields(logrus.Fields{
-			"namespace": namespace,
-		}).Info("Namespace is ready")
-
 	}
 
 	return nil
+}
+
+func waitForNamespaceReady(ns resource.NamespaceService, namespace string) error {
+
+	//Starting watching namespace
+	go func() {
+		err := ns.WatchNamespaces()
+		if err != nil {
+			logrus.Errorf("Error while trying to watch namespace : %s", err.Error())
+		}
+	}()
+
+	//register for event listening
+	ns.AddListener("cli_progress_bar")
+
+	//initiate progress bar
+	uiprogress.Start()
+	bar := uiprogress.AddBar(100).AppendCompleted().PrependElapsed()
+
+	//Init timer
+	timerCh := time.NewTimer(timeout).C
+	doneCh := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case e := <-ns.Events("cli_progress_bar"):
+				if e.Type == resource.NamespaceStatusUpdate && e.Namespace == namespace {
+
+					logrus.WithFields(logrus.Fields{
+						"namespace": e.Namespace,
+						"type":      e.Type,
+						"Phase":     e.Phase,
+						"Status":    e.Status,
+					}).Debug("Event received for namespace")
+
+					if err := bar.Set(e.Status); err != nil {
+						logrus.Debugf("Error when incrementing progress bar : %s", err.Error())
+					}
+
+					if e.Status == 100 {
+						doneCh <- true
+					}
+				}
+			}
+		}
+	}()
+
+	for {
+		select {
+		case <-timerCh:
+			return fmt.Errorf("time out : Some pods are not yet ready")
+		case <-doneCh:
+			logrus.WithFields(logrus.Fields{
+				"namespace": namespace,
+			}).Info("Namespace is ready")
+			return nil
+		}
+	}
 }
