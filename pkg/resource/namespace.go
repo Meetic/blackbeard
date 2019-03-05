@@ -8,6 +8,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+const (
+	refreshStatusTick     = 10 * time.Second
+	NamespaceStatusUpdate = "STATUS.UPDATE"
+)
+
 type Namespace struct {
 	Name   string
 	Phase  string
@@ -39,9 +44,9 @@ type NamespaceRepository interface {
 }
 
 type namespaceService struct {
-	namespaces      NamespaceRepository
-	pods            PodRepository
-	namespaceEvents map[string]chan NamespaceEvent
+	namespaces NamespaceRepository
+	pods       PodRepository
+	listeners  map[string]chan NamespaceEvent
 }
 
 // NamespaceStatus represent namespace with percentage of pods running and status phase (Active or Terminating)
@@ -74,18 +79,18 @@ func NewNamespaceService(namespaces NamespaceRepository, pods PodRepository) Nam
 
 // AddListener register a new listener
 func (ns *namespaceService) AddListener(name string) {
-	if ns.namespaceEvents == nil {
-		ns.namespaceEvents = make(map[string]chan NamespaceEvent)
+	if ns.listeners == nil {
+		ns.listeners = make(map[string]chan NamespaceEvent)
 	}
 
-	ns.namespaceEvents[name] = make(chan NamespaceEvent)
+	ns.listeners[name] = make(chan NamespaceEvent)
 }
 
 // RemoveListener close channel and remove listener
 func (ns *namespaceService) RemoveListener(name string) error {
-	if listener, ok := ns.namespaceEvents[name]; ok {
+	if listener, ok := ns.listeners[name]; ok {
 		close(listener)
-		delete(ns.namespaceEvents, name)
+		delete(ns.listeners, name)
 		return nil
 	}
 
@@ -98,9 +103,11 @@ func (ns *namespaceService) Emit(event NamespaceEvent) {
 		"component": "emmiter",
 		"event":     event.Type,
 		"namespace": event.Namespace,
-	}).Debugf("new status : %d | new phase %s", event.Status, event.Phase)
+		"status":    event.Status,
+		"phase":     event.Phase,
+	}).Debugf("namespace changed")
 
-	for _, ch := range ns.namespaceEvents {
+	for _, ch := range ns.listeners {
 		go func(handler chan NamespaceEvent) {
 			handler <- event
 		}(ch)
@@ -125,7 +132,7 @@ func (ns *namespaceService) WatchNamespaces() error {
 
 func (ns *namespaceService) watchStatus() error {
 
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(refreshStatusTick)
 
 	defer ticker.Stop()
 
@@ -146,7 +153,7 @@ func (ns *namespaceService) watchStatus() error {
 			}
 
 			events = append(events, NamespaceEvent{
-				Type:       "STATUS.UPDATE",
+				Type:       NamespaceStatusUpdate,
 				Namespace:  n.Name,
 				Phase:      n.Phase,
 				Status:     n.Status,
@@ -203,7 +210,7 @@ func (ns *namespaceService) Create(n string) error {
 
 // Events
 func (ns *namespaceService) Events(listener string) chan NamespaceEvent {
-	if ch, ok := ns.namespaceEvents[listener]; ok {
+	if ch, ok := ns.listeners[listener]; ok {
 		return ch
 	}
 
