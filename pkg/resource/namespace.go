@@ -103,7 +103,9 @@ func (ns *namespaceService) Emit(event NamespaceEvent) {
 		"component": "emmiter",
 		"event":     event.Type,
 		"namespace": event.Namespace,
-	}).Debugf("new status : %d | new phase %s", event.Status, event.Phase)
+		"status":    event.Status,
+		"phase":     event.Phase,
+	}).Debugf("namespace changed")
 
 	for _, ch := range ns.listeners {
 		go func(handler chan NamespaceEvent) {
