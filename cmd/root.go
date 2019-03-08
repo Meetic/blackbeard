@@ -65,6 +65,7 @@ func NewBlackbeardCommand() *cobra.Command {
 	rootCmd.AddCommand(NewGetCommand())
 	rootCmd.AddCommand(NewResetCommand())
 	rootCmd.AddCommand(NewVersionCommand())
+	rootCmd.AddCommand(NewKillCommand())
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.blackbeard.yaml)")
 	rootCmd.PersistentFlags().StringVar(&dir, "dir", "", "Use the specified dir as root path to execute commands. Default is the current dir.")

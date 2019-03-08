@@ -20,7 +20,7 @@ var (
 		mock.NewConfigRepository(),
 		mock.NewPlaybookRepository(),
 		mock.NewNamespaceRepository(kube, false),
-		kubernetes.NewPodRepository(kube),
+		mock.NewPodRepository(kube),
 		kubernetes.NewServiceRepository(kube, "kube.test"),
 		kubernetes.NewClusterRepository(),
 	)
@@ -42,7 +42,7 @@ func (clusterRepositoryMock) GetVersion() (*resource.Version, error) {
 }
 
 func TestGetVersion(t *testing.T) {
-	blackbeard = api.NewApi(
+	b := api.NewApi(
 		mock.NewInventoryRepository(),
 		mock.NewConfigRepository(),
 		mock.NewPlaybookRepository(),
@@ -52,7 +52,7 @@ func TestGetVersion(t *testing.T) {
 		&clusterRepositoryMock{},
 	)
 
-	version, err := blackbeard.GetVersion()
+	version, err := b.GetVersion()
 
 	assert.Nil(t, err)
 	assert.Equal(t, version, &api.Version{Blackbeard: "dev", Kubernetes: "1.2", Kubectl: "0.9"})

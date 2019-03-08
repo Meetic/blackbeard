@@ -39,3 +39,7 @@ func (pr *podRepository) List(n string) (resource.Pods, error) {
 
 	return pods, nil
 }
+
+func (pr *podRepository) Delete(n string, pod resource.Pod) error {
+	return pr.kubernetes.CoreV1().Pods(n).Delete(pod.Name, &metav1.DeleteOptions{})
+}
