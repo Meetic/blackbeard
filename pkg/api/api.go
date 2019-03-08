@@ -1,12 +1,10 @@
 package api
 
 import (
-	"strings"
 	"time"
 
 	"github.com/Meetic/blackbeard/pkg/playbook"
 	"github.com/Meetic/blackbeard/pkg/resource"
-	"github.com/Meetic/blackbeard/pkg/version"
 	"github.com/sirupsen/logrus"
 )
 
@@ -19,6 +17,7 @@ type Api interface {
 	Pods() resource.PodService
 	Create(namespace string) (playbook.Inventory, error)
 	Delete(namespace string, wait bool) error
+	Kill(namespace string, deployments []string) []error
 	ListExposedServices(namespace string) ([]resource.Service, error)
 	ListNamespaces() ([]Namespace, error)
 	Reset(namespace string, configPath string) error
@@ -210,24 +209,4 @@ func (api *api) WatchDelete() {
 			}).Debug("Playbook deleted")
 		}
 	}
-}
-
-type Version struct {
-	Blackbeard string `json:"blackbeard"`
-	Kubernetes string `json:"kubernetes"`
-	Kubectl    string `json:"kubectl"`
-}
-
-func (api *api) GetVersion() (*Version, error) {
-	v, err := api.cluster.GetVersion()
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &Version{
-		Blackbeard: version.GetVersion(),
-		Kubernetes: strings.Join([]string{v.ClientVersion.Major, v.ClientVersion.Minor}, "."),
-		Kubectl:    strings.Join([]string{v.ServerVersion.Major, v.ServerVersion.Minor}, "."),
-	}, nil
 }

@@ -147,16 +147,16 @@ func execute(c string, t time.Duration) error {
 	if t > 0 {
 		timer = time.NewTimer(t)
 		var err error
-		go func(timer *time.Timer, cmd *exec.Cmd) {
+		go func(timer *time.Timer, cmd *exec.Cmd, err *error) {
 			for range timer.C {
 				e := cmd.Process.Kill()
 				if e != nil {
-					err = errors.New("the command has timeout but the process could not be killed")
+					*err = errors.New("the command has timeout but the process could not be killed")
 				} else {
-					err = errors.New("the command timed out")
+					*err = errors.New("the command timed out")
 				}
 			}
-		}(timer, cmd)
+		}(timer, cmd, &err)
 	}
 
 	err = cmd.Wait()

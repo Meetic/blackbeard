@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -79,4 +80,26 @@ func (h *Handler) GetStatuses(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, statuses)
+}
+
+type killQuery []string
+
+// Kill handle the kill deployments
+func (h *Handler) Kill(c *gin.Context) {
+
+	var kQuery killQuery
+
+	if err := c.BindJSON(&kQuery); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Kill the corresponding pods
+	errs := h.api.Kill(c.Params.ByName("namespace"), kQuery)
+
+	if len(errs) > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"errors": fmt.Sprintf("%v", errs)})
+		return
+	}
+	c.Status(http.StatusOK)
 }
