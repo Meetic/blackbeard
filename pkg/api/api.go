@@ -87,6 +87,10 @@ func (api *api) Pods() resource.PodService {
 // for a given namespace.
 // If an inventory already exist, Create will log the error and continue the process. Configs will be override.
 func (api *api) Create(namespace string) (playbook.Inventory, error) {
+	if err := api.namespaces.Create(namespace); err != nil {
+		return playbook.Inventory{}, err
+	}
+
 	inv, err := api.inventories.Create(namespace)
 	if err != nil {
 		switch e := err.(type) {
@@ -99,10 +103,6 @@ func (api *api) Create(namespace string) (playbook.Inventory, error) {
 	}
 
 	if err := api.configs.Generate(inv); err != nil {
-		return playbook.Inventory{}, err
-	}
-
-	if err := api.namespaces.Create(namespace); err != nil {
 		return playbook.Inventory{}, err
 	}
 
