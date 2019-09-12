@@ -92,7 +92,7 @@ func (ns *namespaceService) RemoveListener(name string) error {
 	return fmt.Errorf("listener does not exist")
 }
 
-// Emit event to all registered listener
+// Emit publish event to all registered listeners
 func (ns *namespaceService) Emit(event NamespaceEvent) {
 	logrus.WithFields(logrus.Fields{
 		"component": "emmiter",
@@ -101,9 +101,7 @@ func (ns *namespaceService) Emit(event NamespaceEvent) {
 	}).Debugf("new status : %d | new phase %s", event.Status, event.Phase)
 
 	for _, ch := range ns.namespaceEvents {
-		go func(handler chan NamespaceEvent) {
-			handler <- event
-		}(ch)
+		ch <- event
 	}
 }
 
@@ -145,8 +143,13 @@ func (ns *namespaceService) watchStatus() error {
 				return err
 			}
 
+			eventType := "STATUS.UPDATE"
+			if n.Status == 100 {
+				eventType = "STATUS.READY"
+			}
+
 			events = append(events, NamespaceEvent{
-				Type:       "STATUS.UPDATE",
+				Type:       eventType,
 				Namespace:  n.Name,
 				Phase:      n.Phase,
 				Status:     n.Status,

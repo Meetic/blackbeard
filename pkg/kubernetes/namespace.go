@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/Meetic/blackbeard/pkg/resource"
@@ -95,6 +96,13 @@ func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
 
 	for event := range watcher.ResultChan() {
 		n := event.Object.(*v1.Namespace)
+
+		// prevent publishing event ADDED for previous created namespaces
+		elapsedTime := time.Now().Sub(n.ObjectMeta.CreationTimestamp.Time)
+		if elapsedTime > 5*time.Minute && event.Type == watch.Added {
+			continue
+		}
+
 		namespaceEvent := resource.NamespaceEvent{
 			Type:       string(event.Type),
 			Namespace:  n.GetName(),
