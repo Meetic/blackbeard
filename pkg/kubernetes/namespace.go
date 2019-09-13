@@ -36,7 +36,12 @@ func NewNamespaceRepository(kubernetes kubernetes.Interface) resource.NamespaceR
 
 // Create creates a namespace
 func (ns *namespaceRepository) Create(namespace string) error {
-	_, err := ns.kubernetes.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}})
+	_, err := ns.kubernetes.CoreV1().Namespaces().Create(&v1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   namespace,
+			Labels: map[string]string{"manager": "blackbeard"},
+		},
+	})
 	return err
 }
 
@@ -69,7 +74,10 @@ func (ns *namespaceRepository) Delete(namespace string) error {
 // Phase is the status phase.
 // List returns an error if the namespace list could not be get from Kubernetes cluster.
 func (ns *namespaceRepository) List() ([]resource.Namespace, error) {
-	nsList, err := ns.kubernetes.CoreV1().Namespaces().List(metav1.ListOptions{})
+	nsList, err := ns.kubernetes.CoreV1().Namespaces().List(
+		metav1.ListOptions{LabelSelector: "manager=blackbeard"},
+	)
+
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +95,9 @@ func (ns *namespaceRepository) List() ([]resource.Namespace, error) {
 
 func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
 
-	watcher, err := ns.kubernetes.CoreV1().Namespaces().Watch(metav1.ListOptions{})
+	watcher, err := ns.kubernetes.CoreV1().Namespaces().Watch(
+		metav1.ListOptions{LabelSelector: "manager=blackbeard"},
+	)
 
 	if err != nil {
 		logrus.Errorf("Error when watching phase : %s", err.Error())

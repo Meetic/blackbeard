@@ -50,6 +50,11 @@ type NamespaceStatus struct {
 	Phase  string `json:"phase"`
 }
 
+const (
+	EventStatusUpdate string = "STATUS.UPDATE"
+	EventStatusReady  string = "STATUS.READY"
+)
+
 // NamespaceEvent represent a namespace event happened on kubernetes cluster
 type NamespaceEvent struct {
 	Type       string `json:"type"`
@@ -101,7 +106,9 @@ func (ns *namespaceService) Emit(event NamespaceEvent) {
 	}).Debugf("new status : %d | new phase %s", event.Status, event.Phase)
 
 	for _, ch := range ns.namespaceEvents {
-		ch <- event
+		go func(handler chan NamespaceEvent) {
+			handler <- event
+		}(ch)
 	}
 }
 
@@ -122,7 +129,6 @@ func (ns *namespaceService) WatchNamespaces() error {
 }
 
 func (ns *namespaceService) watchStatus() error {
-
 	ticker := time.NewTicker(10 * time.Second)
 
 	defer ticker.Stop()
@@ -143,13 +149,8 @@ func (ns *namespaceService) watchStatus() error {
 				return err
 			}
 
-			eventType := "STATUS.UPDATE"
-			if n.Status == 100 {
-				eventType = "STATUS.READY"
-			}
-
 			events = append(events, NamespaceEvent{
-				Type:       eventType,
+				Type:       getEventType(n.Status),
 				Namespace:  n.Name,
 				Phase:      n.Phase,
 				Status:     n.Status,
@@ -166,6 +167,14 @@ func (ns *namespaceService) watchStatus() error {
 	}
 
 	return nil
+}
+
+func getEventType(status int) string {
+	if status == 100 {
+		return EventStatusReady
+	}
+
+	return EventStatusUpdate
 }
 
 func compareEvents(now []NamespaceEvent, before []NamespaceEvent) []NamespaceEvent {
