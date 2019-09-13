@@ -101,7 +101,9 @@ func (ns *namespaceService) Emit(event NamespaceEvent) {
 	}).Debugf("new status : %d | new phase %s", event.Status, event.Phase)
 
 	for _, ch := range ns.namespaceEvents {
-		ch <- event
+		go func(handler chan NamespaceEvent) {
+			handler <- event
+		}(ch)
 	}
 }
 
@@ -122,7 +124,6 @@ func (ns *namespaceService) WatchNamespaces() error {
 }
 
 func (ns *namespaceService) watchStatus() error {
-
 	ticker := time.NewTicker(10 * time.Second)
 
 	defer ticker.Stop()
