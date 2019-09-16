@@ -4,10 +4,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/Meetic/blackbeard/pkg/playbook"
 	"github.com/Meetic/blackbeard/pkg/resource"
 	"github.com/Meetic/blackbeard/pkg/version"
-	"github.com/sirupsen/logrus"
 )
 
 // Api represents the blackbeard entrypoint by defining the list of actions

@@ -50,6 +50,11 @@ type NamespaceStatus struct {
 	Phase  string `json:"phase"`
 }
 
+const (
+	EventStatusUpdate string = "STATUS.UPDATE"
+	EventStatusReady  string = "STATUS.READY"
+)
+
 // NamespaceEvent represent a namespace event happened on kubernetes cluster
 type NamespaceEvent struct {
 	Type       string `json:"type"`
@@ -92,7 +97,7 @@ func (ns *namespaceService) RemoveListener(name string) error {
 	return fmt.Errorf("listener does not exist")
 }
 
-// Emit event to all registered listener
+// Emit publish event to all registered listeners
 func (ns *namespaceService) Emit(event NamespaceEvent) {
 	logrus.WithFields(logrus.Fields{
 		"component": "emmiter",
@@ -124,7 +129,6 @@ func (ns *namespaceService) WatchNamespaces() error {
 }
 
 func (ns *namespaceService) watchStatus() error {
-
 	ticker := time.NewTicker(10 * time.Second)
 
 	defer ticker.Stop()
@@ -146,7 +150,7 @@ func (ns *namespaceService) watchStatus() error {
 			}
 
 			events = append(events, NamespaceEvent{
-				Type:       "STATUS.UPDATE",
+				Type:       getEventType(n.Status),
 				Namespace:  n.Name,
 				Phase:      n.Phase,
 				Status:     n.Status,
@@ -163,6 +167,14 @@ func (ns *namespaceService) watchStatus() error {
 	}
 
 	return nil
+}
+
+func getEventType(status int) string {
+	if status == 100 {
+		return EventStatusReady
+	}
+
+	return EventStatusUpdate
 }
 
 func compareEvents(now []NamespaceEvent, before []NamespaceEvent) []NamespaceEvent {
