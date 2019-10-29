@@ -1,6 +1,6 @@
 language: go
 go:
-  - 1.11
+  - 1.13
   - master
 before_install:
   make dep

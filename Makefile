@@ -18,12 +18,11 @@ help: ## Show Help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 dep: ## Get build dependencies
-	  go get -v -u github.com/golang/dep/cmd/dep && \
-      go get github.com/mitchellh/gox && \
-      go get github.com/mattn/goveralls
+	go get github.com/mitchellh/gox && \
+	go get github.com/mattn/goveralls
 
 build: ## Build blackbeard
-	dep ensure && go build
+	go build
 
 cross-build: ## Build blackbeard for multiple os/arch
 	gox -osarch=$(OSARCH) -output "bin/blackbeard_{{.OS}}_{{.Arch}}"

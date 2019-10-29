@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -166,6 +166,7 @@ func execute(c string, t time.Duration) error {
 	if t > 0 {
 		timer = time.NewTimer(t)
 		go func(timer *time.Timer, cmd *exec.Cmd) {
+			//TODO: use a chan and select pattern to output the error
 			for range timer.C {
 				e := cmd.Process.Kill()
 				if e != nil {
