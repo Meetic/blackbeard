@@ -30,7 +30,7 @@ func NewGetNamespacesCommand() *cobra.Command {
 
 func runGetNamespaces() error {
 
-	api := newAPI(newFileClient(dir), newKubernetesClient())
+	api := newAPI(newFileClient(playbookDir), newKubernetesClient())
 
 	namespaces, err := api.ListNamespaces()
 	if err != nil {

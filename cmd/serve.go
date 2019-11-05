@@ -26,7 +26,7 @@ func NewServeCommand() *cobra.Command {
 }
 
 func runServe() {
-	files := newFileClient(dir)
+	files := newFileClient(playbookDir)
 
 	api := newAPI(files, newKubernetesClient())
 

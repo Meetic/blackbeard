@@ -19,7 +19,7 @@ import (
 
 var (
 	cfgFile           string
-	dir               string
+	playbookDir       string
 	kubectlConfigPath string
 	v                 string
 	namespace         string
@@ -56,8 +56,6 @@ func NewBlackbeardCommand() *cobra.Command {
 		return nil
 	}
 
-	initConfig()
-
 	rootCmd.AddCommand(NewServeCommand())
 	rootCmd.AddCommand(NewApplyCommand())
 	rootCmd.AddCommand(NewCreateCommand())
@@ -67,11 +65,13 @@ func NewBlackbeardCommand() *cobra.Command {
 	rootCmd.AddCommand(NewVersionCommand())
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.blackbeard.yaml)")
-	rootCmd.PersistentFlags().StringVar(&dir, "dir", "", "Use the specified dir as root path to execute commands. Default is the current dir.")
+	rootCmd.PersistentFlags().StringVar(&playbookDir, "playbookDir", "", "Use the specified dir as root path to execute commands. Default is the current dir.")
 	rootCmd.PersistentFlags().StringVar(&kubectlConfigPath, "kube-config-path", kubernetes.KubeConfigDefaultPath(), "kubectl config file")
 	rootCmd.PersistentFlags().StringVarP(&v, "verbosity", "v", logrus.InfoLevel.String(), "Log level (debug, info, warn, error, fatal, panic")
 
-	viper.BindPFlag("dir", rootCmd.PersistentFlags().Lookup("dir"))
+	viper.BindPFlag("working-dir", rootCmd.PersistentFlags().Lookup("playbookDir"))
+
+	initConfig()
 
 	return rootCmd
 
@@ -91,20 +91,20 @@ func initConfig() {
 	viper.AddConfigPath("$HOME")       // adding home directory as first search path
 	viper.AutomaticEnv()               // read in environment variables that match
 
+	//Define current working dir as default value
+	currentDir, err := os.Getwd()
+	if err != nil {
+		logrus.Fatal("Error when getting the working dir : ", err)
+	}
+	viper.SetDefault("working-dir", currentDir)
+
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		logrus.Infof("Using config file: %s", viper.ConfigFileUsed())
+
 	}
 
-	if dir == "" {
-		//Define current working dir as default value
-		currentDir, err := os.Getwd()
-		if err != nil {
-			logrus.Fatal("Error when getting the working dir : ", err)
-		}
-		viper.SetDefault("working-dir", currentDir)
-		dir = viper.GetString("working-dir")
-	}
+	playbookDir = viper.GetString("working-dir")
 
 }
 
