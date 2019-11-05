@@ -21,7 +21,6 @@ var createCmd = &cobra.Command{
 This file contains all the parameters needed to build a complete Kubernetes configuration.
 Feel free to edit this file before applying changes.
 `,
-
 	Run: func(cmd *cobra.Command, args []string) {
 		err := runCreate(namespace)
 		if err != nil {
@@ -41,7 +40,7 @@ func runCreate(namespace string) error {
 		return errors.New("you must specified a namespace using the --namespace flag")
 	}
 
-	files := newFileClient(dir)
+	files := newFileClient(playbookDir)
 
 	api := newAPI(files, newKubernetesClient())
 

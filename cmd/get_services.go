@@ -35,7 +35,7 @@ func runGetServices() error {
 		return errors.New("you must specified a namespace using the --namespace flag")
 	}
 
-	api := newAPI(newFileClient(dir), newKubernetesClient())
+	api := newAPI(newFileClient(playbookDir), newKubernetesClient())
 
 	// get exposed services (NodePort, LoadBalancer)
 	services, err := api.ListExposedServices(namespace)
