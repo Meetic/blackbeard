@@ -93,6 +93,7 @@ func (ns *namespaceRepository) List() ([]resource.Namespace, error) {
 	return namespaces, nil
 }
 
+// WatchPhase watch namespaces with label manager=blackbeard and send their status to the event emitter
 func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
 
 	watcher, err := ns.kubernetes.CoreV1().Namespaces().Watch(
