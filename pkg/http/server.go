@@ -82,12 +82,7 @@ func NewServer(h *Handler) *Server {
 // Serve launch the webserver
 func (s *Server) Serve(port int) {
 
-	go func() {
-		err := s.handler.api.Namespaces().WatchNamespaces()
-		if err != nil {
-			logrus.Errorf("Error while trying to watch namespace : %s", err.Error())
-		}
-	}()
+	go s.handler.api.Namespaces().WatchNamespaces()
 
 	s.handler.Engine().Run(fmt.Sprintf(":%d", port))
 }

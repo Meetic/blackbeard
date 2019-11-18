@@ -2,6 +2,7 @@ package resource
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -25,7 +26,7 @@ type NamespaceService interface {
 	AddListener(name string)
 	RemoveListener(name string) error
 	Emit(event NamespaceEvent)
-	WatchNamespaces() error
+	WatchNamespaces()
 }
 
 // NamespaceRepository defined the way namespace area actually managed.
@@ -113,8 +114,15 @@ func (ns *namespaceService) Emit(event NamespaceEvent) {
 }
 
 // WatchNamespaces create a watcher on namespace events from kubernetes cluster and send result over received channel
-func (ns *namespaceService) WatchNamespaces() error {
+func (ns *namespaceService) WatchNamespaces() {
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	logrus.WithFields(logrus.Fields{"component": "watcher",}).Debug("Starting watch status")
+
 	go ns.watchStatus()
+
+	logrus.WithFields(logrus.Fields{"component": "watcher",}).Debug("Starting watch phase")
 
 	go func() {
 		for {
@@ -125,48 +133,62 @@ func (ns *namespaceService) WatchNamespaces() error {
 		}
 	}()
 
-	return nil
+	wg.Wait()
 }
 
-func (ns *namespaceService) watchStatus() error {
-	ticker := time.NewTicker(10 * time.Second)
+func (ns *namespaceService) watchStatus()  {
+	ticker := time.NewTicker(5 * time.Second)
 
 	defer ticker.Stop()
 
 	var lastEvents []NamespaceEvent
 
 	for range ticker.C {
+		logrus.WithFields(logrus.Fields{"component": "watcher",}).Debug("Watch status tick")
+
 		namespaces, err := ns.List()
+
 		if err != nil {
-			return err
+			continue
 		}
 
 		var events []NamespaceEvent
 
-		for _, n := range namespaces {
-			pods, err := ns.pods.List(n.Name)
-			if err != nil {
-				return err
-			}
+		var wg sync.WaitGroup
+		var mx sync.Mutex
 
-			events = append(events, NamespaceEvent{
-				Type:       getEventType(n.Status),
-				Namespace:  n.Name,
-				Phase:      n.Phase,
-				Status:     n.Status,
-				PodsStatus: pods,
-			})
+		for _, n := range namespaces {
+			wg.Add(1)
+			go func(n Namespace) {
+				defer wg.Done()
+				pods, err := ns.pods.List(n.Name)
+
+				if err != nil {
+					return
+				}
+
+				mx.Lock()
+				events = append(events, NamespaceEvent{
+					Type:       getEventType(n.Status),
+					Namespace:  n.Name,
+					Phase:      n.Phase,
+					Status:     n.Status,
+					PodsStatus: pods,
+				})
+				mx.Unlock()
+			}(n)
+			wg.Wait()
 		}
 
 		returnedEvents := compareEvents(events, lastEvents)
 		lastEvents = events
 
+		logrus.WithFields(logrus.Fields{"component": "watcher",}).Debugf("Namespace status events to send %d", len(returnedEvents))
+
 		for _, e := range returnedEvents {
 			ns.Emit(e)
 		}
 	}
-
-	return nil
 }
 
 func getEventType(status int) string {
@@ -242,14 +264,24 @@ func (ns *namespaceService) List() ([]Namespace, error) {
 		return nil, err
 	}
 
-	for i, namespace := range namespaces {
-		status, err := ns.GetStatus(namespace.Name)
-		if err != nil {
-			return nil, err
-		}
+	var wg sync.WaitGroup
 
-		namespaces[i].Status = status.Status
+	for i := range namespaces {
+		wg.Add(1)
+
+		go func(index int) {
+			status, err := ns.GetStatus(namespaces[index].Name)
+
+			if err != nil {
+				namespaces[index].Status = 0
+			}
+
+			namespaces[index].Status = status.Status
+			wg.Done()
+		}(i)
 	}
+
+	wg.Wait()
 
 	return namespaces, nil
 }
