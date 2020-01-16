@@ -30,11 +30,11 @@ type clusterRepositoryMock struct{}
 
 func (clusterRepositoryMock) GetVersion() (*resource.Version, error) {
 	return &resource.Version{
-		ClientVersion: struct {
+		ServerVersion: struct {
 			Major string `json:"major"`
 			Minor string `json:"minor"`
 		}{Major: "1", Minor: "2"},
-		ServerVersion: struct {
+		ClientVersion: struct {
 			Major string `json:"major"`
 			Minor string `json:"minor"`
 		}{Major: "0", Minor: "9"},

@@ -228,7 +228,7 @@ func (api *api) GetVersion() (*Version, error) {
 
 	return &Version{
 		Blackbeard: version.GetVersion(),
-		Kubernetes: strings.Join([]string{v.ClientVersion.Major, v.ClientVersion.Minor}, "."),
-		Kubectl:    strings.Join([]string{v.ServerVersion.Major, v.ServerVersion.Minor}, "."),
+		Kubectl:    strings.Join([]string{v.ClientVersion.Major, v.ClientVersion.Minor}, "."),
+		Kubernetes: strings.Join([]string{v.ServerVersion.Major, v.ServerVersion.Minor}, "."),
 	}, nil
 }
