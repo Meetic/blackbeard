@@ -59,7 +59,7 @@ func NewHandler(api api.Api) *handler {
 func (h *handler) Handle(w http.ResponseWriter, r *http.Request) {
 	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		logrus.Warnf("Failed to set websocket upgrade: ", err)
+		logrus.Warnf("Failed to set websocket upgrade: %s", err.Error())
 		return
 	}
 
