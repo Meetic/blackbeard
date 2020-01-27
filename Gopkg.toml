@@ -54,16 +54,16 @@
   version = "1.2.2"
 
 [[constraint]]
-  branch = "release-1.10"
+  branch = "release-1.16"
   name = "k8s.io/api"
 
 [[constraint]]
-  branch = "release-1.10"
+  branch = "release-1.16"
   name = "k8s.io/apimachinery"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  version = "7.0.0"
+  version = "kubernetes-1.16.3"
 
 [prune]
   go-tests = true
