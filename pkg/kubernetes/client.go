@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"github.com/Meetic/blackbeard/pkg/resource"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -30,7 +32,7 @@ func NewClient(configFilePath string) (*Client, error) {
 
 	config, err := clientcmd.BuildConfigFromFlags("", configFilePath)
 	if err != nil {
-		return &Client{}, err
+		return &Client{}, fmt.Errorf("kubernetes client build config : %s", err.Error())
 	}
 
 	config.QPS = float32(250)
@@ -38,7 +40,7 @@ func NewClient(configFilePath string) (*Client, error) {
 
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return &Client{}, err
+		return &Client{}, fmt.Errorf("kubernetes new client for config : %s", err.Error())
 	}
 
 	return &Client{

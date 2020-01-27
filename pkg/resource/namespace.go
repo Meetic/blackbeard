@@ -118,11 +118,11 @@ func (ns *namespaceService) WatchNamespaces() {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	logrus.WithFields(logrus.Fields{"component": "watcher",}).Debug("Starting watch status")
+	logrus.WithFields(logrus.Fields{"component": "watcher"}).Debug("Starting watch status")
 
 	go ns.watchStatus()
 
-	logrus.WithFields(logrus.Fields{"component": "watcher",}).Debug("Starting watch phase")
+	logrus.WithFields(logrus.Fields{"component": "watcher"}).Debug("Starting watch phase")
 
 	go func() {
 		for {
@@ -136,7 +136,7 @@ func (ns *namespaceService) WatchNamespaces() {
 	wg.Wait()
 }
 
-func (ns *namespaceService) watchStatus()  {
+func (ns *namespaceService) watchStatus() {
 	ticker := time.NewTicker(5 * time.Second)
 
 	defer ticker.Stop()
@@ -144,7 +144,7 @@ func (ns *namespaceService) watchStatus()  {
 	var lastEvents []NamespaceEvent
 
 	for range ticker.C {
-		logrus.WithFields(logrus.Fields{"component": "watcher",}).Debug("Watch status tick")
+		logrus.WithFields(logrus.Fields{"component": "watcher"}).Debug("Watch status tick")
 
 		namespaces, err := ns.List()
 
@@ -183,7 +183,7 @@ func (ns *namespaceService) watchStatus()  {
 		returnedEvents := compareEvents(events, lastEvents)
 		lastEvents = events
 
-		logrus.WithFields(logrus.Fields{"component": "watcher",}).Debugf("Namespace status events to send %d", len(returnedEvents))
+		logrus.WithFields(logrus.Fields{"component": "watcher"}).Debugf("Namespace status events to send %d", len(returnedEvents))
 
 		for _, e := range returnedEvents {
 			ns.Emit(e)
