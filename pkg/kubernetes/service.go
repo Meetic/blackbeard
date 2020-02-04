@@ -1,7 +1,11 @@
 package kubernetes
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/Meetic/blackbeard/pkg/resource"
+
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -12,7 +16,7 @@ type serviceRepository struct {
 	host       string
 }
 
-// NewServiceRepository retuns a new ServiceRespository
+// NewServiceRepository returns a new ServiceRepository
 // It takes as parameter a go-client kubernetes client and the kubernetes cluster host (domain name or ip).
 func NewServiceRepository(kubernetes kubernetes.Interface, host string) resource.ServiceRepository {
 	return &serviceRepository{
@@ -21,19 +25,19 @@ func NewServiceRepository(kubernetes kubernetes.Interface, host string) resource
 	}
 }
 
-// ListNodePort returns a list of kubernetes services exposed as NodePort.
-func (sr *serviceRepository) ListNodePort(n string) ([]resource.Service, error) {
+// ListExternal returns a list of kubernetes services exposed as NodePort or LoadBalancer.
+func (sr *serviceRepository) ListExternal(n string) ([]resource.Service, error) {
+	// unfortunately, we cant filter service by type using field selector
 	svcs, err := sr.kubernetes.CoreV1().Services(n).List(metav1.ListOptions{})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("kubernetes api list services : %s", err.Error())
 	}
 
 	var services []resource.Service
 
 	for _, svc := range svcs.Items {
-		if isNodePort(svc) {
-
+		if svc.Spec.Type == v1.ServiceTypeNodePort || svc.Spec.Type == v1.ServiceTypeLoadBalancer {
 			var ports []resource.Port
 
 			for _, p := range svc.Spec.Ports {
@@ -43,11 +47,23 @@ func (sr *serviceRepository) ListNodePort(n string) ([]resource.Service, error) 
 				})
 			}
 
+			addr := sr.host
+
+			if svc.Spec.Type == v1.ServiceTypeLoadBalancer {
+				var ips[] string
+				for _, lbi := range svc.Status.LoadBalancer.Ingress {
+					ips = append(ips, lbi.IP)
+				}
+
+				addr = strings.Join(ips, ",")
+			}
+
 			services = append(services, resource.Service{
 				Name:  svc.Name,
 				Ports: ports,
-				Addr:  sr.host,
+				Addr:  addr,
 			})
+
 		}
 	}
 
@@ -85,22 +101,5 @@ func (sr *serviceRepository) ListIngress(n string) ([]resource.Service, error) {
 	}
 
 	return services, nil
-
-}
-
-func isNodePort(svc v1.Service) bool {
-	var nP int
-	for _, p := range svc.Spec.Ports {
-
-		if p.NodePort != 0 {
-			nP++
-		}
-	}
-
-	if nP > 0 {
-		return true
-	}
-
-	return false
 
 }

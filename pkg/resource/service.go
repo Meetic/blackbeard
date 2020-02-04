@@ -1,5 +1,7 @@
 package resource
 
+import "fmt"
+
 // Service represent a kubernetes service
 // Name is the service name
 // Addr is the domain name where the service can be reach from outside the kubernetes cluster.
@@ -25,7 +27,7 @@ type ServiceService interface {
 
 // ServiceRepository defines the way to interact with Kubernetes
 type ServiceRepository interface {
-	ListNodePort(n string) ([]Service, error)
+	ListExternal(n string) ([]Service, error)
 	ListIngress(n string) ([]Service, error)
 }
 
@@ -49,14 +51,14 @@ func (ss *serviceService) ListExposed(namespace string) ([]Service, error) {
 		err      error
 	)
 
-	services, err = ss.services.ListNodePort(namespace)
+	services, err = ss.services.ListExternal(namespace)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to list external services %s", err.Error())
 	}
 
 	ingress, err := ss.services.ListIngress(namespace)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to list ingress entries %s", err.Error())
 	}
 
 	services = append(services, ingress...)
