@@ -37,7 +37,7 @@ func runGetServices() error {
 
 	api := newAPI(newFileClient(dir), newKubernetesClient())
 
-	//get exposed services (NodePort)
+	// get exposed services (NodePort, LoadBalancer)
 	services, err := api.ListExposedServices(namespace)
 	if err != nil {
 		return errors.New(fmt.Sprintf("an error occurend when getting information about services : %v", err))

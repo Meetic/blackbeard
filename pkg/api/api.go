@@ -127,6 +127,7 @@ func (api *api) Delete(namespace string, wait bool) error {
 // ListExposedServices returns a list of services exposed somehow outside of the kubernetes cluster.
 // Exposed services could be :
 // * NodePort type services
+// * LoadBalancer type services
 // * Http services exposed throw Ingress
 func (api *api) ListExposedServices(namespace string) ([]resource.Service, error) {
 	return api.services.ListExposed(namespace)
