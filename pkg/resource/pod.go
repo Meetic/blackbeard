@@ -24,7 +24,6 @@ type podService struct {
 // PodRepository represents the way Pods are managed
 type PodRepository interface {
 	List(string) (Pods, error)
-	//Get(string, string) (Pod, error)
 }
 
 type PodService interface {
