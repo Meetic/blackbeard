@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"github.com/Meetic/blackbeard/pkg/resource"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -21,7 +22,8 @@ func NewPodRepository(kubernetes kubernetes.Interface) resource.PodRepository {
 // GetPods of all the pods in a given namespace.
 // This method returns a Pods slice containing the pod name and the pod status (pod status phase).
 func (pr *podRepository) List(n string) (resource.Pods, error) {
-	podsList, err := pr.kubernetes.CoreV1().Pods(n).List(metav1.ListOptions{})
+	// get all pods except job or cron jobs in a succeeded state
+	podsList, err := pr.kubernetes.CoreV1().Pods(n).List(metav1.ListOptions{FieldSelector: "status.phase!=Succeeded"})
 
 	if err != nil {
 		return nil, err
