@@ -165,7 +165,6 @@ func execute(c string, t time.Duration) error {
 	var timer *time.Timer
 	if t > 0 {
 		timer = time.NewTimer(t)
-		var err error
 		go func(timer *time.Timer, cmd *exec.Cmd) {
 			for range timer.C {
 				e := cmd.Process.Kill()
