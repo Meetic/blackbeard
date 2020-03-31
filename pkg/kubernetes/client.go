@@ -25,6 +25,7 @@ type Client struct {
 	pods       resource.PodRepository
 	services   resource.ServiceRepository
 	cluster    resource.ClusterRepository
+	jobs       resource.JobRepository
 }
 
 // NewClient return a new kubernetes client
@@ -49,7 +50,12 @@ func NewClient(configFilePath string) (*Client, error) {
 		pods:       NewPodRepository(clientSet),
 		services:   NewServiceRepository(clientSet, GetKubernetesHost(configFilePath)),
 		cluster:    NewClusterRepository(),
+		jobs:       NewJobRepository(clientSet),
 	}, nil
+}
+
+func (c *Client) Jobs() resource.JobRepository {
+	return c.jobs
 }
 
 func (c *Client) Namespaces() resource.NamespaceRepository {

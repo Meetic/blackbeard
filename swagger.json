@@ -366,6 +366,43 @@
         }
       }
     },
+    "/resource/{namespace}/job/{resource}": {
+      "delete": {
+        "description": "Delete a namespace job",
+        "summary": "Delete a job in a namespace, this will",
+        "operationId": "delete-namespace-job",
+        "parameters": [
+          {
+            "name": "namespace",
+            "in": "path",
+            "description": "Namespace name",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "resource",
+            "in": "path",
+            "description": "Resource name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "204": {
+            "description": "Deletion successfully executed"
+          },
+          "500": {
+            "description": "Something went wrong when deleting the resource",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/version": {
       "get": {
         "description": "Return blackbeard, kubernetes and kubectl version",
