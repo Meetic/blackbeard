@@ -80,3 +80,17 @@ func (h *Handler) GetStatuses(c *gin.Context) {
 
 	c.JSON(http.StatusOK, statuses)
 }
+
+// Delete handle the namespace deletion.
+func (h *Handler) DeleteResource(c *gin.Context) {
+	namespace := c.Params.ByName("namespace")
+	resource := c.Params.ByName("resource")
+
+	//Delete inventory
+	if err := h.api.DeleteResource(namespace, resource); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}

@@ -27,6 +27,7 @@ type Api interface {
 	Update(namespace string, inventory playbook.Inventory, configPath string) error
 	WaitForNamespaceReady(namespace string, timeout time.Duration, bar progress) error
 	GetVersion() (*Version, error)
+	DeleteResource(namespace string, resource string) error
 }
 
 type api struct {
@@ -37,6 +38,7 @@ type api struct {
 	pods        resource.PodService
 	services    resource.ServiceService
 	cluster     resource.ClusterService
+	job         resource.JobService
 }
 
 // NewApi creates a blackbeard api. The blackbeard api is responsible for managing playbooks and namespaces.
@@ -49,6 +51,7 @@ func NewApi(
 	pods resource.PodRepository,
 	services resource.ServiceRepository,
 	cluster resource.ClusterRepository,
+	job resource.JobRepository,
 ) Api {
 	api := &api{
 		inventories: playbook.NewInventoryService(inventories, playbook.NewPlaybookService(playbooks)),
@@ -58,6 +61,7 @@ func NewApi(
 		pods:        resource.NewPodService(pods),
 		services:    resource.NewServiceService(services),
 		cluster:     resource.NewClusterService(cluster),
+		job:         resource.NewJobService(job),
 	}
 
 	go api.WatchDelete()
@@ -185,6 +189,16 @@ func (api *api) Update(namespace string, inventory playbook.Inventory, configPat
 	}
 
 	if err := api.Apply(namespace, configPath); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Delete a resource from a namespace
+// Deletion of a Job only for now
+func (api *api) DeleteResource(namespace, resource string) error {
+	if err := api.job.Delete(namespace, resource); err != nil {
 		return err
 	}
 

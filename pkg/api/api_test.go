@@ -23,6 +23,7 @@ var (
 		kubernetes.NewPodRepository(kube),
 		kubernetes.NewServiceRepository(kube, "kube.test"),
 		kubernetes.NewClusterRepository(),
+		kubernetes.NewJobRepository(kube),
 	)
 )
 
@@ -50,6 +51,7 @@ func TestGetVersion(t *testing.T) {
 		kubernetes.NewPodRepository(kube),
 		kubernetes.NewServiceRepository(kube, "kube.test"),
 		&clusterRepositoryMock{},
+		kubernetes.NewJobRepository(kube),
 	)
 
 	version, err := blackbeard.GetVersion()

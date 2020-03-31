@@ -56,6 +56,7 @@ func NewHandler(api api.Api, websocket WsHandler, configPath string, corsEnable 
 	h.engine.GET("/defaults", h.GetDefaults)
 	h.engine.PUT("/inventories/:namespace", h.Update)
 	h.engine.DELETE("/inventories/:namespace", h.Delete)
+	h.engine.DELETE("/resources/:namespace/jobs/:resource", h.DeleteResource)
 	h.engine.GET("/ws", func(c *gin.Context) {
 		websocket.Handle(c.Writer, c.Request)
 	})
