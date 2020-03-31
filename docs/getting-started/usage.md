@@ -37,7 +37,7 @@ This step will prompt a list of exposed services in the namespace. If you need t
 #### Getting back to previous state
 
 ```sh
-blackbeard delete -n my-feature
+blackbeard delete namespace my-feature
 ```
 
 Delete all generated files and delete the namespace.
