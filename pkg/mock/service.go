@@ -19,8 +19,8 @@ func NewServiceRepository(kubernetes kubernetes.Interface, host string) resource
 	}
 }
 
-// ListNodePort returns a list of kubernetes services exposed as NodePort.
-func (sr *serviceRepository) ListNodePort(n string) ([]resource.Service, error) {
+// ListExternal returns a list of kubernetes services exposed as NodePort.
+func (sr *serviceRepository) ListExternal(n string) ([]resource.Service, error) {
 	services := []resource.Service{
 		{
 			Name: "testPort",
