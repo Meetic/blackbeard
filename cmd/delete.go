@@ -3,7 +3,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"html/template"
+	"text/template"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -15,7 +15,7 @@ var deleteCmd = &cobra.Command{
 	Short: "Delete an object",
 	Long: `Delete resources by namespace or names.
 
-Deletetion of a namespace will remove the namespace all his attached object and the intentory attached to it. While the remove of the resource will only supress it form the namespace.`,
+Deletetion of a namespace will delete the namespace and remove all his attached object including the intentory attached to it. While removing an object will only supress it form the namespace but keep everything else.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runDelete()
 	},
@@ -40,7 +40,7 @@ Using the get command without any sub-command makes no sens. Please use one of t
 
 	contents := bytes.Buffer{}
 	if err := tpl.Execute(&contents, data); err != nil {
-		logrus.Fatalf("error when executing template : %v", err)
+		logrus.Fatalf("error while executing template : %v", err)
 	}
 
 	fmt.Println(contents.String())
