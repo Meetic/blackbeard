@@ -13,7 +13,7 @@ var deleteJobCmd = &cobra.Command{
 	Short: "Delete a job object from a namespace",
 	Long: `Delete a job object that started a pod.
 
-It won't remove any configuration in the inventory. Reappling the inventory will redeploy it.
+It won't remove any configuration in the inventory. Reapplying the inventory will redeploy it.
 
 Kubernetes will also remove the pod whatever the status.`,
 	Args: cobra.ExactArgs(1),

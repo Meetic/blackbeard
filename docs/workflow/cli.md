@@ -72,6 +72,14 @@ Exposed services are Kubernetes services exposed using `NodePort` or http servic
 {{% /block %}}
 
 
+### Delete specific resources in a namespace
+
+```sh
+blackbeard delete job {my-resource} -n {namespace-name}
+```
+
+* delete the resource associated to your namespace (it can only delete jobs for now)
+
 ### Get Help
 
 ```sh
