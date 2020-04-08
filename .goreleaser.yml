@@ -8,6 +8,8 @@ builds:
       - amd64
     ldflags:
       - -s -w -X github.com/Meetic/blackbeard/pkg/version.version={{.Version}}
+    env:
+      - CGO_ENABLED=0
 # archive:
 #   replacements:
 #     darwin: macos
