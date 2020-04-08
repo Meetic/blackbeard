@@ -32,3 +32,6 @@ test: ## Launch tests
 
 test-cover: ## Launch test coverage and send it to coverall
 	$(ENV) ./scripts/test-coverage.sh
+
+release: ## Build release
+	docker run --rm -v $PWD:/go/src/github.com/Meetic/blackbeard -w /go/src/github.com/Meetic/blackbeard -e GITHUB_TOKEN -t goreleaser/goreleaser:latest release --rm-dist

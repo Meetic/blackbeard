@@ -8,6 +8,10 @@ builds:
       - amd64
     ldflags:
       - -s -w -X github.com/Meetic/blackbeard/pkg/version.version={{.Version}}
+    # Custom environment variables to be set during the builds.
+    # Default is empty.
+    env:
+     - CGO_ENABLED=0
 # archive:
 #   replacements:
 #     darwin: macos
