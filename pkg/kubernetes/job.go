@@ -20,7 +20,8 @@ func NewJobRepository(kubernetes kubernetes.Interface) resource.JobRepository {
 }
 
 func (c *jobRepository) Delete(namespace, resourceName string) error {
-	if err := c.kubernetes.BatchV1().Jobs(namespace).Delete(resourceName, &metav1.DeleteOptions{}); err != nil {
+	pp := metav1.DeletePropagationBackground
+	if err := c.kubernetes.BatchV1().Jobs(namespace).Delete(resourceName, &metav1.DeleteOptions{PropagationPolicy: &pp}); err != nil {
 		return err
 	}
 	return nil
