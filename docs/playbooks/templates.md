@@ -51,6 +51,12 @@ Blackbeard compile templates using the content of the inventory file. Thus, two 
 
 * `.Values` : contains a json object
 * `.Namespace` : contains a string
+
+You can also use this custom functions inside template :
+
+* `getFile "somefile.yml"` : return file content in string
+* `sha256sum` : return sha256 hash of a string
+
 {{% /block %}}
 
 

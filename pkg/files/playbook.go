@@ -1,11 +1,15 @@
 package files
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"text/template"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/Meetic/blackbeard/pkg/playbook"
 )
@@ -20,13 +24,12 @@ func NewPlaybookRepository(templatePath, defaultsPath string) playbook.PlaybookR
 		templatePath,
 		defaultsPath,
 	}
-
 }
 
 // GetTemplate returns the templates from the playbook
 func (p *playbooks) GetTemplate() ([]playbook.ConfigTemplate, error) {
 
-	//Get template list
+	// Get templates list
 	templates, _ := filepath.Glob(fmt.Sprintf("%s/*%s", p.templatePath, tplSuffix))
 
 	if templates == nil {
@@ -36,13 +39,16 @@ func (p *playbooks) GetTemplate() ([]playbook.ConfigTemplate, error) {
 	var cfgTpl []playbook.ConfigTemplate
 
 	for _, templ := range templates {
+		tpl := template.New(filepath.Base(templ))
 
-		tpl, err := template.ParseFiles(templ)
+		p.initFuncMap(tpl) // add custom template functions
+
+		tpl, err := tpl.ParseFiles(templ)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("template cannot parse files: %v", err)
 		}
 
-		//create config file from tpl by removing the .tpl extension
+		// create config file from tpl by removing the .tpl extension
 		ext := filepath.Ext(templ)
 		_, configFile := filepath.Split(templ[0 : len(templ)-len(ext)])
 
@@ -55,7 +61,6 @@ func (p *playbooks) GetTemplate() ([]playbook.ConfigTemplate, error) {
 	}
 
 	return cfgTpl, nil
-
 }
 
 // GetDefault reads the default inventory file and return an Inventory where namespace is set to "default"
@@ -74,4 +79,23 @@ func (p *playbooks) GetDefault() (playbook.Inventory, error) {
 	}
 
 	return inventory, nil
+}
+
+func (p *playbooks) initFuncMap(t *template.Template) {
+	funcMap := make(template.FuncMap, 0)
+
+	funcMap["sha256sum"] = func(input string) string {
+		hash := sha256.Sum256([]byte(input))
+		return hex.EncodeToString(hash[:])
+	}
+
+	funcMap["getFile"] = func(filename string) string {
+		data, err := ioutil.ReadFile(fmt.Sprintf("%s/%s%s", p.templatePath, filename, tplSuffix))
+		if err != nil {
+			logrus.Fatal(fmt.Errorf("template getFile func: %v", err))
+		}
+		return string(data)
+	}
+
+	t.Funcs(funcMap)
 }

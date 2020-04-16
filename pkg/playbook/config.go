@@ -91,7 +91,6 @@ func (cs *configService) Generate(inv Inventory) error {
 	}
 
 	return cs.configs.Save(inv.Namespace, configs)
-
 }
 
 // Delete delete kubernetes configs for the given namespace.
