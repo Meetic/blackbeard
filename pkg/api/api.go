@@ -178,7 +178,6 @@ func (api *api) Apply(namespace string, configPath string) error {
 	}
 
 	return nil
-
 }
 
 // Update replace the inventory associated to the given namespace by the one set in parameters

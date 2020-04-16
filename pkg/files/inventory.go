@@ -47,7 +47,6 @@ func (ir *inventories) Create(inventory playbook.Inventory) error {
 
 	j, _ := json.MarshalIndent(inventory, "", "    ")
 	return ioutil.WriteFile(ir.path(inventory.Namespace), j, 0644)
-
 }
 
 // Delete remove an inventory file.

@@ -58,9 +58,10 @@ func (is *inventoryService) Create(namespace string) (Inventory, error) {
 		return Inventory{}, err
 	}
 
-	var inv Inventory
-	inv.Namespace = namespace
-	inv.Values = def.Values
+	inv := Inventory{
+		Namespace: namespace,
+		Values:    def.Values,
+	}
 
 	if err := is.inventories.Create(inv); err != nil {
 		return Inventory{}, err
