@@ -7,11 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Meetic/blackbeard/pkg/resource"
 	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/Meetic/blackbeard/pkg/resource"
 )
 
 const (
@@ -20,12 +21,14 @@ const (
 )
 
 type Client struct {
-	kubernetes kubernetes.Interface
-	namespaces resource.NamespaceRepository
-	pods       resource.PodRepository
-	services   resource.ServiceRepository
-	cluster    resource.ClusterRepository
-	jobs       resource.JobRepository
+	kubernetes   kubernetes.Interface
+	namespaces   resource.NamespaceRepository
+	pods         resource.PodRepository
+	deployments  resource.DeploymentRepository
+	statefulsets resource.StatefulsetRepository
+	services     resource.ServiceRepository
+	cluster      resource.ClusterRepository
+	jobs         resource.JobRepository
 }
 
 // NewClient return a new kubernetes client
@@ -45,12 +48,14 @@ func NewClient(configFilePath string) (*Client, error) {
 	}
 
 	return &Client{
-		kubernetes: clientSet,
-		namespaces: NewNamespaceRepository(clientSet),
-		pods:       NewPodRepository(clientSet),
-		services:   NewServiceRepository(clientSet, GetKubernetesHost(configFilePath)),
-		cluster:    NewClusterRepository(),
-		jobs:       NewJobRepository(clientSet),
+		kubernetes:   clientSet,
+		namespaces:   NewNamespaceRepository(clientSet),
+		pods:         NewPodRepository(clientSet),
+		deployments:  NewDeploymentRepository(clientSet),
+		statefulsets: NewStatefulsetRepository(clientSet),
+		services:     NewServiceRepository(clientSet, GetKubernetesHost(configFilePath)),
+		cluster:      NewClusterRepository(),
+		jobs:         NewJobRepository(clientSet),
 	}, nil
 }
 
@@ -72,6 +77,14 @@ func (c *Client) Services() resource.ServiceRepository {
 
 func (c *Client) Cluster() resource.ClusterRepository {
 	return c.cluster
+}
+
+func (c *Client) Deployments() resource.DeploymentRepository {
+	return c.deployments
+}
+
+func (c *Client) Statefulsets() resource.StatefulsetRepository {
+	return c.statefulsets
 }
 
 // KubeConfigDefaultPath return the kubernetes default config path

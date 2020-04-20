@@ -12,7 +12,12 @@ import (
 
 var (
 	kube       = fake.NewSimpleClientset()
-	namespaces = resource.NewNamespaceService(mock.NewNamespaceRepository(kube, false), mock.NewPodRepository(kube))
+	namespaces = resource.NewNamespaceService(
+		mock.NewNamespaceRepository(kube, false),
+		mock.NewPodRepository(kube),
+		mock.NewDeploymentRepository(kube),
+		mock.NewStatefulsetRepository(kube),
+	)
 )
 
 func TestGetStatusOk(t *testing.T) {
@@ -36,7 +41,12 @@ func TestNamespaceCreate(t *testing.T) {
 }
 
 func TestNamespaceCreateError(t *testing.T) {
-	namespaces = resource.NewNamespaceService(mock.NewNamespaceRepository(kube, true), mock.NewPodRepository(kube))
+	namespaces = resource.NewNamespaceService(
+		mock.NewNamespaceRepository(kube, true),
+		mock.NewPodRepository(kube),
+		mock.NewDeploymentRepository(kube),
+		mock.NewStatefulsetRepository(kube),
+	)
 
 	err := namespaces.Create("foobar")
 
@@ -90,7 +100,7 @@ func TestList(t *testing.T) {
 	expectedNamespaces := []resource.Namespace{
 		{
 			Name:   "test",
-			Phase:  "active",
+			Phase:  "Active",
 			Status: 100,
 		},
 	}

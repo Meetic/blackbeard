@@ -50,7 +50,7 @@ func (sr *serviceRepository) ListExternal(n string) ([]resource.Service, error) 
 			addr := sr.host
 
 			if svc.Spec.Type == v1.ServiceTypeLoadBalancer {
-				var ips[] string
+				var ips []string
 				for _, lbi := range svc.Status.LoadBalancer.Ingress {
 					ips = append(ips, lbi.IP)
 				}
