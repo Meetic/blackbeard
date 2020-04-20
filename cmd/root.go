@@ -156,6 +156,8 @@ func newAPI(files *files.Client, kube *kubernetes.Client) api.Api {
 		files.Playbooks(),
 		kube.Namespaces(),
 		kube.Pods(),
+		kube.Deployments(),
+		kube.Statefulsets(),
 		kube.Services(),
 		kube.Cluster(),
 		kube.Jobs(),

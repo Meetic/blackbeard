@@ -49,7 +49,7 @@ func (ns *namespaceRepository) List() ([]resource.Namespace, error) {
 	namespaces := []resource.Namespace{
 		{
 			Name:  "test",
-			Phase: "active",
+			Phase: "Active",
 		},
 	}
 

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	v1 "k8s.io/api/core/v1"
 )
 
 type Namespace struct {
@@ -42,6 +41,8 @@ type NamespaceRepository interface {
 type namespaceService struct {
 	namespaces      NamespaceRepository
 	pods            PodRepository
+	deployments     DeploymentRepository
+	statefulsets    StatefulsetRepository
 	namespaceEvents map[string]chan NamespaceEvent
 }
 
@@ -68,11 +69,18 @@ type NamespaceEvent struct {
 type EventEmitter func(event NamespaceEvent)
 
 // NewNamespaceService creates a new NamespaceService
-func NewNamespaceService(namespaces NamespaceRepository, pods PodRepository) NamespaceService {
+func NewNamespaceService(
+	namespaces NamespaceRepository,
+	pods PodRepository,
+	deployments DeploymentRepository,
+	statefulsets StatefulsetRepository,
+) NamespaceService {
 
 	ns := &namespaceService{
-		namespaces: namespaces,
-		pods:       pods,
+		namespaces:   namespaces,
+		pods:         pods,
+		deployments:  deployments,
+		statefulsets: statefulsets,
 	}
 
 	return ns
@@ -256,8 +264,8 @@ func (ns *namespaceService) Delete(namespace string) error {
 	return ns.namespaces.Delete(namespace)
 }
 
-// List returns a slice of Namespace from the kubernetes package and enrich each of the
-// returned namespace with its status.
+// List returns a slice of namespace from the kubernetes package and enrich each of the
+// returned namespace with their status.
 func (ns *namespaceService) List() ([]Namespace, error) {
 	namespaces, err := ns.namespaces.List()
 	if err != nil {
@@ -293,34 +301,41 @@ func (ns *namespaceService) GetStatus(namespace string) (*NamespaceStatus, error
 	// get namespace state
 	n, err := ns.namespaces.Get(namespace)
 	if err != nil {
-		return &NamespaceStatus{0, ""}, err
+		return nil, fmt.Errorf("namespace get status: %v", err)
 	}
 
 	if n.Phase == "Terminating" {
 		return &NamespaceStatus{0, n.Phase}, nil
 	}
 
-	//  get pod's namespace
-	pods, err := ns.pods.List(namespace)
-	if err != nil {
-		return &NamespaceStatus{0, ""}, err
+	dps, errDps := ns.deployments.List(namespace)
+	sfs, errSfs := ns.statefulsets.List(namespace)
+
+	if errDps != nil || errSfs != nil {
+		return &NamespaceStatus{0, ""}, fmt.Errorf("namespace get status: list deployments or statefulsets: %v", err)
 	}
 
-	totalPods := len(pods)
+	totalApps := len(dps) + len(sfs)
 
-	if totalPods == 0 {
+	if totalApps == 0 {
 		return &NamespaceStatus{0, n.Phase}, nil
 	}
 
 	var i int
 
-	for _, pod := range pods {
-		if pod.Status == v1.PodRunning {
+	for _, dp := range dps {
+		if dp.Status == DeploymentReady {
 			i++
 		}
 	}
 
-	status := i * 100 / totalPods
+	for _, sf := range sfs {
+		if sf.Status == StatefulsetReady {
+			i++
+		}
+	}
+
+	status := i * 100 / totalApps
 
 	return &NamespaceStatus{status, n.Phase}, nil
 }
