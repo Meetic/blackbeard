@@ -43,6 +43,7 @@ type namespaceService struct {
 	pods            PodRepository
 	deployments     DeploymentRepository
 	statefulsets    StatefulsetRepository
+	jobs            JobRepository
 	namespaceEvents map[string]chan NamespaceEvent
 }
 
@@ -74,6 +75,7 @@ func NewNamespaceService(
 	pods PodRepository,
 	deployments DeploymentRepository,
 	statefulsets StatefulsetRepository,
+	jobs JobRepository,
 ) NamespaceService {
 
 	ns := &namespaceService{
@@ -81,6 +83,7 @@ func NewNamespaceService(
 		pods:         pods,
 		deployments:  deployments,
 		statefulsets: statefulsets,
+		jobs:         jobs,
 	}
 
 	return ns
@@ -310,12 +313,13 @@ func (ns *namespaceService) GetStatus(namespace string) (*NamespaceStatus, error
 
 	dps, errDps := ns.deployments.List(namespace)
 	sfs, errSfs := ns.statefulsets.List(namespace)
+	jbs, errJbs := ns.jobs.List(namespace)
 
-	if errDps != nil || errSfs != nil {
-		return &NamespaceStatus{0, ""}, fmt.Errorf("namespace get status: list deployments or statefulsets: %v", err)
+	if errDps != nil || errSfs != nil || errJbs != nil {
+		return &NamespaceStatus{0, ""}, fmt.Errorf("namespace get status: list deployments, statefulsets or jobs: %v", err)
 	}
 
-	totalApps := len(dps) + len(sfs)
+	totalApps := len(dps) + len(sfs) + len(jbs)
 
 	if totalApps == 0 {
 		return &NamespaceStatus{0, n.Phase}, nil
@@ -331,6 +335,12 @@ func (ns *namespaceService) GetStatus(namespace string) (*NamespaceStatus, error
 
 	for _, sf := range sfs {
 		if sf.Status == StatefulsetReady {
+			i++
+		}
+	}
+
+	for _, job := range jbs {
+		if job.Status == JobReady {
 			i++
 		}
 	}

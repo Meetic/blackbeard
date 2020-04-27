@@ -1,6 +1,7 @@
 package resource_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,26 +12,66 @@ import (
 )
 
 var (
+	podRepository         = new(mock.PodRepository)
+	deploymentRepository  = new(mock.DeploymentRepository)
+	statefulsetRepository = new(mock.StatefulsetRepository)
+	jobRepository         = new(mock.JobRepository)
+)
+
+var (
 	kube       = fake.NewSimpleClientset()
 	namespaces = resource.NewNamespaceService(
 		mock.NewNamespaceRepository(kube, false),
-		mock.NewPodRepository(kube),
-		mock.NewDeploymentRepository(kube),
-		mock.NewStatefulsetRepository(kube),
+		podRepository,
+		deploymentRepository,
+		statefulsetRepository,
+		jobRepository,
 	)
 )
 
 func TestGetStatusOk(t *testing.T) {
+	deploymentRepository.
+		On("List", "test").
+		Return(resource.Deployments{{Name: "app", Status: resource.DeploymentReady}}, nil)
+
+	statefulsetRepository.
+		On("List", "test").
+		Return(resource.Statefulsets{{Name: "app", Status: resource.StatefulsetReady}}, nil)
+
+	jobRepository.
+		On("List", "test").
+		Return(resource.Jobs{{Name: "app", Status: resource.JobReady}}, nil)
+
 	status, err := namespaces.GetStatus("test")
+
+	deploymentRepository.AssertExpectations(t)
+	statefulsetRepository.AssertExpectations(t)
+	jobRepository.AssertExpectations(t)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 100, status.Status)
 }
 
-func TestGetStatusUncomplete(t *testing.T) {
+func TestGetStatusIncomplete(t *testing.T) {
+	deploymentRepository.
+		On("List", "testko").
+		Return(resource.Deployments{{Name: "app", Status: resource.DeploymentReady}}, nil)
+
+	statefulsetRepository.
+		On("List", "testko").
+		Return(resource.Statefulsets{}, errors.New("some error"))
+
+	jobRepository.
+		On("List", "testko").
+		Return(resource.Jobs{{Name: "app", Status: resource.JobReady}}, nil)
+
 	status, err := namespaces.GetStatus("testko")
 
-	assert.Nil(t, err)
+	deploymentRepository.AssertExpectations(t)
+	statefulsetRepository.AssertExpectations(t)
+	jobRepository.AssertExpectations(t)
+
+	assert.NotNil(t, err)
 	assert.Equal(t, 0, status.Status)
 }
 
@@ -43,9 +84,10 @@ func TestNamespaceCreate(t *testing.T) {
 func TestNamespaceCreateError(t *testing.T) {
 	namespaces = resource.NewNamespaceService(
 		mock.NewNamespaceRepository(kube, true),
-		mock.NewPodRepository(kube),
-		mock.NewDeploymentRepository(kube),
-		mock.NewStatefulsetRepository(kube),
+		podRepository,
+		deploymentRepository,
+		statefulsetRepository,
+		jobRepository,
 	)
 
 	err := namespaces.Create("foobar")

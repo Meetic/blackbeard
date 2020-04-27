@@ -59,7 +59,7 @@ func NewApi(
 		inventories: playbook.NewInventoryService(inventories, playbook.NewPlaybookService(playbooks)),
 		configs:     playbook.NewConfigService(configs, playbook.NewPlaybookService(playbooks)),
 		playbooks:   playbook.NewPlaybookService(playbooks),
-		namespaces:  resource.NewNamespaceService(namespaces, pods, deployments, statefulsets),
+		namespaces:  resource.NewNamespaceService(namespaces, pods, deployments, statefulsets, job),
 		pods:        resource.NewPodService(pods),
 		services:    resource.NewServiceService(services),
 		cluster:     resource.NewClusterService(cluster),

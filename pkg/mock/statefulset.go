@@ -1,37 +1,16 @@
 package mock
 
 import (
-	"k8s.io/client-go/kubernetes"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/Meetic/blackbeard/pkg/resource"
 )
 
-type statefulsetRepository struct {
-	kubernetes.Interface
+type StatefulsetRepository struct {
+	mock.Mock
 }
 
-func NewStatefulsetRepository(kubernetes kubernetes.Interface) resource.StatefulsetRepository {
-	return &statefulsetRepository{kubernetes}
-}
-
-func (statefulsetRepository) List(namespace string) (resource.Statefulsets, error) {
-	if namespace == "testko" {
-		sfs := resource.Statefulsets{
-			{
-				Name:   "test",
-				Status: resource.StatefulsetNotReady,
-			},
-		}
-
-		return sfs, nil
-	}
-
-	sfs := resource.Statefulsets{
-		{
-			Name:   "test",
-			Status: resource.StatefulsetReady,
-		},
-	}
-
-	return sfs, nil
+func (m *StatefulsetRepository) List(namespace string) (resource.Statefulsets, error) {
+	args := m.Called(namespace)
+	return args.Get(0).(resource.Statefulsets), args.Error(1)
 }
