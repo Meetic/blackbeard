@@ -35,7 +35,11 @@ func (c *jobRepository) List(namespace string) (resource.Jobs, error) {
 	for _, job := range jl.Items {
 		status := resource.JobNotReady
 
-		if len(job.Status.Conditions) > 0 && job.Status.Conditions[len(job.Status.Conditions)].Type == v1.JobComplete {
+		if len(job.Status.Conditions) == 0 {
+			continue
+		}
+
+		if job.Status.Conditions[len(job.Status.Conditions)-1].Type == v1.JobComplete {
 			status = resource.JobReady
 		}
 
