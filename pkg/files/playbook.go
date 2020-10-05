@@ -1,17 +1,15 @@
 package files
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"text/template"
 
-	"github.com/sirupsen/logrus"
-
+	"github.com/Masterminds/sprig"
 	"github.com/Meetic/blackbeard/pkg/playbook"
+	"github.com/sirupsen/logrus"
 )
 
 type playbooks struct {
@@ -82,12 +80,11 @@ func (p *playbooks) GetDefault() (playbook.Inventory, error) {
 }
 
 func (p *playbooks) initFuncMap(t *template.Template) {
-	funcMap := make(template.FuncMap, 0)
+	f := sprig.TxtFuncMap()
+	delete(f, "env")
+	delete(f, "expandenv")
 
-	funcMap["sha256sum"] = func(input string) string {
-		hash := sha256.Sum256([]byte(input))
-		return hex.EncodeToString(hash[:])
-	}
+	funcMap := make(template.FuncMap, 0)
 
 	funcMap["getFile"] = func(filename string) string {
 		data, err := ioutil.ReadFile(fmt.Sprintf("%s/%s%s", p.templatePath, filename, tplSuffix))
@@ -97,5 +94,9 @@ func (p *playbooks) initFuncMap(t *template.Template) {
 		return string(data)
 	}
 
-	t.Funcs(funcMap)
+	for k, v := range funcMap {
+		f[k] = v
+	}
+
+	t.Funcs(f)
 }
