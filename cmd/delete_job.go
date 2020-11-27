@@ -36,7 +36,7 @@ func runDeleteJob(resource string) error {
 		return errors.New("you must specified a namespace using the --namespace flag")
 	}
 
-	api := newAPI(newFileClient(dir), newKubernetesClient())
+	api := newAPI(newFileClient(playbookDir), newKubernetesClient())
 	err := api.DeleteResource(namespace, resource)
 	if err != nil {
 		return errors.New(fmt.Sprintf("an error occurend when removing the job : %v", err))

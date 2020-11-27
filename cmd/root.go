@@ -65,11 +65,11 @@ func NewBlackbeardCommand() *cobra.Command {
 	rootCmd.AddCommand(NewVersionCommand())
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.blackbeard.yaml)")
-	rootCmd.PersistentFlags().StringVar(&playbookDir, "playbookDir", "", "Use the specified dir as root path to execute commands. Default is the current dir.")
+	rootCmd.PersistentFlags().StringVar(&playbookDir, "dir", "", "Use the specified directory as root path to execute commands. Default is the current directory.")
 	rootCmd.PersistentFlags().StringVar(&kubectlConfigPath, "kube-config-path", kubernetes.KubeConfigDefaultPath(), "kubectl config file")
 	rootCmd.PersistentFlags().StringVarP(&v, "verbosity", "v", logrus.InfoLevel.String(), "Log level (debug, info, warn, error, fatal, panic")
 
-	viper.BindPFlag("working-dir", rootCmd.PersistentFlags().Lookup("playbookDir"))
+	viper.BindPFlag("working-dir", rootCmd.PersistentFlags().Lookup("dir"))
 
 	initConfig()
 
