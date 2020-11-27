@@ -31,7 +31,7 @@ func runDeleteNamespace(namespace string) error {
 		return nil
 	}
 
-	api := newAPI(newFileClient(dir), newKubernetesClient())
+	api := newAPI(newFileClient(playbookDir), newKubernetesClient())
 
 	err := api.Delete(namespace, false)
 	if err != nil {
