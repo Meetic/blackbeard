@@ -24,9 +24,20 @@
   "produces": [
     "application/json"
   ],
+  "tags": [
+    {
+      "name": "Namespaces"
+    },
+    {
+      "name": "Monitoring"
+    }
+  ],
   "paths": {
     "/inventories/{namespace}": {
       "get": {
+        "tags": [
+          "Namespaces"
+        ],
         "description": "Read inventory file for a given namespace and return it as a json object.",
         "summary": "Return inventory for the given namespace",
         "operationId": "get-inventory",
@@ -67,6 +78,9 @@
         }
       },
       "put": {
+        "tags": [
+          "Namespaces"
+        ],
         "description": "Update the inventory for the given namespace. If the namespace field is different from the namespace passed as query param, it will also rename the namespace.",
         "consumes": [
           "application/json"
@@ -113,6 +127,9 @@
         }
       },
       "delete": {
+        "tags": [
+          "Namespaces"
+        ],
         "description": "Delete inventory file, configs and namespace for the given namespace",
         "summary": "Delete inventory file and associated namespace",
         "operationId": "delete-inventory",
@@ -143,6 +160,9 @@
     },
     "/inventories/{namespace}/status": {
       "get": {
+        "tags": [
+          "Namespaces"
+        ],
         "description": "Read the namespace status : either ready or not ready",
         "summary": "Return the namespace status",
         "operationId": "get-inventory-status",
@@ -185,6 +205,9 @@
     },
     "/inventories/{namespace}/reset": {
       "post": {
+        "tags": [
+          "Namespaces"
+        ],
         "description": "Reset a namespace to defaults. This will reset the inventory and apply the changes to kubernetes.",
         "summary": "Reset a namespace to defaults",
         "consumes": [
@@ -224,6 +247,9 @@
     },
     "/inventories": {
       "post": {
+        "tags": [
+          "Namespaces"
+        ],
         "description": "Create an inventory for the given namespace. This will also create the inventory file and the associated namespace.",
         "consumes": [
           "application/json"
@@ -272,6 +298,9 @@
         }
       },
       "get": {
+        "tags": [
+          "Namespaces"
+        ],
         "description": "Read all inventory files and return them as an array",
         "produces": [
           "application/json"
@@ -299,6 +328,9 @@
     },
     "/defaults": {
       "get": {
+        "tags": [
+          "Namespaces"
+        ],
         "description": "Return the content of the defaults.json file in the used playbook.",
         "produces": [
           "application/json"
@@ -323,6 +355,9 @@
     },
     "/inventories/{namespace}/services": {
       "get": {
+        "tags": [
+          "Namespaces"
+        ],
         "description": "Returns the list of exposed services (NodePort and ingress configuration) of a given inventory",
         "summary": "Returns the list of exposed services",
         "operationId": "get-services",
@@ -368,6 +403,9 @@
     },
     "/resource/{namespace}/job/{resource}": {
       "delete": {
+        "tags": [
+          "Namespaces"
+        ],
         "description": "Delete a namespace job",
         "summary": "Delete a job in a namespace, this will",
         "operationId": "delete-namespace-job",
@@ -405,6 +443,9 @@
     },
     "/version": {
       "get": {
+        "tags": [
+          "Monitoring"
+        ],
         "description": "Return blackbeard, kubernetes and kubectl version",
         "summary": "Return blackbeard, kubernetes and kubectl version",
         "operationId": "get-version",
@@ -420,6 +461,48 @@
             "schema": {
               "$ref": "#/definitions/blackbeard.Version"
             }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "tags": [
+          "Monitoring"
+        ],
+        "description": "Check if http server is ready to handle traffic",
+        "summary": "Check if http server is ready",
+        "operationId": "get-ready",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Ready"
+          }
+        }
+      }
+    },
+    "/alive": {
+      "get": {
+        "tags": [
+          "Monitoring"
+        ],
+        "description": "Check if http server is alive and can handle traffic",
+        "summary": "Check if http server is alive",
+        "operationId": "get-alive",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Alive"
           }
         }
       }

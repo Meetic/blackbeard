@@ -46,6 +46,8 @@ func NewHandler(api api.Api, websocket WsHandler, configPath string, corsEnable 
 		logrus.Info("CORS are enabled")
 	}
 
+	h.engine.GET("/ready", h.HealthCheck)
+	h.engine.GET("/alive", h.HealthCheck)
 	h.engine.POST("/inventories", h.Create)
 	h.engine.GET("/inventories/:namespace", h.Get)
 	h.engine.GET("/inventories/:namespace/status", h.GetStatus)

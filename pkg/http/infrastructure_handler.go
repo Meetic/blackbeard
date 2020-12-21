@@ -18,3 +18,7 @@ func (h *Handler) Version(c *gin.Context) {
 
 	c.JSON(http.StatusOK, version)
 }
+
+func (h *Handler) HealthCheck(c *gin.Context) {
+	c.Writer.WriteHeader(http.StatusOK)
+}
