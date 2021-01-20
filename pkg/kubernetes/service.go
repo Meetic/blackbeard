@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -28,7 +29,7 @@ func NewServiceRepository(kubernetes kubernetes.Interface, host string) resource
 // ListExternal returns a list of kubernetes services exposed as NodePort or LoadBalancer.
 func (sr *serviceRepository) ListExternal(n string) ([]resource.Service, error) {
 	// unfortunately, we cant filter service by type using field selector
-	svcs, err := sr.kubernetes.CoreV1().Services(n).List(metav1.ListOptions{})
+	svcs, err := sr.kubernetes.CoreV1().Services(n).List(context.Background(), metav1.ListOptions{})
 
 	if err != nil {
 		return nil, fmt.Errorf("kubernetes api list services : %s", err.Error())
@@ -73,7 +74,7 @@ func (sr *serviceRepository) ListExternal(n string) ([]resource.Service, error) 
 
 // ListIngress returns a list of Kubernetes services exposed throw Ingress.
 func (sr *serviceRepository) ListIngress(n string) ([]resource.Service, error) {
-	ingressList, err := sr.kubernetes.ExtensionsV1beta1().Ingresses(n).List(metav1.ListOptions{})
+	ingressList, err := sr.kubernetes.ExtensionsV1beta1().Ingresses(n).List(context.Background(), metav1.ListOptions{})
 
 	if err != nil {
 		return nil, err

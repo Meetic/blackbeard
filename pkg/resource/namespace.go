@@ -60,11 +60,10 @@ const (
 
 // NamespaceEvent represent a namespace event happened on kubernetes cluster
 type NamespaceEvent struct {
-	Type       string `json:"type"`
-	Namespace  string `json:"namespace"`
-	Phase      string `json:"phase"`
-	Status     int    `json:"status"`
-	PodsStatus Pods   `json:"pods_status"`
+	Type      string `json:"type"`
+	Namespace string `json:"namespace"`
+	Phase     string `json:"phase"`
+	Status    int    `json:"status"`
 }
 
 type EventEmitter func(event NamespaceEvent)
@@ -165,30 +164,13 @@ func (ns *namespaceService) watchStatus() {
 
 		var events []NamespaceEvent
 
-		var wg sync.WaitGroup
-		var mx sync.Mutex
-
 		for _, n := range namespaces {
-			wg.Add(1)
-			go func(n Namespace) {
-				defer wg.Done()
-				pods, err := ns.pods.List(n.Name)
-
-				if err != nil {
-					return
-				}
-
-				mx.Lock()
-				events = append(events, NamespaceEvent{
-					Type:       getEventType(n.Status),
-					Namespace:  n.Name,
-					Phase:      n.Phase,
-					Status:     n.Status,
-					PodsStatus: pods,
-				})
-				mx.Unlock()
-			}(n)
-			wg.Wait()
+			events = append(events, NamespaceEvent{
+				Type:      getEventType(n.Status),
+				Namespace: n.Name,
+				Phase:     n.Phase,
+				Status:    n.Status,
+			})
 		}
 
 		returnedEvents := compareEvents(events, lastEvents)

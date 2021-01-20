@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,7 +22,7 @@ func NewStatefulsetRepository(kubernetes kubernetes.Interface) resource.Stateful
 
 // List return a list of statefulset with their status Ready or NotReady
 func (r *statefulsetRepository) List(namespace string) (resource.Statefulsets, error) {
-	sfl, err := r.AppsV1().StatefulSets(namespace).List(v1.ListOptions{})
+	sfl, err := r.AppsV1().StatefulSets(namespace).List(context.Background(), v1.ListOptions{})
 
 	if err != nil {
 		return nil, fmt.Errorf("unable to list statefulsets: %v", err)

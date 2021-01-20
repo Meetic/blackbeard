@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,7 +22,7 @@ func NewDeploymentRepository(kubernetes kubernetes.Interface) resource.Deploymen
 
 // List return a list of deployment with their status Ready or NotReady
 func (r *deploymentRepository) List(namespace string) (resource.Deployments, error) {
-	dl, err := r.AppsV1().Deployments(namespace).List(v1.ListOptions{})
+	dl, err := r.AppsV1().Deployments(namespace).List(context.Background(), v1.ListOptions{})
 
 	if err != nil {
 		return nil, fmt.Errorf("unable to list deployments: %v", err)
