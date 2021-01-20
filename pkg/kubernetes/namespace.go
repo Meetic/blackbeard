@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"os/exec"
@@ -9,7 +10,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -36,18 +37,22 @@ func NewNamespaceRepository(kubernetes kubernetes.Interface) resource.NamespaceR
 
 // Create creates a namespace
 func (ns *namespaceRepository) Create(namespace string) error {
-	_, err := ns.kubernetes.CoreV1().Namespaces().Create(&v1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   namespace,
-			Labels: map[string]string{"manager": "blackbeard"},
+	_, err := ns.kubernetes.CoreV1().Namespaces().Create(
+		context.Background(),
+		&v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:   namespace,
+				Labels: map[string]string{"manager": "blackbeard"},
+			},
 		},
-	})
+		metav1.CreateOptions{},
+	)
 	return err
 }
 
 // Get namespace with status
 func (ns *namespaceRepository) Get(namespace string) (*resource.Namespace, error) {
-	n, err := ns.kubernetes.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{})
+	n, err := ns.kubernetes.CoreV1().Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
 
 	if err != nil {
 		return nil, err
@@ -58,7 +63,8 @@ func (ns *namespaceRepository) Get(namespace string) (*resource.Namespace, error
 
 // Delete deletes a given namespace
 func (ns *namespaceRepository) Delete(namespace string) error {
-	err := ns.kubernetes.CoreV1().Namespaces().Delete(namespace, &metav1.DeleteOptions{})
+	err := ns.kubernetes.CoreV1().Namespaces().Delete(context.Background(), namespace, metav1.DeleteOptions{})
+
 	switch t := err.(type) {
 	case *kerr.StatusError:
 		return nil
@@ -75,6 +81,7 @@ func (ns *namespaceRepository) Delete(namespace string) error {
 // List returns an error if the namespace list could not be get from Kubernetes cluster.
 func (ns *namespaceRepository) List() ([]resource.Namespace, error) {
 	nsList, err := ns.kubernetes.CoreV1().Namespaces().List(
+		context.Background(),
 		metav1.ListOptions{LabelSelector: "manager=blackbeard"},
 	)
 
@@ -97,6 +104,7 @@ func (ns *namespaceRepository) List() ([]resource.Namespace, error) {
 func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
 
 	watcher, err := ns.kubernetes.CoreV1().Namespaces().Watch(
+		context.Background(),
 		metav1.ListOptions{LabelSelector: "manager=blackbeard"},
 	)
 
@@ -115,11 +123,10 @@ func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
 		}
 
 		namespaceEvent := resource.NamespaceEvent{
-			Type:       string(event.Type),
-			Namespace:  n.GetName(),
-			Phase:      string(n.Status.Phase),
-			Status:     0,
-			PodsStatus: nil,
+			Type:      string(event.Type),
+			Namespace: n.GetName(),
+			Phase:     string(n.Status.Phase),
+			Status:    0,
 		}
 
 		emit(namespaceEvent)

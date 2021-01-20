@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 
 	"k8s.io/api/batch/v1"
@@ -24,7 +25,7 @@ func NewJobRepository(kubernetes kubernetes.Interface) resource.JobRepository {
 }
 
 func (c *jobRepository) List(namespace string) (resource.Jobs, error) {
-	jl, err := c.kubernetes.BatchV1().Jobs(namespace).List(metav1.ListOptions{})
+	jl, err := c.kubernetes.BatchV1().Jobs(namespace).List(context.Background(), metav1.ListOptions{})
 
 	if err != nil {
 		return nil, fmt.Errorf("unable to list jobs: %v", err)
@@ -54,7 +55,7 @@ func (c *jobRepository) List(namespace string) (resource.Jobs, error) {
 
 func (c *jobRepository) Delete(namespace, resourceName string) error {
 	pp := metav1.DeletePropagationBackground
-	if err := c.kubernetes.BatchV1().Jobs(namespace).Delete(resourceName, &metav1.DeleteOptions{PropagationPolicy: &pp}); err != nil {
+	if err := c.kubernetes.BatchV1().Jobs(namespace).Delete(context.Background(), resourceName, metav1.DeleteOptions{PropagationPolicy: &pp}); err != nil {
 		return err
 	}
 	return nil
