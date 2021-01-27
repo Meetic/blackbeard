@@ -172,9 +172,6 @@ func setUpLogs(out io.Writer, level string) error {
 		return err
 	}
 	logrus.SetLevel(lvl)
-	logrus.SetFormatter(&logrus.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "2006-01-02 15:04:05",
-	})
+	logrus.SetFormatter(&logrus.JSONFormatter{})
 	return nil
 }

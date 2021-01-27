@@ -36,7 +36,8 @@ func NewHandler(api api.Api, websocket WsHandler, configPath string, corsEnable 
 		configPath: configPath,
 	}
 
-	h.engine = gin.Default()
+	h.engine = gin.New()
+	h.engine.Use(jsonLogMiddleware(), gin.Recovery())
 
 	if corsEnable == true {
 		config := cors.DefaultConfig()
