@@ -1,5 +1,5 @@
 language: go
-go: 1.15
+go: "1.18"
 before_install:
   make dep
 install:
