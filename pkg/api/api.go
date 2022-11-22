@@ -66,8 +66,6 @@ func NewApi(
 		job:         resource.NewJobService(job),
 	}
 
-	go api.WatchDelete()
-
 	return api
 }
 
@@ -196,7 +194,7 @@ func (api *api) Update(namespace string, inventory playbook.Inventory, configPat
 	return nil
 }
 
-// Delete a resource from a namespace
+// DeleteResource delete a resource from a namespace
 // Deletion of a Job only for now
 func (api *api) DeleteResource(namespace, resource string) error {
 	if err := api.job.Delete(namespace, resource); err != nil {
@@ -210,22 +208,6 @@ func (api *api) deletePlaybook(namespace string) {
 	if inv, _ := api.inventories.Get(namespace); inv.Namespace == namespace {
 		api.inventories.Delete(namespace)
 		api.configs.Delete(namespace)
-	}
-}
-
-func (api *api) WatchDelete() {
-	api.namespaces.AddListener("http")
-
-	// handle delete of inventories and configs files
-	for event := range api.namespaces.Events("http") {
-		if event.Type == "DELETED" {
-			api.deletePlaybook(event.Namespace)
-			logrus.WithFields(logrus.Fields{
-				"component": "watcher",
-				"event":     "delete",
-				"namespace": event.Namespace,
-			}).Debug("Playbook deleted")
-		}
 	}
 }
 

@@ -3,9 +3,6 @@ package resource
 import (
 	"fmt"
 	"sync"
-	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 type Namespace struct {
@@ -21,11 +18,6 @@ type NamespaceService interface {
 	Delete(namespace string) error
 	GetStatus(namespace string) (*NamespaceStatus, error)
 	List() ([]Namespace, error)
-	Events(listener string) chan NamespaceEvent
-	AddListener(name string)
-	RemoveListener(name string) error
-	Emit(event NamespaceEvent)
-	WatchNamespaces()
 }
 
 // NamespaceRepository defined the way namespace area actually managed.
@@ -35,16 +27,14 @@ type NamespaceRepository interface {
 	ApplyConfig(namespace string, configPath string) error
 	Delete(namespace string) error
 	List() ([]Namespace, error)
-	WatchPhase(emit EventEmitter) error
 }
 
 type namespaceService struct {
-	namespaces      NamespaceRepository
-	pods            PodRepository
-	deployments     DeploymentRepository
-	statefulsets    StatefulsetRepository
-	jobs            JobRepository
-	namespaceEvents map[string]chan NamespaceEvent
+	namespaces   NamespaceRepository
+	pods         PodRepository
+	deployments  DeploymentRepository
+	statefulsets StatefulsetRepository
+	jobs         JobRepository
 }
 
 // NamespaceStatus represent namespace with percentage of pods running and status phase (Active or Terminating)
@@ -52,21 +42,6 @@ type NamespaceStatus struct {
 	Status int    `json:"status"`
 	Phase  string `json:"phase"`
 }
-
-const (
-	EventStatusUpdate string = "STATUS.UPDATE"
-	EventStatusReady  string = "STATUS.READY"
-)
-
-// NamespaceEvent represent a namespace event happened on kubernetes cluster
-type NamespaceEvent struct {
-	Type      string `json:"type"`
-	Namespace string `json:"namespace"`
-	Phase     string `json:"phase"`
-	Status    int    `json:"status"`
-}
-
-type EventEmitter func(event NamespaceEvent)
 
 // NewNamespaceService creates a new NamespaceService
 func NewNamespaceService(
@@ -88,150 +63,12 @@ func NewNamespaceService(
 	return ns
 }
 
-// AddListener register a new listener
-func (ns *namespaceService) AddListener(name string) {
-	if ns.namespaceEvents == nil {
-		ns.namespaceEvents = make(map[string]chan NamespaceEvent)
-	}
-
-	ns.namespaceEvents[name] = make(chan NamespaceEvent)
-}
-
-// RemoveListener close channel and remove listener
-func (ns *namespaceService) RemoveListener(name string) error {
-	if listener, ok := ns.namespaceEvents[name]; ok {
-		close(listener)
-		delete(ns.namespaceEvents, name)
-		return nil
-	}
-
-	return fmt.Errorf("listener does not exist")
-}
-
-// Emit publish event to all registered listeners
-func (ns *namespaceService) Emit(event NamespaceEvent) {
-	logrus.WithFields(logrus.Fields{
-		"component": "emmiter",
-		"event":     event.Type,
-		"namespace": event.Namespace,
-	}).Debugf("new status : %d | new phase %s", event.Status, event.Phase)
-
-	for _, ch := range ns.namespaceEvents {
-		go func(handler chan NamespaceEvent) {
-			handler <- event
-		}(ch)
-	}
-}
-
-// WatchNamespaces create a watcher on namespace events from kubernetes cluster and send result over received channel
-func (ns *namespaceService) WatchNamespaces() {
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	logrus.WithFields(logrus.Fields{"component": "watcher"}).Debug("Starting watch status")
-
-	go ns.watchStatus()
-
-	logrus.WithFields(logrus.Fields{"component": "watcher"}).Debug("Starting watch phase")
-
-	go func() {
-		for {
-			ns.namespaces.WatchPhase(ns.Emit)
-			logrus.WithFields(logrus.Fields{
-				"component": "watcher",
-			}).Debug("Phase watcher restarted due to closed http connection")
-		}
-	}()
-
-	wg.Wait()
-}
-
-func (ns *namespaceService) watchStatus() {
-	ticker := time.NewTicker(5 * time.Second)
-
-	defer ticker.Stop()
-
-	var lastEvents []NamespaceEvent
-
-	for range ticker.C {
-		logrus.WithFields(logrus.Fields{"component": "watcher"}).Debug("Watch status tick")
-
-		namespaces, err := ns.List()
-
-		if err != nil {
-			continue
-		}
-
-		var events []NamespaceEvent
-
-		for _, n := range namespaces {
-			events = append(events, NamespaceEvent{
-				Type:      getEventType(n.Status),
-				Namespace: n.Name,
-				Phase:     n.Phase,
-				Status:    n.Status,
-			})
-		}
-
-		returnedEvents := compareEvents(events, lastEvents)
-		lastEvents = events
-
-		logrus.WithFields(logrus.Fields{"component": "watcher"}).Debugf("Namespace status events to send %d", len(returnedEvents))
-
-		for _, e := range returnedEvents {
-			ns.Emit(e)
-		}
-	}
-}
-
-func getEventType(status int) string {
-	if status == 100 {
-		return EventStatusReady
-	}
-
-	return EventStatusUpdate
-}
-
-func compareEvents(now []NamespaceEvent, before []NamespaceEvent) []NamespaceEvent {
-	var diff []NamespaceEvent
-
-	for _, s1 := range now {
-		found := false
-		statusDiff := true
-		for _, s2 := range before {
-			if s1.Namespace == s2.Namespace {
-				found = true
-				if s1.Status == s2.Status {
-					statusDiff = false
-				}
-				break
-			}
-		}
-
-		// not found before or status diff
-		if !found || statusDiff {
-			diff = append(diff, s1)
-		}
-	}
-
-	return diff
-}
-
 // Create creates a kubernetes namespace
 func (ns *namespaceService) Create(n string) error {
 	err := ns.namespaces.Create(n)
 
 	if err != nil {
 		return ErrorCreateNamespace{err.Error()}
-	}
-
-	return nil
-}
-
-// Events
-func (ns *namespaceService) Events(listener string) chan NamespaceEvent {
-	if ch, ok := ns.namespaceEvents[listener]; ok {
-		return ch
 	}
 
 	return nil

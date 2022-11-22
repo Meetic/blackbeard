@@ -11,7 +11,7 @@ const (
 	tickerDuration = 2 * time.Second
 )
 
-//Namespace represents a kubernetes namespace enrich with informations from the playbook.
+// Namespace represents a kubernetes namespace enrich with informations from the playbook.
 type Namespace struct {
 	//Name is the namespace name
 	Name string

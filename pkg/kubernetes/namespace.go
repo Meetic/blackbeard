@@ -13,7 +13,6 @@ import (
 	"k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/Meetic/blackbeard/pkg/resource"
@@ -98,41 +97,6 @@ func (ns *namespaceRepository) List() ([]resource.Namespace, error) {
 	}
 
 	return namespaces, nil
-}
-
-// WatchPhase watch namespaces with label manager=blackbeard and send their status to the event emitter
-func (ns *namespaceRepository) WatchPhase(emit resource.EventEmitter) error {
-
-	watcher, err := ns.kubernetes.CoreV1().Namespaces().Watch(
-		context.Background(),
-		metav1.ListOptions{LabelSelector: "manager=blackbeard"},
-	)
-
-	if err != nil {
-		logrus.Errorf("Error when watching phase : %s", err.Error())
-		return err
-	}
-
-	for event := range watcher.ResultChan() {
-		n := event.Object.(*v1.Namespace)
-
-		// prevent publishing event ADDED for previous created namespaces
-		elapsedTime := time.Now().Sub(n.ObjectMeta.CreationTimestamp.Time)
-		if elapsedTime > 5*time.Minute && event.Type == watch.Added {
-			continue
-		}
-
-		namespaceEvent := resource.NamespaceEvent{
-			Type:      string(event.Type),
-			Namespace: n.GetName(),
-			Phase:     string(n.Status.Phase),
-			Status:    0,
-		}
-
-		emit(namespaceEvent)
-	}
-
-	return nil
 }
 
 // ApplyConfig loads configuration files into kubernetes
