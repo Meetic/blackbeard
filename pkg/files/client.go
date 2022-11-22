@@ -76,12 +76,12 @@ func (c *Client) Playbooks() playbook.PlaybookRepository {
 	return c.playbooks
 }
 
-//InventoryPath returns the inventory path for the current playbook
+// InventoryPath returns the inventory path for the current playbook
 func (c *Client) InventoryPath() string {
 	return c.inventoryPath
 }
 
-//ConfigPath return the config path for the current playbook
+// ConfigPath return the config path for the current playbook
 func (c *Client) ConfigPath() string {
 	return c.configPath
 }

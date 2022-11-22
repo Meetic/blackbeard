@@ -2,7 +2,6 @@ package http
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -15,24 +14,17 @@ import (
 // It use a router to map uri to HandlerFunc
 type Handler struct {
 	api        api.Api
-	websocket  WsHandler
 	configPath string
 
 	engine *gin.Engine
 }
 
-// WebsocketHandler defines the way Websocket should be handled
-type WsHandler interface {
-	Handle(http.ResponseWriter, *http.Request)
-}
-
-// NewHandler create an Handler using defined routes.
-// It takes a client as argument in order to be passe to the handler and be accessible to the HandlerFunc
+// NewHandler create a Handler using defined routes.
+// It takes a client as argument in order to be pass to the handler and be accessible to the HandlerFunc
 // Typically in a CRUD API, the client manage connections to a storage system.
-func NewHandler(api api.Api, websocket WsHandler, configPath string, corsEnable bool) *Handler {
+func NewHandler(api api.Api, configPath string, corsEnable bool) *Handler {
 	h := &Handler{
 		api:        api,
-		websocket:  websocket,
 		configPath: configPath,
 	}
 
@@ -60,9 +52,6 @@ func NewHandler(api api.Api, websocket WsHandler, configPath string, corsEnable 
 	h.engine.PUT("/inventories/:namespace", h.Update)
 	h.engine.DELETE("/inventories/:namespace", h.Delete)
 	h.engine.DELETE("/resources/:namespace/jobs/:resource", h.DeleteResource)
-	h.engine.GET("/ws", func(c *gin.Context) {
-		websocket.Handle(c.Writer, c.Request)
-	})
 	h.engine.GET("/version", h.Version)
 
 	return h
@@ -71,12 +60,12 @@ func NewHandler(api api.Api, websocket WsHandler, configPath string, corsEnable 
 // Engine returns the defined router for the Handler
 func (h *Handler) Engine() *gin.Engine { return h.engine }
 
-// Server represents an http server that handle request
+// Server represents a http server that handle request
 type Server struct {
 	handler *Handler
 }
 
-// NewServer return an http server with a given handler
+// NewServer return a http server with a given handler
 func NewServer(h *Handler) *Server {
 	return &Server{
 		handler: h,
@@ -85,8 +74,5 @@ func NewServer(h *Handler) *Server {
 
 // Serve launch the webserver
 func (s *Server) Serve(port int) {
-
-	go s.handler.api.Namespaces().WatchNamespaces()
-
 	s.handler.Engine().Run(fmt.Sprintf(":%d", port))
 }

@@ -74,7 +74,7 @@ func (sr *serviceRepository) ListExternal(n string) ([]resource.Service, error) 
 
 // ListIngress returns a list of Kubernetes services exposed throw Ingress.
 func (sr *serviceRepository) ListIngress(n string) ([]resource.Service, error) {
-	ingressList, err := sr.kubernetes.ExtensionsV1beta1().Ingresses(n).List(context.Background(), metav1.ListOptions{})
+	ingressList, err := sr.kubernetes.NetworkingV1().Ingresses(n).List(context.Background(), metav1.ListOptions{})
 
 	if err != nil {
 		return nil, err
@@ -87,11 +87,11 @@ func (sr *serviceRepository) ListIngress(n string) ([]resource.Service, error) {
 		for _, rules := range ing.Spec.Rules {
 			for _, path := range rules.HTTP.Paths {
 				svc := resource.Service{
-					Name: path.Backend.ServiceName,
+					Name: path.Backend.Service.Name,
 					Addr: rules.Host,
 					Ports: []resource.Port{
 						{
-							Port:        path.Backend.ServicePort.IntVal,
+							Port:        path.Backend.Service.Port.Number,
 							ExposedPort: 80,
 						},
 					},

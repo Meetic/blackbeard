@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Meetic/blackbeard/pkg/http"
-	"github.com/Meetic/blackbeard/pkg/websocket"
 )
 
 // serveCmd represents the serve command
@@ -30,9 +29,7 @@ func runServe() {
 
 	api := newAPI(files, newKubernetesClient())
 
-	wh := websocket.NewHandler(api)
-
-	h := http.NewHandler(api, wh, files.ConfigPath(), cors)
+	h := http.NewHandler(api, files.ConfigPath(), cors)
 	s := http.NewServer(h)
 
 	// start http web server

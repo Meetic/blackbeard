@@ -30,7 +30,7 @@ type PodService interface {
 	List(string) (Pods, error)
 }
 
-//NewPodService returns a new PodService
+// NewPodService returns a new PodService
 func NewPodService(pods PodRepository) PodService {
 	return &podService{
 		pods: pods,
