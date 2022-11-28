@@ -28,6 +28,7 @@ type Api interface {
 	WaitForNamespaceReady(namespace string, timeout time.Duration, bar progress) error
 	GetVersion() (*Version, error)
 	DeleteResource(namespace string, resource string) error
+	WatchNamespaceDeleted()
 }
 
 type api struct {
@@ -202,6 +203,23 @@ func (api *api) DeleteResource(namespace, resource string) error {
 	}
 
 	return nil
+}
+
+func (api *api) WatchNamespaceDeleted() {
+	events := make(chan resource.NamespaceEvent, 0)
+
+	go api.namespaces.Watch(events)
+
+	// handle delete of inventories and configs files
+	for event := range events {
+		if event.Type == "DELETED" {
+			api.deletePlaybook(event.Namespace)
+
+			logrus.
+				WithFields(logrus.Fields{"component": "watcher", "event": "delete", "namespace": event.Namespace}).
+				Debug("Playbook deleted")
+		}
+	}
 }
 
 func (api *api) deletePlaybook(namespace string) {

@@ -13,6 +13,7 @@ import (
 	"k8s.io/api/core/v1"
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/Meetic/blackbeard/pkg/resource"
@@ -105,6 +106,37 @@ func (ns *namespaceRepository) ApplyConfig(namespace, configPath string) error {
 	err := execute(fmt.Sprintf("kubectl apply -f %s -n %s", filepath.Join(configPath, namespace), namespace), timeout)
 	if err != nil {
 		return fmt.Errorf("the namespace could not be configured : %v", err)
+	}
+
+	return nil
+}
+
+// Watch namespace events and send it to events channel
+func (ns *namespaceRepository) Watch(events chan<- resource.NamespaceEvent) error {
+
+	watcher, err := ns.kubernetes.CoreV1().Namespaces().Watch(
+		context.Background(),
+		metav1.ListOptions{LabelSelector: "manager=blackbeard"},
+	)
+
+	if err != nil {
+		logrus.Errorf("error when watching namespace : %s", err.Error())
+		return err
+	}
+
+	for event := range watcher.ResultChan() {
+		n := event.Object.(*v1.Namespace)
+
+		// prevent publishing event ADDED for previous created namespaces
+		elapsedTime := time.Now().Sub(n.ObjectMeta.CreationTimestamp.Time)
+		if elapsedTime > 5*time.Minute && event.Type == watch.Added {
+			continue
+		}
+
+		events <- resource.NamespaceEvent{
+			Namespace: n.Name,
+			Type:      string(event.Type),
+		}
 	}
 
 	return nil
