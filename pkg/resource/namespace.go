@@ -3,6 +3,9 @@ package resource
 import (
 	"fmt"
 	"sync"
+	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Namespace struct {
@@ -18,6 +21,7 @@ type NamespaceService interface {
 	Delete(namespace string) error
 	GetStatus(namespace string) (*NamespaceStatus, error)
 	List() ([]Namespace, error)
+	Watch(events chan NamespaceEvent)
 }
 
 // NamespaceRepository defined the way namespace area actually managed.
@@ -27,6 +31,7 @@ type NamespaceRepository interface {
 	ApplyConfig(namespace string, configPath string) error
 	Delete(namespace string) error
 	List() ([]Namespace, error)
+	Watch(events chan<- NamespaceEvent) error
 }
 
 type namespaceService struct {
@@ -41,6 +46,11 @@ type namespaceService struct {
 type NamespaceStatus struct {
 	Status int    `json:"status"`
 	Phase  string `json:"phase"`
+}
+
+type NamespaceEvent struct {
+	Namespace string
+	Type      string
 }
 
 // NewNamespaceService creates a new NamespaceService
@@ -167,6 +177,26 @@ func (ns *namespaceService) GetStatus(namespace string) (*NamespaceStatus, error
 	status := i * 100 / totalApps
 
 	return &NamespaceStatus{status, n.Phase}, nil
+}
+
+func (ns *namespaceService) Watch(events chan NamespaceEvent) {
+	ticker := time.NewTicker(5 * time.Second)
+	defer close(events)
+
+	for range ticker.C {
+		err := ns.namespaces.Watch(events)
+		if err != nil {
+			ticker.Stop()
+		}
+
+		logrus.
+			WithFields(logrus.Fields{"component": "watcher"}).
+			Debug("watch namespace restarted")
+	}
+
+	logrus.
+		WithFields(logrus.Fields{"component": "watcher"}).
+		Error("watch namespace stopped due to error")
 }
 
 // ErrorCreateNamespace represents an error due to a namespace creation failure on kubernetes cluster

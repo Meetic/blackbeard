@@ -29,6 +29,8 @@ func runServe() {
 
 	api := newAPI(files, newKubernetesClient())
 
+	go api.WatchNamespaceDeleted()
+
 	h := http.NewHandler(api, files.ConfigPath(), cors)
 	s := http.NewServer(h)
 
